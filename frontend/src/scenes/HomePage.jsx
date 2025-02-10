@@ -15,7 +15,7 @@ const HomePage = () => {
       }}
     >
       {/* ✅ Title */}
-      <img src="/encyclomediaglobe.png" alt="Logo" width="450" height="400" />
+      <img src="/encyclomediaglobe.png" alt="Logo" width="300" height="270" />
       <Typography
         variant="h3"
         sx={{
