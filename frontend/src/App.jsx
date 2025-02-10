@@ -7,6 +7,7 @@ import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
 import DataPage from "./scenes/DataPage";
 import NotFound from "./scenes/NotFound";
+import PosterTest from "./scenes/PosterTest";
 import axios from "axios";
 
 function App() {
@@ -79,6 +80,9 @@ function App() {
 
             {/* 404 Not Found Page */}
             <Route path="*" element={<NotFound />} />
+
+            {/* Poster Test */}
+            <Route path="/poster" element={<PosterTest />} />
           </Routes>
         </Container>
       </ThemeProvider>
