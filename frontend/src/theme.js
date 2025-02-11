@@ -4,6 +4,7 @@ export const themeSettings = (mode) => ({
   palette: {
     mode: mode,
     customGrey: { main: "#EEEEEE", contrastText: "#000000" }, // ✅ Define Custom Color
+    darkGrey: {main: "#595959", contrastText: "#000000"}
   },
   typography: {
     fontFamily: `"Helvetica", "Roboto", "Arial", sans-serif`, // ✅ Change font
