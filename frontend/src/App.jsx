@@ -17,44 +17,6 @@ function App() {
   // Authentication state (if used later)
   const isAuth = Boolean(useSelector((state) => state.token));
 
-  // State management for data
-  const [data, setData] = useState([]);
-  const [newItem, setNewItem] = useState("");
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:5000/api/data", {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-      console.log("✅ Fetched Data:", response.data);
-      setData(response.data); // Ensure it's an array
-    } catch (error) {
-      console.error("❌ Error fetching data:", error);
-    }
-  };
-
-  const addItem = async () => {
-    try {
-      const response = await axios.post("http://127.0.0.1:5000/api/data", {
-        item: newItem,
-        withCredentials: true,
-      });
-      console.log("✅ POST response:", response);
-      fetchData();
-      setNewItem("");
-    } catch (error) {
-      console.error("❌ Error adding item:", error);
-    }
-  };
-
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
@@ -65,17 +27,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
 
             {/* Data Management Page */}
-            <Route
-              path="/data"
-              element={
-                <DataPage
-                  data={data}
-                  newItem={newItem}
-                  setNewItem={setNewItem}
-                  addItem={addItem}
-                />
-              }
-            />
+            <Route path="/data" element={<DataPage />} />
 
             {/* 404 Not Found Page */}
             <Route path="*" element={<NotFound />} />
