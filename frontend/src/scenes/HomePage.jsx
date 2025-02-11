@@ -114,20 +114,26 @@ const HomePage = () => {
         }}
       >
         {/* ✅ Logo */}
-        <Box
-          sx={{
-            position: "fixed", // ✅ Ensures it stays behind other elements
-            top: 0,
-            left: 0,
-            width: "50vw",
-            height: "50vh",
-            zIndex: 100, // ✅ Places it behind UI elements
-            pointerEvents: "none",
-          }}
+        <motion.div
+          initial={{ opacity: -1 }} // ✅ Start at zero size
+          animate={{ opacity: 1 }} // ✅ Expand to full size
+          transition={{ duration: 5, ease: "easeOut" }} // ✅ Smooth transition
         >
-          <BouncingSphere />
-        </Box>
-
+          <Box
+            sx={{
+              position: "fixed", // ✅ Ensures it stays behind other elements
+              top: 0,
+              left: 0,
+              width: "50vw",
+              height: "50vh",
+              zIndex: 100, // ✅ Places it behind UI elements
+              pointerEvents: "none",
+            }}
+          >
+            <BouncingSphere />
+          </Box>
+        </motion.div>
+        ;
         <motion.img
           src="/encyclomediaglobe.png"
           alt="Logo"
@@ -191,12 +197,11 @@ const HomePage = () => {
         >
           You name it, we have it.
         </Typography>
-
         {/* ✅ Button */}
         <Box
           sx={{
             position: "relative",
-            zIndex: 200, // ✅ Ensures it's above the sphere
+            zIndex: 999999, // ✅ Ensures it's above the sphere
           }}
         >
           <RotatingButtons />
@@ -258,7 +263,8 @@ const HomePage = () => {
               textAlign: "center",
             }}
           >
-            By reading this you transfer legal ownership of your soul to Encyclomedia. All rights reserved {new Date().getFullYear()} ©.
+            By reading this you transfer legal ownership of your soul to
+            Encyclomedia. All rights reserved {new Date().getFullYear()} ©.
           </p>
         </div>
 

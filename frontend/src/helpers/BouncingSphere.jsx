@@ -15,7 +15,7 @@ const Model = () => {
     }
   });
   useFrame(() => {
-    setRotation((prev) => prev + 0.005); // ✅ Adjust speed as needed
+    setRotation((prev) => prev + 0.003); // ✅ Adjust speed as needed
   });
 
   return <primitive object={scene} scale={2} rotation={[0, rotation, 0]} />;
@@ -29,11 +29,11 @@ const BouncingSphere = () => {
   });
 
   useEffect(() => {
-    let x = 0;
-    let y = 0;
+    let x = Math.random() * windowSize.width / 2;
+    let y = Math.random() * -windowSize.height / 2;
     let dx = Math.random() > 0.5 ? 1 : -1;
     let dy = Math.random() > 0.5 ? 1 : -1;
-    const speed = 6;
+    const speed = 5;
 
     const interval = setInterval(() => {
       x += dx * speed;
@@ -51,7 +51,7 @@ const BouncingSphere = () => {
     }, 50); // ✅ Updates every 50ms
 
     return () => clearInterval(interval); // ✅ Cleanup on unmount
-  }, [controls, windowSize]);
+  }, [windowSize]);
 
   return (
     <motion.div
