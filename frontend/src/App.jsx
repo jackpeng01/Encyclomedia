@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { CssBaseline, Container } from "@mui/material";
+import { Container, CssBaseline } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { themeSettings } from "./theme";
-import HomePage from "./scenes/HomePage";
+import React, { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
+import HomePage from "./scenes/HomePage";
 import NotFound from "./scenes/NotFound";
-import axios from "axios";
+import { themeSettings } from "./theme";
 
 function App() {
   // Redux state for theme mode (if used in your app)

@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
-import { Box } from "@mui/material";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { motion, useAnimation } from "framer-motion";
+import React, { useEffect, useState } from "react";
 
 const Model = () => {
   const [rotation, setRotation] = useState(0);

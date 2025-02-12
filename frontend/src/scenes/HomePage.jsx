@@ -11,16 +11,12 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BouncingSphere from "../helpers/BouncingSphere";
 import RotatingButtons from "../helpers/RotatingButtons";
-
-const footnotes = [
-  { id: "fn1", symbol: "*", text: "That's right. No disclaimers. Sue us." },
-  { id: "fn2", symbol: "†", text: "Please do not sue us." },
-];
+import HomePageFooter from "../helpers/HomePageFooter";
+import LoginModal from "../helpers/LoginModal";
 
 const HomePage = () => {
+  const [isLoginOpen, setLoginOpen] = useState(false);
   const [showFootnotes, setShowFootnotes] = useState(false);
-  const [showSecondFootnote, setShowSecondFootnote] = useState(false);
-
   useEffect(() => {
     const handleScroll = () => {
       const scrolledToBottom =
@@ -90,15 +86,21 @@ const HomePage = () => {
                 fontSize: "1rem",
               }}
               component={Link}
-              to="/login"
+              onClick={() => {
+                setLoginOpen(true);
+              }}
               color="inherit"
             >
-              Login/Signup
+              Login / Signup
             </Button>
+            <LoginModal
+              open={isLoginOpen}
+              onClose={() => setLoginOpen(false)}
+              sx={{z:101}}
+            />
           </Box>
         </Toolbar>
       </AppBar>
-
       {/* ✅ Main Content */}
       <Container
         sx={{
@@ -201,85 +203,13 @@ const HomePage = () => {
         <Box
           sx={{
             position: "relative",
-            zIndex: 999999, // ✅ Ensures it's above the sphere
+            zIndex: 100, // ✅ Ensures it's above the sphere
           }}
         >
           <RotatingButtons />
         </Box>
       </Container>
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={showFootnotes ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
-        transition={{ duration: 3, ease: "easeOut" }}
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "10px 20px",
-          boxShadow: "0px -2px 10px rgba(0, 0, 0, 0.1)",
-          textAlign: "left",
-        }}
-      >
-        {/* ✅ First Footnote */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%", // ✅ Ensures full width
-            textAlign: "left", // ✅ Keeps left-aligned text
-          }}
-        >
-          {/* ✅ Left-Aligned Text */}
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#555",
-              // margin: "5px 0",
-              flex: 1,
-            }}
-          >
-            <strong>*</strong> That's right. No disclaimers.{" "}
-            <span
-              style={{
-                textDecoration: "underline",
-                color: "blue",
-                cursor: "pointer",
-              }}
-              onClick={() => setShowSecondFootnote(true)}
-            >
-              Sue
-            </span>{" "}
-            us.
-          </p>
-
-          {/* ✅ Center-Aligned Text */}
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#555",
-              // flex: 1,
-              textAlign: "center",
-            }}
-          >
-            By reading this you transfer legal ownership of your soul to
-            Encyclomedia. All rights reserved {new Date().getFullYear()} ©.
-          </p>
-        </div>
-
-        {/* ✅ Second Footnote (Appears only when clicked) */}
-        {showSecondFootnote && (
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            style={{ fontSize: "14px", color: "#555", margin: "5px 0" }}
-          >
-            <strong>†</strong> Please do not sue us.
-          </motion.p>
-        )}
-      </motion.div>
+      <HomePageFooter showFootnotes={showFootnotes} />
     </Box>
   );
 };
