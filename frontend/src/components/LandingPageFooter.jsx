@@ -11,35 +11,54 @@ const footnotes = [
   {
     id: "fn2",
     symbol: "†",
-    text: "Just messin' with ya. You weren't actually thinking about suing... right?",
-    trigger: "Fine, then explain this.‡",
+    text: "Just messin' around. You weren't actually thinking about suing... right?",
+    trigger: "Fine, then explain this.††",
+  },
+  {
+    id: "fn2",
+    symbol: "††",
+    text: "Alright I can explain",
+    trigger: "I'm listening. ¶",
   },
   {
     id: "fn3",
-    symbol: "‡",
-    text: "Look, let's calm down a bit first. What's wrong with some good ol' fashioned fun?",
+    symbol: "¶",
+    text: "Let's just calm down a bit",
     trigger: "I'm calling my lawyer.§",
   },
   {
     id: "fn4",
     symbol: "§",
-    text: "Wow, look at all these cool symbols! ≈ç√∫˜µ≤≥÷åß∂ƒ©˙∆˚¬…æœ∑´®´∑†¥¨ˆøπ“‘∏ÒÂ˜◊Ç˛¡™£¢∞§¶•",
-    trigger: "You will be hearing from my lawyer very, very soon. ¶",
+    text: "Boy, these footers sure are neat, huh? Look at all these cool symbols! ≈ç√∫˜µ≤≥÷åß∂ƒ©˙∆˚¬…æœ∑´®´∑†¥¨ˆøπ“‘∏ÒÂ˜◊Ç˛¡™£¢∞§¶•",
+    trigger: "Yep, very cool. Still suing. ||",
   },
   {
     id: "fn4",
-    symbol: "¶",
-    text: "Whoa, that's weird... All of your problems are.. magically disappearing!",
+    symbol: "||",
+    text: "Let me start over",
+    trigger: "I'm calling my lawyer. #",
+  },
+  {
+    id: "fn4",
+    symbol: "#",
+    text: "I'm running out of symbols here, just gimme a sec.",
+    trigger: "You will be hearing from my lawyer very, very soon. **",
+  },
+  {
+    id: "fn4",
+    symbol: "**",
+    text: "Whoa, that's weird... All of your problems are magically disappearing!",
   }, // ✅ Fixed duplicate ID
 ];
 
-const HomePageFooter = ({ showFootnotes }) => {
+const LandingPageFooter = ({ showFootnotes }) => {
   const [visibleFootnotes, setVisibleFootnotes] = useState([true]);
   const [fadeOutFooter, setFadeOutFooter] = useState(false);
+  const [index, setIndex] = useState(0);
 
   if (!showFootnotes) return null; // ✅ Don't render unless needed
 
-  const handleShowNextFootnote = (index) => {
+  const handleShowNextFootnote = () => {
     if (index + 2 < footnotes.length) {
       // Show the next footnote
       setVisibleFootnotes((prev) => {
@@ -62,7 +81,11 @@ const HomePageFooter = ({ showFootnotes }) => {
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={fadeOutFooter ? { opacity: 0 } : { opacity: 1, y: 0 }}
-      transition={{ duration: fadeOutFooter ? 4 : 1, ease: "easeInOut", delay: fadeOutFooter ? 3 : 0}}
+      transition={{
+        duration: fadeOutFooter ? 4 : 1,
+        ease: "easeInOut",
+        delay: fadeOutFooter ? 3 : 0,
+      }}
       style={{
         position: "fixed",
         bottom: 0,
@@ -81,17 +104,6 @@ const HomePageFooter = ({ showFootnotes }) => {
           transition={{ duration: fadeOutFooter ? 4 : 0.4, ease: "easeOut" }}
         >
           <strong>{footnotes[0].symbol}</strong> {footnotes[0].text}{" "}
-          <span
-            style={{
-              marginTop: "5px",
-              textDecoration: "underline",
-              color: "blue",
-              cursor: "pointer",
-            }}
-            onClick={() => handleShowNextFootnote(0)}
-          >
-            {footnotes[0].trigger}
-          </span>
         </motion.p>
 
         <motion.p
@@ -99,9 +111,9 @@ const HomePageFooter = ({ showFootnotes }) => {
           animate={{ opacity: fadeOutFooter ? 0 : 1 }}
           transition={{ duration: fadeOutFooter ? 4 : 0.4, ease: "easeOut" }}
         >
-          By reading this, you consent to having your data sold on the dark web,
-          and acknowledge Encyclomedia has legal ownership of your left kidney.
-          All rights reserved {new Date().getFullYear()} ©.
+          By reading this, you consent to having your data sold on the dark web
+          and forfeit legal ownership of your left kidney. Copyright ©{" "}
+          {new Date().getFullYear()} Encyclomedia. All rights reserved.
         </motion.p>
       </div>
 
@@ -134,7 +146,7 @@ const HomePageFooter = ({ showFootnotes }) => {
             </motion.p>
 
             {/* Trigger appears slightly later */}
-            <motion.span
+            {/* <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: fadeOutFooter ? 0 : 1 }}
               transition={{
@@ -155,7 +167,7 @@ const HomePageFooter = ({ showFootnotes }) => {
               onClick={() => handleShowNextFootnote(index + 1)}
             >
               {footnote.trigger}
-            </motion.span>
+            </motion.span> */}
           </motion.div>
         ) : null
       )}
@@ -171,7 +183,7 @@ const HomePageFooter = ({ showFootnotes }) => {
         >
           <strong>{footnotes[footnotes.length - 1].symbol}</strong>{" "}
           {footnotes[footnotes.length - 1].text}{" "}
-          <span
+          {/* <span
             style={{
               marginTop: "5px",
               textDecoration: "underline",
@@ -180,11 +192,25 @@ const HomePageFooter = ({ showFootnotes }) => {
             }}
           >
             {footnotes[footnotes.length - 1].trigger}
-          </span>
+          </span> */}
         </motion.p>
       )}
+      <span
+        style={{
+          marginTop: "5px",
+          textDecoration: "underline",
+          color: "blue",
+          cursor: "pointer",
+        }}
+        onClick={() => {
+          handleShowNextFootnote();
+          setIndex((prev) => prev + 1);
+        }}
+      >
+        {footnotes[index].trigger}
+      </span>
     </motion.div>
   );
 };
 
-export default HomePageFooter;
+export default LandingPageFooter;

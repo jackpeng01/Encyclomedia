@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from database import connect_db  # Import the database connection function
 from routes.data import data_bp
-# from routes.users import users_bp
+from routes.users import users_bp
 # from routes.reviews import reviews_bp
 
 app = Flask(__name__)
@@ -32,9 +32,13 @@ else:
 
 # ✅ Register Blueprints
 app.register_blueprint(data_bp)
-# app.register_blueprint(users_bp)
+app.register_blueprint(users_bp)
 # app.register_blueprint(reviews_bp)
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.route("/")
 def home():

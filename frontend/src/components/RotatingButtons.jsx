@@ -9,7 +9,7 @@ const buttonData = [
   { text: "Connect with Friends", link: "/data" },
 ];
 
-const RotatingButtons = () => {
+const RotatingButtons = ({onClick}) => {
   const [buttons, setButtons] = useState(buttonData);
 
   useEffect(() => {
@@ -41,8 +41,7 @@ const RotatingButtons = () => {
           <Button
             variant="contained"
             color="customGrey"
-            component={Link}
-            to={button.link}
+            onClick={onClick}
             sx={{
               opacity: 0.5,
               padding: "12px 24px", // ✅ Increases button padding

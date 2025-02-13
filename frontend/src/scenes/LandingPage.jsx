@@ -9,13 +9,14 @@ import {
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import BouncingSphere from "../helpers/BouncingSphere";
-import RotatingButtons from "../helpers/RotatingButtons";
-import HomePageFooter from "../helpers/HomePageFooter";
-import LoginModal from "../helpers/LoginModal";
+import BouncingSphere from "../components/BouncingSphere";
+import RotatingButtons from "../components/RotatingButtons";
+import LandingPageFooter from "../components/LandingPageFooter";
+import LoginModal from "../components/LoginModal";
 
-const HomePage = () => {
+const LandingPage = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
+  const [signUpMode, setSignUpMode] = useState(false);
   const [showFootnotes, setShowFootnotes] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
@@ -74,7 +75,7 @@ const HomePage = () => {
                 fontSize: "1rem",
               }}
               component={Link}
-              to="/about"
+              to="/data"
               color="inherit"
             >
               About
@@ -87,16 +88,19 @@ const HomePage = () => {
               }}
               component={Link}
               onClick={() => {
+                setSignUpMode(false);
                 setLoginOpen(true);
               }}
               color="inherit"
             >
-              Login / Signup
+              Log in
             </Button>
             <LoginModal
+              signUp={signUpMode}
+              setSignUp={setSignUpMode}
               open={isLoginOpen}
               onClose={() => setLoginOpen(false)}
-              sx={{z:101}}
+              sx={{ z: 101 }}
             />
           </Box>
         </Toolbar>
@@ -206,12 +210,17 @@ const HomePage = () => {
             zIndex: 100, // ✅ Ensures it's above the sphere
           }}
         >
-          <RotatingButtons />
+          <RotatingButtons
+            onClick={() => {
+              setSignUpMode(true);
+              setLoginOpen(true);
+            }}
+          />
         </Box>
       </Container>
-      <HomePageFooter showFootnotes={showFootnotes} />
+      <LandingPageFooter showFootnotes={showFootnotes} />
     </Box>
   );
 };
 
-export default HomePage;
+export default LandingPage;

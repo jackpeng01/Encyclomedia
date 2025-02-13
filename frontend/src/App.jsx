@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
-import HomePage from "./scenes/HomePage";
+import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
 
@@ -23,7 +23,7 @@ function App() {
         <Container>
           <Routes>
             {/* Home Page */}
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<LandingPage />} />
 
             {/* Data Management Page */}
             <Route path="/data" element={<DataPage />} />
