@@ -1,3 +1,4 @@
+from schemas.user_schema import UserSchema
 from flask import Blueprint, current_app, jsonify, request, make_response
 from flask_jwt_extended import create_access_token
 from flask_cors import cross_origin
@@ -6,41 +7,31 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 users_bp = Blueprint("users", __name__)
 
+user_schema = UserSchema()
+
 
 @users_bp.route("/api/users", methods=["POST"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def create_user():
-    """Create a new user"""
+    """Register a new user with schema validation"""
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
         return jsonify({"error": "Database not connected"}), 500
 
-    # Extract request data
     data = request.json
-    username = data.get("username")
-    email = data.get("email")
-    password = data.get("password")
 
-    # Validate required fields
-    if not username or not email or not password:
-        return jsonify({"error": "Missing required fields"}), 400
+    # ✅ Validate request data with Marshmallow
+    errors = user_schema.validate(data)
+    if errors:
+        return jsonify({"error": errors}), 400
 
-    # Check if username already exists
-    hashed_password = generate_password_hash(password)
+    # ✅ Hash password before storing
+    data["password"] = generate_password_hash(data["password"])
 
-    try:
-        # Insert into MongoDB
-        user_id = users_col.insert_one(
-            {
-                "username": username,
-                "email": email,
-                "password": hashed_password,  # Store hashed password
-            }
-        ).inserted_id
+    # ✅ Insert user into MongoDB
+    users_col.insert_one(data)
 
-        return jsonify({"message": "User created", "id": str(user_id)}), 201
-    except DuplicateKeyError:
-        return jsonify({"error": "Username or email already exists"}), 409
+    return jsonify({"message": "User registered successfully"}), 201
 
 
 @users_bp.route("/api/users/check-username", methods=["GET"])
@@ -53,12 +44,16 @@ def check_username_unique():
 
     username = request.args.get("username")
     if not username:
-        return jsonify({"error": "Missing username parameter"}), 400
+        response = make_response(jsonify({"error": "Missing username parameter"}), 400)
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
 
     user = users_col.find_one({"username": username})
     is_unique = user is None
 
-    return jsonify({"isUnique": is_unique}), 200
+    response = make_response(jsonify({"isUnique": is_unique}), 200)
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 
 @users_bp.route("/api/users/<username>", methods=["GET"])
@@ -105,8 +100,10 @@ def login_user():
         access_token = create_access_token(
             identity={"username": user["username"], "email": user["email"]}
         )
-        response = make_response(
-            jsonify({"message": "Login successful", "access_token": access_token}), 200
+
+        response = make_response(jsonify({"message": "Login successful"}), 200)
+        response.set_cookie(
+            "token", access_token, httponly=True, secure=True, samesite="Strict"
         )
         response.headers["Access-Control-Allow-Credentials"] = "true"
         return response

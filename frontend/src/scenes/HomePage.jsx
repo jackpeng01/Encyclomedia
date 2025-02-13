@@ -1,23 +1,16 @@
-import {
-  AppBar,
-  Box,
-  Button,
-  Container,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import BouncingSphere from "../components/BouncingSphere";
-import RotatingButtons from "../components/RotatingButtons";
-import LandingPageFooter from "../components/LandingPageFooter";
 import LoginModal from "../components/LoginModal";
+import { setToken } from "../state/authSlice";
 
 const HomePage = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
   const [showFootnotes, setShowFootnotes] = useState(false);
+  const dispatch = useDispatch();
 
   return (
     <Box
@@ -87,12 +80,11 @@ const HomePage = () => {
               }}
               component={Link}
               onClick={() => {
-                setSignUpMode(false);
-                setLoginOpen(true);
+                dispatch(setToken(null));
               }}
               color="inherit"
             >
-              Log in
+              Logout
             </Button>
             <LoginModal
               signUp={signUpMode}

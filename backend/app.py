@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from database import connect_db  # Import the database connection function
 from routes.data import data_bp
 from routes.users import users_bp
+from routes.auth import auth_bp
 from config import Config
 # from routes.reviews import reviews_bp
 
@@ -34,6 +35,7 @@ else:
 # ✅ Register Blueprints
 app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
+app.register_blueprint(auth_bp)
 # app.register_blueprint(reviews_bp)
 
 

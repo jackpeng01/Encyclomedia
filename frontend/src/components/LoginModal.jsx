@@ -8,9 +8,12 @@ import {
   Typography,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addUser, checkUsernameUnique, loginUser } from "../api/Login";
+import { setToken } from "../state/authSlice";
+import { WaveText } from "./WaveText";
 
 const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
   const [email, setEmail] = useState("");
@@ -19,6 +22,7 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
   const [agreed, setAgreed] = useState(false);
   const [successfulSignUp, setSuccessfulSignUp] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Error states for validation
   const [errors, setErrors] = useState({
@@ -53,6 +57,7 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
     try {
       const response = await loginUser(email, password);
       console.log("Login successful:", response);
+      dispatch(setToken(response.token));
       navigate("/home");
     } catch (error) {
       console.error("❌ Error logging in:", error);
@@ -141,11 +146,13 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
               mb: 2,
             }}
           >
-            {signUp
-              ? "Be an Encyclomedian."
-              : successfulSignUp
-              ? "Thank you for joining Encyclomedia!"
-              : "Log In"}
+            {signUp ? (
+              <WaveText text="Be an Encyclomedian." />
+            ) : successfulSignUp ? (
+              <WaveText text="Thank you for joining Encyclomedia!" />
+            ) : (
+              "Log In"
+            )}
           </Typography>
           {successfulSignUp && (
             <Typography

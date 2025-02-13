@@ -8,6 +8,7 @@ import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -27,7 +28,14 @@ function App() {
             <Route path="/" element={<LandingPage />} />
 
             {/* Home Page */}
-            <Route path="/home" element={<HomePage />} />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
             {/* Data Management Page */}
             <Route path="/data" element={<DataPage />} />
 
