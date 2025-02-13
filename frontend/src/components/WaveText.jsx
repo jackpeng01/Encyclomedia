@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const waveAnimation = {
   hidden: { y: 0, opacity: 0 },
@@ -9,32 +9,37 @@ const waveAnimation = {
   }),
 };
 
-export const WaveText = ({ text }) => {
-  // ✅ Split into words and preserve spaces
-  const words = text.split(/\s+/); // Splits words but removes extra spaces
+export const WaveText = ({ text, keyProp }) => {
+  const words = text.split(/\s+/); // ✅ Preserves words and spaces
 
   return (
-    <motion.span
-      initial="hidden"
-      animate="visible"
-      style={{ display: "inline-flex", flexWrap: "wrap" }}
-    >
-      {words.map((word, wordIndex) => (
-        <motion.span
-          key={wordIndex}
-          style={{ display: "inline-flex", marginRight: "8px" }} // ✅ Ensures spacing between words
-        >
-          {word.split("").map((char, charIndex) => (
-            <motion.span
-              key={charIndex}
-              custom={wordIndex + charIndex}
-              variants={waveAnimation}
-            >
-              {char}
-            </motion.span>
-          ))}
-        </motion.span>
-      ))}
-    </motion.span>
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={keyProp} // ✅ Ensures each instance re-renders properly
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        style={{ display: "inline-flex", flexWrap: "wrap" }}
+      >
+        {words.map((word, wordIndex) => (
+          <motion.span
+            key={`${keyProp}-word-${wordIndex}`} // ✅ Unique key for words
+            style={{ display: "inline-flex", marginRight: "8px" }}
+          >
+            {word.split("").map((char, charIndex) => (
+              <motion.span
+                key={`${keyProp}-char-${wordIndex}-${charIndex}`} // ✅ Unique key for characters
+                custom={charIndex}
+                variants={waveAnimation}
+                initial="hidden" // ✅ Ensures each letter starts from hidden
+                animate="visible"
+              >
+                {char}
+              </motion.span>
+            ))}
+          </motion.span>
+        ))}
+      </motion.span>
+    </AnimatePresence>
   );
 };
