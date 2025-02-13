@@ -68,11 +68,14 @@ export const getUserByUsername = async (username) => {
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/login`,
-      { email: email, password: password },
-      { withCredentials: true }
-    );
+    const response = await axios.post(`${API_URL}/login`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      email: email,
+      password: password,
+      withCredentials: true,
+    });
     return response.data;
   } catch (error) {
     console.error("❌ Error logging in:", error);

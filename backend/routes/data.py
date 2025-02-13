@@ -6,12 +6,15 @@ from bson.objectid import ObjectId
 data_bp = Blueprint("data", __name__)
 
 
-@data_bp.route("/api/data", methods=["GET"])
+@data_bp.route("/api/data", methods=["GET", "OPTIONS"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_data():
     """Fetch all items from the 'data' collection in MongoDB"""
     print("\n📤 GET /api/data requested")
-
+    if request.method == "OPTIONS":
+        response = jsonify({"message": "CORS preflight successful"})
+        response.status_code = 204  # No Content
+        return response
     data_col = current_app.config["collections"].get("data")
     if data_col is None:
         print("❌ Database not connected.\n")
@@ -21,7 +24,7 @@ def get_data():
         {"_id": str(item["_id"]), "item": item["item"]} for item in data_col.find({})
     ]
     response = make_response(jsonify(items), 200)
-    # response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
 
@@ -35,10 +38,7 @@ def add_data():
     if data_col is None:
         return jsonify({"error": "Database not connected"}), 500
 
-    try:
-        data = request.json.get("item", "")
-    except Exception as e:
-        return jsonify({"error": "Invalid JSON format"}), 400
+    data = request.json.get("item", "")
     if data:
         inserted = data_col.insert_one({"item": data})
         return jsonify({"message": "Item added", "id": str(inserted.inserted_id)}), 201

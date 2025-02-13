@@ -79,7 +79,12 @@ def get_user(username):
 @users_bp.route("/api/users/login", methods=["POST"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def login_user():
-    """Verify user credentials"""
+    # if request.method == "OPTIONS":
+    #     response = jsonify({"message": "CORS preflight successful"})
+    #     response.status_code = 204  # No Content
+    #     response.headers["Access-Control-Allow-Credentials"] = "true"
+    #     return response
+    """Verify user credentials and return JWT token"""
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
         return jsonify({"error": "Database not connected"}), 500
@@ -96,6 +101,14 @@ def login_user():
     # Find user by email
     user = users_col.find_one({"email": email})
     if user and check_password_hash(user["password"], password):
-        return jsonify({"message": "Login successful"}), 200
+        # Create JWT token
+        access_token = create_access_token(
+            identity={"username": user["username"], "email": user["email"]}
+        )
+        response = make_response(
+            jsonify({"message": "Login successful", "access_token": access_token}), 200
+        )
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
     else:
         return jsonify({"error": "Invalid credentials"}), 401

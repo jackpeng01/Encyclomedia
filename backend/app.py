@@ -1,21 +1,22 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 from database import connect_db  # Import the database connection function
 from routes.data import data_bp
 from routes.users import users_bp
+from config import Config
 # from routes.reviews import reviews_bp
 
 app = Flask(__name__)
+# ✅ Load configuration from config.py
+app.config.from_object(Config)
+
+# ✅ Ensure JWTManager is initialized
+jwt = JWTManager(app)
 
 # ✅ Enable CORS
-CORS(
-    app,
-    resources={
-        r"/api/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}
-    },
-    supports_credentials=True,
-)
-app.config["CORS_HEADERS"] = "Content-Type"
+cors = CORS(app, origins="http://localhost:3000", supports_credentials=True)
+# app.config["CORS_HEADERS"] = "Content-Type"
 
 # ✅ Connect to MongoDB
 db = connect_db()
@@ -33,13 +34,15 @@ else:
 # ✅ Register Blueprints
 app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
-# app.register_blueprint(accounts_bp)
 # app.register_blueprint(reviews_bp)
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Credentials"] = "true"
+
+@app.route("/api/test")
+def test():
+    response = {"message": "CORS test"}
+    # print("CORS is applied with origins:", cors.origins)  # Debugging output
     return response
+
 
 @app.route("/")
 def home():
