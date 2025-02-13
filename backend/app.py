@@ -33,6 +33,7 @@ else:
 # ✅ Register Blueprints
 app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
+# app.register_blueprint(accounts_bp)
 # app.register_blueprint(reviews_bp)
 
 @app.after_request

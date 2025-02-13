@@ -7,6 +7,7 @@ import DataPage from "./scenes/DataPage";
 import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
+import HomePage from "./scenes/HomePage";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -22,9 +23,11 @@ function App() {
         <CssBaseline />
         <Container>
           <Routes>
-            {/* Home Page */}
+            {/* Landing Page */}
             <Route path="/" element={<LandingPage />} />
 
+            {/* Home Page */}
+            <Route path="/home" element={<HomePage />} />
             {/* Data Management Page */}
             <Route path="/data" element={<DataPage />} />
 

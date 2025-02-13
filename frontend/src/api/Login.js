@@ -69,8 +69,9 @@ export const getUserByUsername = async (username) => {
 export const loginUser = async (email, password) => {
   try {
     const response = await axios.post(
-      `http://127.0.0.1:5000/api/users/login`,
-      { email: email, password: password, withCredentials: true }
+      `${API_URL}/login`,
+      { email: email, password: password },
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {

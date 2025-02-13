@@ -53,21 +53,28 @@ const LandingPage = () => {
           zIndex: 1000, // ✅ Sends it behind all elements
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 3 }}>
-          {/* Left Side: Logo or Brand Name */}
-          <Typography
-            variant="h7"
-            sx={{
-              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-              fontWeight: 100,
-            }}
-          >
-            <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
-            <span style={{ fontSize: "1.3em" }}>A</span>
-          </Typography>
-
-          {/* Right Side: Navigation Links */}
-          <Box sx={{ display: "flex", gap: 3 }}>
+        <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <motion.img
+              src="/encyclomediaglobe.png"
+              alt="Logo"
+              width="80"
+              height="70"
+              style={{ opacity: 0.4 }} // Slightly transparent
+            />
+            <Typography
+              variant="h7"
+              sx={{
+                fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+                fontWeight: 100,
+                ml: 1, // Add some margin to the left of the text
+              }}
+            >
+              <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
+              <span style={{ fontSize: "1.3em" }}>A</span>
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
             <Button
               sx={{
                 textTransform: "none",
@@ -143,15 +150,16 @@ const LandingPage = () => {
         <motion.img
           src="/encyclomediaglobe.png"
           alt="Logo"
-          width="300"
-          height="270"
+          width="500"
+          height="470"
           sx={{ zIndex: 100 }}
-          // animate={{ rotate: [0, 360] }} // ✅ Rotates once per cycle
-          // transition={{
-          //   duration: 10, // ✅ Controls how many seconds per rotation
-          //   // ease: "linear", // ✅ Smooth rotation
-          //   repeat: Infinity, // ✅ Keeps looping
-          // }}
+          animate={{ rotate: [0, 360]}} // ✅ Rotates once per cycle
+          transition={{
+            duration: 10, // ✅ Controls how many seconds per rotation
+            ease: "easeInOut", // ✅ Smooth rotation
+            repeat: Infinity, // ✅ Keeps looping
+            // delay: 4,
+          }}
         />
         <Typography
           variant="h3"

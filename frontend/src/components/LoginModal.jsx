@@ -53,7 +53,7 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
     try {
       const response = await loginUser(email, password);
       console.log("Login successful:", response);
-      navigate("/data");
+      navigate("/home");
     } catch (error) {
       console.error("❌ Error logging in:", error);
       setErrors((prevErrors) => ({

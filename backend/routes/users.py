@@ -1,4 +1,5 @@
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, make_response
+from flask_jwt_extended import create_access_token
 from flask_cors import cross_origin
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import check_password_hash, generate_password_hash
