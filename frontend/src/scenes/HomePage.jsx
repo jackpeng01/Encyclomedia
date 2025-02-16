@@ -1,17 +1,29 @@
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import LoginModal from "../components/LoginModal";
 import { setToken } from "../state/authSlice";
+import { getUserByToken } from "../api/users";
 
 const HomePage = () => {
+  const token = useSelector((state) => state.auth.token);
+
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
   const [showFootnotes, setShowFootnotes] = useState(false);
+  const [userData, setUserData] = useState([]);
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    const loadUserData = async () => {
+      const fetchedUserData = await getUserByToken(token);
+      setUserData(fetchedUserData);
+      console.log("userdata: ", userData);
+    };
+    loadUserData();
+  }, []);
   return (
     <Box
       sx={{
@@ -107,7 +119,7 @@ const HomePage = () => {
         }}
       >
         <Typography variant="h4" gutterBottom>
-          Welcome to Encyclomedia
+          Welcome {userData.username}
         </Typography>
         <Typography variant="body1">
           Your one-stop destination for all things media. Explore, learn, and

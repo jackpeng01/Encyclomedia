@@ -2,23 +2,6 @@ import axios from "axios";
 
 const API_URL = "http://127.0.0.1:5000/api";
 
-export const getUser = async () => {
-  try {
-    const response = await axios.get(API_URL, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
-    console.log("✅ Fetched Data:", response.data);
-    return response.data; // Return fetched data
-  } catch (error) {
-    console.error("❌ Error fetching data:", error);
-    return []; // Return empty array on error
-  }
-};
-
 export const addUser = async (newUser) => {
   try {
     const response = await axios.post(`${API_URL}/users`, {
@@ -47,22 +30,6 @@ export const checkUsernameUnique = async (username) => {
   } catch (error) {
     console.error("❌ Error checking username:", error);
     return false;
-  }
-};
-
-export const getUserByUsername = async (username) => {
-  try {
-    const response = await axios.get(`${API_URL}/users/${username}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("❌ Error fetching user data:", error);
-    return null;
   }
 };
 
