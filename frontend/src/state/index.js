@@ -1,21 +1,39 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import authReducer from "./authSlice";
+import userReducer from "./userSlice"
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from "redux-persist";
+import storage from "redux-persist/lib/storage";
 
-const initialState = {
-  token: null, // Example authentication token state
-};
-
-const authSlice = createSlice({
-  name: "auth",
-  initialState,
-  reducers: {
-    setToken: (state, action) => {
-      state.token = action.payload;
-    },
-    logout: (state) => {
-      state.token = null;
-    },
-  },
+// ✅ Combine Reducers
+const rootReducer = combineReducers({
+  auth: authReducer,
+  user: userReducer,
 });
 
-export const { setToken, logout } = authSlice.actions;
-export default authSlice.reducer;
+// ✅ Persist Reducer Configuration (only persist auth slice, not everything)
+const persistConfig = { key: "root", storage, version: 1, whitelist: ["auth"] };
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+// ✅ Create Redux Store
+const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
+});
+
+const persistor = persistStore(store);
+
+export { store, persistor };
