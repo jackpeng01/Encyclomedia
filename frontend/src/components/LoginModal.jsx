@@ -16,6 +16,14 @@ import { setToken } from "../state/authSlice";
 import { WaveText } from "./WaveText";
 
 const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
+  const bubbleAnimation = {
+    hidden: { scale: 0.1, opacity: 1 },
+    visible: {
+      scale: 1.1,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100, damping: 10 },
+    },
+  };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -147,11 +155,11 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
             }}
           >
             {signUp ? (
-              <WaveText text="Be an Encyclomedian." />
+              <WaveText keyProp="signup" text={"Be an Encyclomedian."} />
             ) : successfulSignUp ? (
-              <WaveText text="Thank you for joining Encyclomedia!" />
+              <WaveText keyProp="thank" text={"Thank you for joining Encyclomedia!"} />
             ) : (
-              "Log In"
+              <WaveText keyProp="login" text={"Welcome back."} />
             )}
           </Typography>
           {successfulSignUp && (
