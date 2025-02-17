@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import LoginModal from "../components/LoginModal";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
+import Navbar from "../components/Navbar";
 
 const HomePage = () => {
   const token = useSelector((state) => state.auth.token);
@@ -35,81 +36,8 @@ const HomePage = () => {
       }}
     >
       {/* ✅ Top Bar */}
-      <AppBar
-        position="fixed" // ✅ Ensures the bar is fixed to the top
-        sx={{
-          backgroundColor: "rgba(0, 0, 0, 0.7)", // ✅ Transparent black background
-          boxShadow: "none", // ✅ Removes shadow
-          width: "100vw",
-          left: 0,
-          right: 0,
-        }}
-        style={{
-          zIndex: 1000, // ✅ Sends it behind all elements
-        }}
-      >
-        <Toolbar
-          sx={{ justifyContent: "space-between", width: "100%", px: 10 }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* <motion.img
-              src="/encyclomediaglobe.png"
-              alt="Logo"
-              width="80"
-              height="70"
-              style={{ opacity: 0.4 }} // Slightly transparent
-            /> */}
-            <Typography
-              variant="h7"
-              sx={{
-                fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-                fontWeight: 100,
-                ml: 1, // Add some margin to the left of the text
-              }}
-            >
-              <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
-              <span style={{ fontSize: "1.3em" }}>A</span>
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", gap: 3 }}>
-            <Button
-              sx={{
-                textTransform: "none",
-                mt: 2,
-                fontSize: "1rem",
-              }}
-              component={Link}
-              to={`/profile/${userData.username}`}
-              color="inherit"
-            >
-              Profile
-            </Button>
-            <Button
-              sx={{
-                textTransform: "none",
-                mt: 2,
-                fontSize: "1rem",
-              }}
-              component={Link}
-              onClick={() => {
-                dispatch(setToken(null));
-              }}
-              color="inherit"
-            >
-              Logout
-            </Button>
-            <LoginModal
-              signUp={signUpMode}
-              setSignUp={setSignUpMode}
-              open={isLoginOpen}
-              onClose={() => setLoginOpen(false)}
-              sx={{ z: 101 }}
-            />
-          </Box>
-        </Toolbar>
-      </AppBar>
+      <Navbar userData={userData} />
       {/* ✅ Main Content */}
-
       <Box
         sx={{
           fullWidth: true,
