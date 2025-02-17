@@ -1,5 +1,5 @@
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setToken } from "../state/authSlice";
 import LoginModal from "./LoginModal"; // Ensure the correct path for LoginModal
@@ -7,6 +7,7 @@ import { useState } from "react";
 
 const Navbar = ({ userData }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
 
@@ -14,7 +15,7 @@ const Navbar = ({ userData }) => {
     <AppBar
       position="fixed"
       sx={{
-        backgroundColor: "rgba(255, 255, 255, 0.49)", // ✅ Light gray for better contrast
+        backgroundColor: "rgb(255, 255, 255)", // ✅ Light gray for better contrast
         boxShadow: "none",
         width: "100vw",
         left: 0,
@@ -26,7 +27,10 @@ const Navbar = ({ userData }) => {
     >
       <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
         {/* ✅ Left Section - Logo */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+          onClick={() => (window.location.href = "/home")}
+        >
           <Typography
             variant="h7"
             sx={{
@@ -42,25 +46,41 @@ const Navbar = ({ userData }) => {
         </Box>
 
         {/* ✅ Right Section - Buttons */}
-        <Box sx={{ display: "flex", gap: 3 }}>
+        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
+          {" "}
+          {/* ✅ Centers items vertically */}
+          {/* ✅ Profile Picture */}
           <Button
             sx={{
               textTransform: "none",
-              mt: 2,
               fontSize: "1rem",
               color: "black", // ✅ Ensures black text
-              "&:hover": { color: "black" }, // ✅ Ensures hover text remains black
+              "&:hover": { color: "black" }, // ✅ Keeps text black on hover
+              display: "flex",
+              alignItems: "center", // ✅ Ensures image and text are aligned
+              gap: 1.5, // ✅ Adds spacing between the image and text
+              padding: "6px 10px", // ✅ Adds padding for better clickability
             }}
             component={Link}
-            to={`/profile/${userData?.username}`} // ✅ Avoid errors if userData is null
+            to={`/profile/${userData?.username}`} // ✅ Navigates to profile
           >
-            Profile
+            {/* ✅ Profile Picture Inside Button */}
+            <img
+              src={userData.profilePicture}
+              alt="Profile"
+              width="40"
+              height="40"
+              style={{
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+            {userData.username}
           </Button>
-
           <Button
             sx={{
               textTransform: "none",
-              mt: 2,
+              //   mt: 2,
               fontSize: "1rem",
               color: "black", // ✅ Ensures black text
               "&:hover": { color: "black" }, // ✅ Ensures hover text remains black
@@ -71,14 +91,6 @@ const Navbar = ({ userData }) => {
           >
             Logout
           </Button>
-
-          <LoginModal
-            signUp={signUpMode}
-            setSignUp={setSignUpMode}
-            open={isLoginOpen}
-            onClose={() => setLoginOpen(false)}
-            sx={{ z: 101 }}
-          />
         </Box>
       </Toolbar>
     </AppBar>

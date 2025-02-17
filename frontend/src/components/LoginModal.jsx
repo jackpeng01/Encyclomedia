@@ -111,193 +111,208 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
       slotProps={{
         paper: {
           style: {
+            // filter: "invert(1)",
+            // backgroundColor: "#FFF",
             backgroundColor: "rgba(255, 255, 255, 0.8)",
             backdropFilter: "blur(5px)",
-            padding: "20px",
+            // padding: "20px",
             borderRadius: "10px",
           },
         },
       }}
     >
-      <DialogContent>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{ textAlign: "center", padding: "10px" }}
-        >
-          {(signUp || successfulSignUp) && (
-            <motion.img
-              src="/encyclomediaglobe.png"
-              alt="Logo"
-              width="300"
-              height="270"
-              sx={{ zIndex: 100 }}
-              animate={
-                successfulSignUp
-                  ? { rotate: [0, 360] }
-                  : { rotate: [45, -15, 45] }
-              }
-              transition={
-                successfulSignUp
-                  ? { duration: 1, repeat: 1, ease: "easeInOut" }
-                  : { duration: 4, repeat: Infinity, ease: "easeInOut" }
-              }
-            />
-          )}
-          <Typography
-            variant="h5"
-            align={signUp || successfulSignUp ? "center" : "left"}
-            sx={{
-              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-              mb: 2,
-            }}
+      <div
+        // style={{
+        //   filter: "invert(1)",
+        //   backgroundColor: "#FFF",
+        //   // padding: "20px",
+        // }}
+      >
+        <DialogContent>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{ textAlign: "center", padding: "10px" }}
           >
-            {signUp ? (
-              <WaveText keyProp="signup" text={"Be an Encyclomedian."} />
-            ) : successfulSignUp ? (
-              <WaveText keyProp="thank" text={"Thank you for joining Encyclomedia!"} />
-            ) : (
-              <WaveText keyProp="login" text={"Welcome back."} />
+            {(signUp || successfulSignUp) && (
+              <motion.img
+                src="/encyclomediaglobe.png"
+                alt="Logo"
+                width="300"
+                height="270"
+                sx={{ zIndex: 100 }}
+                animate={
+                  successfulSignUp
+                    ? { rotate: [0, 360] }
+                    : { rotate: [45, -15, 45] }
+                }
+                transition={
+                  successfulSignUp
+                    ? { duration: 1, repeat: 1, ease: "easeInOut" }
+                    : { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                }
+              />
             )}
-          </Typography>
-          {successfulSignUp && (
             <Typography
-              variant="h7"
-              // align={signUp ? "center" : "left"}
+              variant="h5"
+              align={signUp || successfulSignUp ? "center" : "left"}
               sx={{
                 fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
                 mb: 2,
               }}
             >
-              {"Log in to get started"}
+              {signUp ? (
+                <WaveText keyProp="signup" text={"Be an Encyclomedian."} />
+              ) : successfulSignUp ? (
+                <WaveText
+                  keyProp="thank"
+                  text={"Thank you for joining Encyclomedia!"}
+                />
+              ) : (
+                <WaveText keyProp="login" text={"Welcome back."} />
+              )}
             </Typography>
-          )}
+            {successfulSignUp && (
+              <Typography
+                variant="h7"
+                // align={signUp ? "center" : "left"}
+                sx={{
+                  fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+                  mb: 2,
+                }}
+              >
+                {"Log in to get started"}
+              </Typography>
+            )}
 
-          {signUp && (
+            {signUp && (
+              <TextField
+                label="Username"
+                type="text"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                value={username}
+                onChange={async (e) => {
+                  const sanitizedUsername = sanitizeInput(e.target.value);
+                  setUsername(sanitizedUsername);
+                  if (signUp) {
+                    const isUnique = await checkUsernameUnique(
+                      sanitizedUsername
+                    );
+                    setErrors((prevErrors) => ({
+                      ...prevErrors,
+                      username: !isUnique,
+                    }));
+                  }
+                }}
+                error={errors.username}
+                helperText={
+                  errors.username
+                    ? username.length > 0
+                      ? "Username is already taken"
+                      : "Username is required"
+                    : ""
+                }
+              />
+            )}
+
             <TextField
-              label="Username"
-              type="text"
+              label="Email"
+              type="email"
               variant="outlined"
               fullWidth
               margin="normal"
-              value={username}
-              onChange={async (e) => {
-                const sanitizedUsername = sanitizeInput(e.target.value);
-                setUsername(sanitizedUsername);
-                if (signUp) {
-                  const isUnique = await checkUsernameUnique(sanitizedUsername);
-                  setErrors((prevErrors) => ({
-                    ...prevErrors,
-                    username: !isUnique,
-                  }));
-                }
-              }}
-              error={errors.username}
+              value={email}
+              onChange={(e) => setEmail(sanitizeInput(e.target.value))}
+              error={errors.email}
+              helperText={errors.email ? "Invalid email" : ""}
+            />
+
+            <TextField
+              label="Password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={password}
+              onChange={(e) => setPassword(sanitizeInput(e.target.value))}
+              error={errors.password}
               helperText={
-                errors.username
-                  ? username.length > 0
-                    ? "Username is already taken"
-                    : "Username is required"
+                errors.password
+                  ? "Password must be at least 12 characters, contain one uppercase, one lowercase, and one number."
                   : ""
               }
             />
-          )}
 
-          <TextField
-            label="Email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(sanitizeInput(e.target.value))}
-            error={errors.email}
-            helperText={errors.email ? "Invalid email" : ""}
-          />
-
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(sanitizeInput(e.target.value))}
-            error={errors.password}
-            helperText={
-              errors.password
-                ? "Password must be at least 12 characters, contain one uppercase, one lowercase, and one number."
-                : ""
-            }
-          />
-
-          {!successfulSignUp && (
-            <Typography
-              variant="h7"
-              align="left"
-              sx={{
-                cursor: "pointer",
-                textDecoration: "none",
-                "&:hover": {
-                  textDecoration: "underline",
-                },
-              }}
-              onClick={() => setSignUp((prev) => !prev)}
-            >
-              {signUp
-                ? "Already have an account? Log in"
-                : "Don't have an account? Sign up"}
-            </Typography>
-          )}
-
-          {signUp && (
-            <DialogContent fullWidth>
-              <h2>Terms and Conditions</h2>
-              <FormControlLabel
+            {!successfulSignUp && (
+              <Typography
+                variant="h7"
+                align="left"
                 sx={{
-                  alignItems: "flex-start",
-                  ".MuiTypography-root": { textAlign: "left" },
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
                 }}
-                control={
-                  <Checkbox
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    sx={{ mt: -1 }}
-                  />
-                }
-                label="By checking this box, I consent to having my organs harvested."
-              />
-              {errors.agreed && (
-                <Typography color="error" variant="body2">
-                  You must agree to continue.
-                </Typography>
-              )}
-            </DialogContent>
-          )}
+                onClick={() => setSignUp((prev) => !prev)}
+              >
+                {signUp
+                  ? "Already have an account? Log in"
+                  : "Don't have an account? Sign up"}
+              </Typography>
+            )}
 
-          <Button
-            variant="contained"
-            color="white"
-            fullWidth
-            sx={{ mt: 2 }}
-            onClick={signUp ? handleSignUp : handleLogin}
-          >
-            {signUp ? "Sign up" : "Log In"}
-          </Button>
+            {signUp && (
+              <DialogContent fullWidth>
+                <h2>Terms and Conditions</h2>
+                <FormControlLabel
+                  sx={{
+                    alignItems: "flex-start",
+                    ".MuiTypography-root": { textAlign: "left" },
+                  }}
+                  control={
+                    <Checkbox
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      sx={{ mt: -1 }}
+                    />
+                  }
+                  label="By checking this box, I consent to having my organs harvested."
+                />
+                {errors.agreed && (
+                  <Typography color="error" variant="body2">
+                    You must agree to continue.
+                  </Typography>
+                )}
+              </DialogContent>
+            )}
 
-          <Button
-            variant="text"
-            color="secondary"
-            fullWidth
-            sx={{ mt: 1 }}
-            onClick={onClose}
-          >
-            Close
-          </Button>
-        </motion.div>
-      </DialogContent>
+            <Button
+              variant="contained"
+              color="white"
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={signUp ? handleSignUp : handleLogin}
+            >
+              {signUp ? "Sign up" : "Log In"}
+            </Button>
+
+            <Button
+              variant="text"
+              color="secondary"
+              fullWidth
+              sx={{ mt: 1 }}
+              onClick={onClose}
+            >
+              Close
+            </Button>
+          </motion.div>
+        </DialogContent>
+      </div>
     </Dialog>
   );
 };

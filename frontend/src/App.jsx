@@ -23,36 +23,38 @@ function App() {
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Container>
-          <Routes>
-            {/* Landing Page */}
-            <Route path="/" element={<LandingPage />} />
+        <div style={{ backgroundColor: "#fff", filter: "invert(0)" }}>
+          <Container>
+            <Routes>
+              {/* Landing Page */}
+              <Route path="/" element={<LandingPage />} />
 
-            {/* Home Page */}
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            {/* ✅ Dynamic Profile Route */}
-            <Route
-              path="/profile/:username"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            {/* Data Management Page */}
-            <Route path="/data" element={<DataPage />} />
+              {/* Home Page */}
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ✅ Dynamic Profile Route */}
+              <Route
+                path="/profile/:username"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Data Management Page */}
+              <Route path="/data" element={<DataPage />} />
 
-            {/* 404 Not Found Page */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Container>
+              {/* 404 Not Found Page */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Container>
+        </div>
       </ThemeProvider>
     </BrowserRouter>
   );
