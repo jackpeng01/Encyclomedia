@@ -34,3 +34,18 @@ export const getUserByToken = async (token) => {
     return null;
   }
 };
+export const getUserByUsername = async (username) => {
+  try {
+    const response = await axios.get(`${API_URL}/users/${username}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching user data:", error);
+    return null;
+  }
+};

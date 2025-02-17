@@ -9,6 +9,7 @@ import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProfilePage from "./scenes/ProfilePage";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -33,6 +34,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            {/* ✅ Dynamic Profile Route */}
+            <Route
+              path="/profile/:username"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               }
             />

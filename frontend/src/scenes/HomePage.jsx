@@ -23,7 +23,7 @@ const HomePage = () => {
       console.log("userdata: ", userData);
     };
     loadUserData();
-  }, []);
+  }, [token]);
   return (
     <Box
       sx={{
@@ -52,13 +52,13 @@ const HomePage = () => {
           sx={{ justifyContent: "space-between", width: "100%", px: 10 }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <motion.img
+            {/* <motion.img
               src="/encyclomediaglobe.png"
               alt="Logo"
               width="80"
               height="70"
               style={{ opacity: 0.4 }} // Slightly transparent
-            />
+            /> */}
             <Typography
               variant="h7"
               sx={{
@@ -79,10 +79,10 @@ const HomePage = () => {
                 fontSize: "1rem",
               }}
               component={Link}
-              to="/data"
+              to={`/profile/${userData.username}`}
               color="inherit"
             >
-              About
+              Profile
             </Button>
             <Button
               sx={{

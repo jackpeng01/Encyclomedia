@@ -61,7 +61,7 @@ const BouncingSphere = () => {
       }}
     >
       <Canvas
-        style={{ height: "100vh", width: "100vh" }}
+        style={{ height: "100vh", width: "100vw" }}
         camera={{ position: [0, 2, 5] }}
       >
         <ambientLight intensity={0.5} />

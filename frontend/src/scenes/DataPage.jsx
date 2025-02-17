@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, List, ListItem, TextField, Typography } from "@mui/material";
 import { default as React, useEffect, useState } from "react";
 import { fetchData, addItem } from "../api/DataPage"; // ✅ Import API functions
 
 const DataPage = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [newItem, setNewItem] = useState("");
 
@@ -32,7 +33,9 @@ const DataPage = () => {
         variant="contained"
         color="customGrey"
         component={Link}
-        to={"/"}
+        onClick={() => {
+          navigate("/");
+        }}
         sx={{
           opacity: 0.5,
           padding: "12px 24px",

@@ -6,7 +6,10 @@ from routes.data import data_bp
 from routes.users import users_bp
 from routes.auth import auth_bp
 from config import Config
+
 # from routes.reviews import reviews_bp
+from flask import send_from_directory
+
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py
@@ -37,6 +40,11 @@ app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
 # app.register_blueprint(reviews_bp)
+
+
+@app.route("/static/uploads/<path:filename>")
+def serve_uploads(filename):
+    return send_from_directory("static/uploads", filename)
 
 
 @app.route("/api/test")
