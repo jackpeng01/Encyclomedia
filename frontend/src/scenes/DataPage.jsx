@@ -32,9 +32,9 @@ const DataPage = () => {
       <Button
         variant="contained"
         color="customGrey"
-        component={Link}
+        // component={Link}
         onClick={() => {
-          navigate("/");
+          navigate("/home");
         }}
         sx={{
           opacity: 0.5,
