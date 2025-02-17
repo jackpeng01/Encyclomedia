@@ -70,7 +70,10 @@ def get_posters():
     query = request.args.get('query', '')
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
-
+    
+    # Retrieve the page number from the query parameters, defaulting to 1
+    page = request.args.get('page', 1, type=int)
+    
     try:
         # Search movies by query
         url = f"{TMDB_BASE_URL}/search/movie"
@@ -79,7 +82,7 @@ def get_posters():
             "query": query,
             "include_adult": False,
             "language": "en-US",
-            "page": 1
+            "page": page
         }
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
@@ -95,9 +98,14 @@ def get_posters():
             for movie in data.get("results", [])
         ]
 
-        return jsonify({"movies": movies})
+        # Return the movies and total number of pages
+        return jsonify({
+            "movies": movies,
+            "total_pages": data.get("total_pages", 1),  # Include total pages information
+            "current_page": page
+        })
     except requests.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500  
     
 @data_bp.route('/api/movie/<int:movie_id>', methods=['GET'])
 def get_movie_details(movie_id):

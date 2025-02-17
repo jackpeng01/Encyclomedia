@@ -13,6 +13,7 @@ import axios from "axios";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
 import MovieDetails from "./scenes/MovieDetails";
+import SearchResults from "./scenes/SearchResults";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -57,6 +58,8 @@ function App() {
 
             {/* Poster Test */}
             <Route path="/poster" element={<PosterTest />} />
+
+            <Route path="/search" element={<SearchResults />} />
 
             <Route path="/movie/:id" element={<MovieDetails />} />
 
