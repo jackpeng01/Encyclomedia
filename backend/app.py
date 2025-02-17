@@ -41,12 +41,6 @@ app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
 # app.register_blueprint(reviews_bp)
 
-
-@app.route("/static/uploads/<path:filename>")
-def serve_uploads(filename):
-    return send_from_directory("static/uploads", filename)
-
-
 @app.route("/api/test")
 def test():
     response = {"message": "CORS test"}

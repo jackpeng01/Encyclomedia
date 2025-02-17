@@ -16,11 +16,6 @@ auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/api/auth/login", methods=["POST"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def login_user():
-    # if request.method == "OPTIONS":
-    #     response = jsonify({"message": "CORS preflight successful"})
-    #     response.status_code = 204  # No Content
-    #     response.headers["Access-Control-Allow-Credentials"] = "true"
-    #     return response
     """Verify user credentials and return JWT token"""
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -62,7 +57,12 @@ def verify_token():
         verify_jwt_in_request()
         current_user = get_jwt_identity()  # ✅ Get user identity from the token
 
-        return jsonify({"valid": True, "user": current_user}), 200
+        response = make_response(jsonify({"valid": True, "user": current_user}), 200)
+        return response
     except Exception as e:
         print("\n❌ Token Error:", str(e))  # ✅ Debugging log
-        return jsonify({"valid": False, "error": "Invalid or missing token"}), 401
+        response = make_response(
+            jsonify({"valid": False, "error": "Invalid or missing token"}), 401
+        )
+        # response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response

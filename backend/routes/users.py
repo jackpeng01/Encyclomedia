@@ -1,5 +1,5 @@
 import os
-
+import cloudinary.uploader
 from flask import Blueprint, current_app, jsonify, make_response, request
 from flask_cors import cross_origin
 from flask_jwt_extended import create_access_token, jwt_required
@@ -7,6 +7,13 @@ from pymongo.errors import DuplicateKeyError
 from schemas.user_schema import UserSchema
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+from config import Config
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+)
 
 users_bp = Blueprint("users", __name__)
 
@@ -90,51 +97,50 @@ def get_user(username):
 @jwt_required()
 def upload_profile_picture(username):
     users_col = current_app.config["collections"].get("users")
+
     if users_col is None:
-        response = make_response(jsonify({"error": "Database not connected"}), 500)
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
+        return make_response(jsonify({"error": "Database not connected"}), 500)
+
     if "image" not in request.files:
-        response = make_response(jsonify({"error": "No file uploaded"}), 400)
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
+        return make_response(jsonify({"error": "No file uploaded"}), 400)
 
     file = request.files["image"]
-    if file.filename == "" or not allowed_file(file.filename):
-        response = make_response(jsonify({"error": "Invalid file type"}), 400)
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
+
+    if file.filename == "":
+        return make_response(jsonify({"error": "Invalid file name"}), 400)
 
     # ✅ Retrieve the user's current profile picture (if any)
     user = users_col.find_one({"username": username})
-    old_picture = user.get("profilePicture")
+    old_picture_url = user.get("profilePicture")
 
-    # ✅ Delete old profile picture if it exists (and is not the default image)
-    if old_picture and old_picture.startswith("http://127.0.0.1:5000/static/uploads/"):
-        old_picture_path = old_picture.lstrip("/")
-        if os.path.exists(old_picture_path):
-            os.remove(old_picture_path)
+    # ✅ Upload new image to Cloudinary
+    try:
+        upload_result = cloudinary.uploader.upload(file, folder="profile_pictures")
+        new_picture_url = upload_result["secure_url"]
+    except Exception as e:
+        return make_response(
+            jsonify({"error": f"Cloudinary upload failed: {str(e)}"}), 500
+        )
 
-    # ✅ Save new file securely
-    filename = secure_filename(f"{username}_{file.filename}")
-    file_path = os.path.join("static/uploads", filename)
-    file.save(file_path)
+    # ✅ Delete the old profile picture from Cloudinary (if not default)
+    if old_picture_url and "res.cloudinary.com" in old_picture_url:
+        public_id = old_picture_url.split("/")[-1].split(".")[0]  # Extract public_id
+        try:
+            cloudinary.uploader.destroy(f"profile_pictures/{public_id}")
+        except Exception as e:
+            print(f"Failed to delete old Cloudinary image: {str(e)}")
 
-    # ✅ Update user profile with new image URL
-    image_url = f"http://127.0.0.1:5000/static/uploads/{filename}"  # ✅ Full URL
+    # ✅ Update MongoDB with the new image URL
     users_col.update_one(
-        {"username": username}, {"$set": {"profilePicture": image_url}}
+        {"username": username}, {"$set": {"profilePicture": new_picture_url}}
     )
 
-    response = make_response(
+    return make_response(
         jsonify(
             {
                 "message": "Profile picture updated successfully",
-                "profilePicture": image_url,
+                "profilePicture": new_picture_url,
             }
         ),
         200,
     )
-    # response.headers["Access-Control-Allow-Credentials"] = "true"
-
-    return response
