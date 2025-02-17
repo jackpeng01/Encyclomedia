@@ -43,7 +43,7 @@ const LandingPage = () => {
       <AppBar
         position="fixed" // ✅ Ensures the bar is fixed to the top
         sx={{
-          backgroundColor: "rgba(0, 0, 0, 0.7)", // ✅ Transparent black background
+          backgroundColor: "rgba(255,255,255,0)", // ✅ Transparent black background
           boxShadow: "none", // ✅ Removes shadow
           width: "100vw",
           left: 0,
@@ -53,21 +53,20 @@ const LandingPage = () => {
           zIndex: 1000, // ✅ Sends it behind all elements
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <motion.img
-              src="/encyclomediaglobe.png"
-              alt="Logo"
-              width="80"
-              height="70"
-              style={{ opacity: 0.4 }} // Slightly transparent
-            />
+        <Toolbar
+          sx={{ justifyContent: "space-between", width: "100%", px: 10 }}
+        >
+          <Box
+            sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+            onClick={() => (window.location.href = "/home")}
+          >
             <Typography
               variant="h7"
               sx={{
                 fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
                 fontWeight: 100,
                 ml: 1, // Add some margin to the left of the text
+                color: "black",
               }}
             >
               <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
@@ -80,6 +79,7 @@ const LandingPage = () => {
                 textTransform: "none",
                 mt: 2,
                 fontSize: "1rem",
+                color: "black",
               }}
               component={Link}
               to="/data"
@@ -92,6 +92,7 @@ const LandingPage = () => {
                 textTransform: "none",
                 mt: 2,
                 fontSize: "1rem",
+                color: "black",
               }}
               component={Link}
               onClick={() => {
@@ -153,7 +154,7 @@ const LandingPage = () => {
           width="500"
           height="470"
           sx={{ zIndex: 100 }}
-          animate={{ rotate: [0, 360]}} // ✅ Rotates once per cycle
+          animate={{ rotate: [0, 360] }} // ✅ Rotates once per cycle
           transition={{
             duration: 10, // ✅ Controls how many seconds per rotation
             ease: "easeInOut", // ✅ Smooth rotation

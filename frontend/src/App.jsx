@@ -27,34 +27,35 @@ function App() {
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Container>
-          <Routes>
-            {/* Landing Page */}
-            <Route path="/" element={<LandingPage />} />
+        <div style={{ backgroundColor: "#fff", filter: "invert(0)" }}>
+          <Container>
+            <Routes>
+              {/* Landing Page */}
+              <Route path="/" element={<LandingPage />} />
 
-            {/* Home Page */}
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-            {/* ✅ Dynamic Profile Route */}
-            <Route
-              path="/profile/:username"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            {/* Data Management Page */}
-            <Route path="/data" element={<DataPage />} />
+              {/* Home Page */}
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ✅ Dynamic Profile Route */}
+              <Route
+                path="/profile/:username"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Data Management Page */}
+              <Route path="/data" element={<DataPage />} />
 
-            {/* 404 Not Found Page */}
-            <Route path="*" element={<NotFound />} />
+              {/* 404 Not Found Page */}
+              <Route path="*" element={<NotFound />} />
 
             {/* Poster Test */}
             <Route path="/poster" element={<PosterTest />} />
@@ -63,8 +64,9 @@ function App() {
 
             <Route path="/movie/:id" element={<MovieDetails />} />
 
-          </Routes>
-        </Container>
+            </Routes>
+          </Container>
+        </div>
       </ThemeProvider>
     </BrowserRouter>
   );

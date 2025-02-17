@@ -1,5 +1,5 @@
 import { AppBar, Box, Button, Toolbar, Typography, TextField } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setToken } from "../state/authSlice";
 import LoginModal from "./LoginModal"; // Ensure the correct path for LoginModal
@@ -7,6 +7,7 @@ import { useState } from "react";
 
 const Navbar = ({ userData }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,7 +24,7 @@ const Navbar = ({ userData }) => {
     <AppBar
       position="fixed"
       sx={{
-        backgroundColor: "rgba(255, 255, 255, 0.49)",
+        backgroundColor: "rgb(255, 255, 255)", // ✅ Light gray for better contrast
         boxShadow: "none",
         width: "100vw",
         left: 0,
@@ -34,8 +35,11 @@ const Navbar = ({ userData }) => {
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
-        {/* Left Section - Logo */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        {/* ✅ Left Section - Logo */}
+        <Box
+          sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+          onClick={() => (window.location.href = "/home")}
+        >
           <Typography
             variant="h7"
             sx={{
@@ -59,9 +63,8 @@ const Navbar = ({ userData }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               sx={{
-                width: "60%",
+                width: "50%", // Adjusted width for a more compact look
                 backgroundColor: "white",
-                borderRadius: 1,
                 '& .MuiOutlinedInput-root': {
                   '& fieldset': {
                     borderColor: 'gray',
@@ -72,6 +75,7 @@ const Navbar = ({ userData }) => {
                   '&.Mui-focused fieldset': {
                     borderColor: 'black',
                   },
+                  borderRadius: "10px", // More rounded corners
                 },
               }}
             />
@@ -83,21 +87,34 @@ const Navbar = ({ userData }) => {
           <Button
             sx={{
               textTransform: "none",
-              mt: 2,
               fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
+              color: "black", // ✅ Ensures black text
+              "&:hover": { color: "black" }, // ✅ Keeps text black on hover
+              display: "flex",
+              alignItems: "center", // ✅ Ensures image and text are aligned
+              gap: 1.5, // ✅ Adds spacing between the image and text
+              padding: "6px 10px", // ✅ Adds padding for better clickability
             }}
             component={Link}
-            to={`/profile/${userData?.username}`}
+            to={`/profile/${userData?.username}`} // ✅ Navigates to profile
           >
-            Profile
+            {/* ✅ Profile Picture Inside Button */}
+            <img
+              src={userData.profilePicture}
+              alt="Profile"
+              width="40"
+              height="40"
+              style={{
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+            {userData.username}
           </Button>
-
           <Button
             sx={{
               textTransform: "none",
-              mt: 2,
+              //   mt: 2,
               fontSize: "1rem",
               color: "black",
               "&:hover": { color: "black" },
@@ -108,14 +125,6 @@ const Navbar = ({ userData }) => {
           >
             Logout
           </Button>
-
-          <LoginModal
-            signUp={signUpMode}
-            setSignUp={setSignUpMode}
-            open={isLoginOpen}
-            onClose={() => setLoginOpen(false)}
-            sx={{ z: 101 }}
-          />
         </Box>
       </Toolbar>
     </AppBar>
