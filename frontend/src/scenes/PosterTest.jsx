@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 const PosterTest = () => {
   const [query, setQuery] = useState(""); // State for the movie name query
-  const [posters, setPosters] = useState([]); // State for an array of posters
+  const [movies, setMovies] = useState([]); // State for an array of movie data (not just posters)
   const [error, setError] = useState(""); // State for error messages
 
   const handleSearch = async (e) => {
@@ -15,15 +16,15 @@ const PosterTest = () => {
 
     try {
       setError(""); // Clear any previous errors
-      setPosters([]); // Clear posters for a fresh search
+      setMovies([]); // Clear movies for a fresh search
 
       // Make an Axios request to the Flask backend
       const response = await axios.get("http://127.0.0.1:5000/api/poster", {
         params: { query: query }, // Send the query as a URL parameter
       });
 
-      // Update the state with the array of posters
-      setPosters(response.data.posters);
+      // Update the state with the array of movies
+      setMovies(response.data.movies); // Expecting data to include more details (e.g., ID, poster URL, title)
     } catch (err) {
       // Handle errors from the backend
       setError(err.response?.data?.error || "An error occurred while fetching the posters.");
@@ -52,21 +53,33 @@ const PosterTest = () => {
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>} {/* Display errors */}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "10px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+          gap: "10px",
+        }}
+      >
         {/* Display each poster image in a grid */}
-        {posters.length > 0 ? (
-          posters.map((posterUrl, index) => (
-            <img
+        {movies.length > 0 ? (
+          movies.map((movie, index) => (
+            <Link
               key={index}
-              src={posterUrl}
-              alt={`Movie Poster ${index + 1}`}
-              style={{
-                width: "150px",
-                height: "auto",
-                borderRadius: "5px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-              }}
-            />
+              to={`/movie/${movie.id}`} // Navigate to the movie details page using the movie ID
+              style={{ textDecoration: "none" }}
+            >
+              <img
+                src={movie.poster_path} // Assuming `poster_path` holds the URL to the poster
+                alt={movie.title || `Movie Poster ${index + 1}`}
+                style={{
+                  width: "150px",
+                  height: "auto",
+                  borderRadius: "5px",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  cursor: "pointer",
+                }}
+              />
+            </Link>
           ))
         ) : (
           <p>No posters to display.</p>

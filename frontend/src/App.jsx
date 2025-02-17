@@ -12,6 +12,7 @@ import PosterTest from "./scenes/PosterTest";
 import axios from "axios";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
+import MovieDetails from "./scenes/MovieDetails";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -56,6 +57,9 @@ function App() {
 
             {/* Poster Test */}
             <Route path="/poster" element={<PosterTest />} />
+
+            <Route path="/movie/:id" element={<MovieDetails />} />
+
           </Routes>
         </Container>
       </ThemeProvider>

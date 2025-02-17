@@ -66,64 +66,60 @@ def options_preflight():
 
 @data_bp.route('/api/poster', methods=['GET'])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
-def get_movie_posters():
-    """
-    Fetch the first 10 movie posters from TMDB API based on the query.
-    """
-    query = request.args.get('query')
+def get_posters():
+    query = request.args.get('query', '')
     if not query:
-        return jsonify({"error": "Query parameter 'query' is required"}), 400
-    
-    encoded_query = quote(query)  # This will encode spaces as '%20'
-    
-    all_posters = []
+        return jsonify({'error': 'Query parameter is required'}), 400
 
-    # Loop through multiple pages (e.g., 5 pages)
-    for page in range(1, 100):
-        url = f"{TMDB_BASE_URL}/search/movie?query={encoded_query}&include_adult=false&language=en-US&page={page}"
-        headers = {
-            "accept": "application/json",
-            "Authorization": f"Bearer {TMDB_API_KEY}"
+    try:
+        # Search movies by query
+        url = f"{TMDB_BASE_URL}/search/movie"
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        params = {
+            "query": query,
+            "include_adult": False,
+            "language": "en-US",
+            "page": 1
         }
-        
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        # Extract relevant movie data
+        movies = [
+            {
+                "id": movie["id"],
+                "title": movie["title"],
+                "poster_path": f"https://image.tmdb.org/t/p/w500{movie['poster_path']}" if movie.get("poster_path") else None,
+            }
+            for movie in data.get("results", [])
+        ]
+
+        return jsonify({"movies": movies})
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+    
+@data_bp.route('/api/movie/<int:movie_id>', methods=['GET'])
+def get_movie_details(movie_id):
+    try:
+        # Fetch movie details from TMDB API
+        url = f"{TMDB_BASE_URL}/movie/{movie_id}"
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
         response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        movie = response.json()
 
-        if response.status_code == 200:
-            data = response.json()
-            for movie in data["results"]:
-                poster_path = movie.get("poster_path")
-                if poster_path:
-                    all_posters.append(f"{TMDB_IMAGE_BASE_URL}{poster_path}")
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
-            break
-    return jsonify({"posters": all_posters}), 200
+        # Format the response data
+        movie_details = {
+            "id": movie.get("id"),
+            "title": movie.get("title"),
+            "overview": movie.get("overview"),
+            "release_date": movie.get("release_date"),
+            "vote_average": movie.get("vote_average"),
+            "poster_path": f"https://image.tmdb.org/t/p/w500{movie['poster_path']}" if movie.get("poster_path") else None,
+            "genres": [genre["name"] for genre in movie.get("genres", [])],
+        }
 
-    # url = f"{TMDB_BASE_URL}/search/movie?query={encoded_query}&include_adult=false&language=en-US&page=1"
-    # url = "https://api.themoviedb.org/3/search/movie?query=cars&include_adult=false&language=en-US&page=1"
-    # params = {"api_key": TMDB_API_KEY, "query": query}
-    # headers = {
-    # "accept": "application/json",
-    # "Authorization": f"Bearer {TMDB_API_KEY}"
-    # }
-
-    response = requests.get(url, headers=headers)
-
-    if response.status_code != 200:
-        return jsonify({"error": "Error fetching data from TMDB"}), response.status_code
-
-    if response.status_code != 200:
-        return jsonify({"error": "Error fetching data from TMDB"}), response.status_code
-
-    data = response.json()
-    if not data["results"]:
-        return jsonify({"error": "No movies found"}), 404
-
-    posters = []
-    for movie in data["results"][:100]:  # Limit results to the first 100
-        poster_path = movie.get("poster_path")
-        if poster_path:
-            posters.append(f"{TMDB_IMAGE_BASE_URL}{poster_path}")
-
-    return jsonify({"posters": posters}), 200
-    return jsonify({"error": "Invalid request"}), 400
+        return jsonify(movie_details)
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
