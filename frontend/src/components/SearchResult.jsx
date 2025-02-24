@@ -21,7 +21,12 @@ export const SearchResult = ({ result, info, poster}) => {
           }}
       >
         <img src={`https://image.tmdb.org/t/p/original/${poster}`} alt={result} style={{ width: '160px', height: '240px', objectFit: 'cover',}} />
-        <TvInfoModal open={showTvInfo} onClose={handleClose} result={result} info={info} />
+        <TvInfoModal
+        open={showTvInfo} 
+        onClose={handleClose} 
+        result={result} 
+        info={info} 
+        />
       </div>
     );
   };

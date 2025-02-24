@@ -2,14 +2,12 @@ import React from 'react';
 import { Dialog, DialogContent } from '@mui/material';
 
 const TvInfoModal = ({ open, onClose, result, info }) => {
-  //if (!open) return null; // Don't render anything if the dialog isn't visible
+  if (!open) return null; // Don't render anything if the dialog isn't visible
 
   return (
     <Dialog
         open={open}
-        onClose={() => {
-          onClose();
-        }}>
+        onClose={onClose}>
         <DialogContent>
         <p><b>{result}</b></p>
         <p>{info}</p>

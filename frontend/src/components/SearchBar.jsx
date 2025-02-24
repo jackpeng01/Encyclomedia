@@ -7,7 +7,7 @@ export const SearchBar = ({ setResults }) => {
     method: 'GET',
     headers: {
       accept: 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjZTQ4YjM4YWM2YjI5MjJlYjZiNGUyZTMxYTk2NDU0NyIsIm5iZiI6MTczOTIxMTA5NS40MDEsInN1YiI6IjY3YWE0MTU3NGU4NDkwNjAzMDFkNzZlZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.mXTdXuAGoTOUvx-DCZd8fmakCDD6S6bHsA0hcKEn87o`
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
     }
   };
 
@@ -40,25 +40,24 @@ export const SearchBar = ({ setResults }) => {
   };
 
   return (
-    <div>
-      <h1 style={{
-           position: 'absolute',
-           left: '50%',
-           top: '5%',
-           transform: 'translate(-50%, -50%)',
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center', // Centers horizontally
+      alignItems: 'center', // Centers vertically
+      paddingTop: '50px',
     }}>
         <input
             type="text"
     value={input}
     onChange={(e) => handleChange(e.target.value)}
             placeholder="Search for TV"
-    style={{ width: '300px', height: '50px',
+    style={{ 
+      width: '300px', height: '50px',
       border: '3px solid black',
       fontWeight: 'bold',
       fontSize: 20,
       textAlign: 'center', }} 
         />
-        </h1>
     </div>
 );
 };
