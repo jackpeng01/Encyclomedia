@@ -7,6 +7,8 @@ import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
 import DataPage from "./scenes/DataPage";
 import NotFound from "./scenes/NotFound";
+import TvPage from "./scenes/TvPage";
+import { themeSettings } from "./theme";
 import axios from "axios";
 
 function App() {
@@ -79,6 +81,9 @@ function App() {
 
             {/* 404 Not Found Page */}
             <Route path="*" element={<NotFound />} />
+
+            {/* TV Page */}
+            <Route path="/tv" element={<TvPage />} />
           </Routes>
         </Container>
       </ThemeProvider>

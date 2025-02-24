@@ -1,0 +1,10 @@
+.results-list {
+  width: 100%;
+  background-color: white;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Dynamic columns */
+  gap: 10px;
+  margin: 110px 0 0 0;
+  padding: 0 10px; /* Optional: Adds padding to prevent edge touching */
+  box-sizing: border-box;
+}
