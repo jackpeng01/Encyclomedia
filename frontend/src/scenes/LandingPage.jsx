@@ -43,7 +43,7 @@ const LandingPage = () => {
       <AppBar
         position="fixed" // ✅ Ensures the bar is fixed to the top
         sx={{
-          backgroundColor: "rgba(0, 0, 0, 0.7)", // ✅ Transparent black background
+          backgroundColor: "rgba(255,255,255,0)", // ✅ Transparent black background
           boxShadow: "none", // ✅ Removes shadow
           width: "100vw",
           left: 0,
@@ -53,38 +53,33 @@ const LandingPage = () => {
           zIndex: 1000, // ✅ Sends it behind all elements
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 3 }}>
-          {/* Left Side: Logo or Brand Name */}
-          <Typography
-            variant="h7"
-            sx={{
-              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-              fontWeight: 100,
-            }}
+        <Toolbar
+          sx={{ justifyContent: "space-between", width: "100%", px: 10 }}
+        >
+          <Box
+            sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+            onClick={() => (window.location.href = "/home")}
           >
-            <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
-            <span style={{ fontSize: "1.3em" }}>A</span>
-          </Typography>
-
-          {/* Right Side: Navigation Links */}
-          <Box sx={{ display: "flex", gap: 3 }}>
-          <Button
+            <Typography
+              variant="h7"
               sx={{
-                textTransform: "none",
-                mt: 2,
-                fontSize: "1rem",
+                fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+                fontWeight: 100,
+                ml: 1, // Add some margin to the left of the text
+                color: "black",
               }}
-              component={Link}
-              to="/tv"
-              color="inherit"
             >
-              TV
-            </Button>
+              <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
+              <span style={{ fontSize: "1.3em" }}>A</span>
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
             <Button
               sx={{
                 textTransform: "none",
                 mt: 2,
                 fontSize: "1rem",
+                color: "black",
               }}
               component={Link}
               to="/data"
@@ -97,6 +92,7 @@ const LandingPage = () => {
                 textTransform: "none",
                 mt: 2,
                 fontSize: "1rem",
+                color: "black",
               }}
               component={Link}
               onClick={() => {
@@ -155,15 +151,16 @@ const LandingPage = () => {
         <motion.img
           src="/encyclomediaglobe.png"
           alt="Logo"
-          width="300"
-          height="270"
+          width="500"
+          height="470"
           sx={{ zIndex: 100 }}
-          // animate={{ rotate: [0, 360] }} // ✅ Rotates once per cycle
-          // transition={{
-          //   duration: 10, // ✅ Controls how many seconds per rotation
-          //   // ease: "linear", // ✅ Smooth rotation
-          //   repeat: Infinity, // ✅ Keeps looping
-          // }}
+          animate={{ rotate: [0, 360] }} // ✅ Rotates once per cycle
+          transition={{
+            duration: 10, // ✅ Controls how many seconds per rotation
+            ease: "easeInOut", // ✅ Smooth rotation
+            repeat: Infinity, // ✅ Keeps looping
+            // delay: 4,
+          }}
         />
         <Typography
           variant="h3"
