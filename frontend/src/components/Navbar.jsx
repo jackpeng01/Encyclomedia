@@ -1,16 +1,24 @@
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { setToken } from "../state/authSlice";
-import LoginModal from "./LoginModal"; // Ensure the correct path for LoginModal
-import { useState } from "react";
+import { getUserByToken } from "../api/users";
+import React, { useEffect, useState } from "react";
 
-const Navbar = ({ userData }) => {
+const Navbar = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [isLoginOpen, setLoginOpen] = useState(false);
-  const [signUpMode, setSignUpMode] = useState(false);
 
+  const token = useSelector((state) => state.auth.token);
+  const [userData, setUserData] = useState([]);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      const fetchedUserData = await getUserByToken(token);
+      setUserData(fetchedUserData);
+      console.log("userdata: ", userData);
+    };
+    loadUserData();
+  }, [token]);
   return (
     <AppBar
       position="fixed"
@@ -62,7 +70,7 @@ const Navbar = ({ userData }) => {
               padding: "6px 10px", // ✅ Adds padding for better clickability
             }}
             component={Link}
-            to={`/profile/${userData?.username}`} // ✅ Navigates to profile
+            to={`/${userData?.username}`} // ✅ Navigates to profile
           >
             {/* ✅ Profile Picture Inside Button */}
             <img

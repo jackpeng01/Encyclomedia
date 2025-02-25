@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Checkbox,
   Dialog,
@@ -11,9 +12,15 @@ import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { addUser, checkUsernameUnique, loginUser } from "../api/Login";
+import {
+  addUser,
+  checkEmailUnique,
+  checkUsernameUnique,
+  loginUser,
+} from "../api/Login";
 import { setToken } from "../state/authSlice";
 import { WaveText } from "./WaveText";
+import { resetPasswordRequest } from "../api/ResetPass";
 
 const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
   const bubbleAnimation = {
@@ -81,6 +88,11 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
     if (!validateFields()) return;
     try {
       const isUsernameUnique = await checkUsernameUnique(username);
+      const isEmailUnique = await checkEmailUnique(email);
+      if (!isEmailUnique) {
+        setErrors((prevErrors) => ({ ...prevErrors, email: true }));
+        return;
+      }
       if (!isUsernameUnique) {
         setErrors((prevErrors) => ({ ...prevErrors, username: true }));
         return;
@@ -95,6 +107,10 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
       console.error("❌ Error adding user:", error);
       throw error;
     }
+  };
+
+  const handleResetPasswordRequest = async() => {
+    await resetPasswordRequest("jackpeng3545@gmail.com");
   };
 
   return (
@@ -122,11 +138,11 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
       }}
     >
       <div
-        // style={{
-        //   filter: "invert(1)",
-        //   backgroundColor: "#FFF",
-        //   // padding: "20px",
-        // }}
+      // style={{
+      //   filter: "invert(1)",
+      //   backgroundColor: "#FFF",
+      //   // padding: "20px",
+      // }}
       >
         <DialogContent>
           <motion.div
@@ -186,7 +202,6 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                 {"Log in to get started"}
               </Typography>
             )}
-
             {signUp && (
               <TextField
                 label="Username"
@@ -218,7 +233,6 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                 }
               />
             )}
-
             <TextField
               label="Email"
               type="email"
@@ -226,11 +240,26 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
               fullWidth
               margin="normal"
               value={email}
-              onChange={(e) => setEmail(sanitizeInput(e.target.value))}
+              onChange={async (e) => {
+                const sanitizedEmail = sanitizeInput(e.target.value);
+                setEmail(sanitizedEmail);
+                if (signUp) {
+                  const isUnique = await checkEmailUnique(sanitizedEmail);
+                  setErrors((prevErrors) => ({
+                    ...prevErrors,
+                    email: !isUnique,
+                  }));
+                }
+              }}
               error={errors.email}
-              helperText={errors.email ? "Invalid email" : ""}
+              helperText={
+                errors.email
+                  ? email.length > 0
+                    ? "Email already registered"
+                    : "Invalid email"
+                  : ""
+              }
             />
-
             <TextField
               label="Password"
               type="password"
@@ -246,12 +275,32 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                   : ""
               }
             />
-
+            {!signUp && (
+              <Box
+                sx={{ textAlign: "right", mt: "-10px", mr: "5px", mb: "10px" }}
+              >
+                <Typography
+                  variant="h10"
+                  fontSize="10px"
+                  sx={{
+                    cursor: "pointer",
+                    textDecoration: "none",
+                    "&:hover": {
+                      textDecoration: "underline",
+                    },
+                  }}
+                  onClick={()=>{navigate("/user/reset-password")}}
+                >
+                  Forgot password?
+                </Typography>
+              </Box>
+            )}
             {!successfulSignUp && (
               <Typography
                 variant="h7"
                 align="left"
                 sx={{
+                  // mt: "30px",
                   cursor: "pointer",
                   textDecoration: "none",
                   "&:hover": {
@@ -265,7 +314,6 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                   : "Don't have an account? Sign up"}
               </Typography>
             )}
-
             {signUp && (
               <DialogContent fullWidth>
                 <h2>Terms and Conditions</h2>
@@ -290,7 +338,6 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                 )}
               </DialogContent>
             )}
-
             <Button
               variant="contained"
               color="white"
@@ -300,7 +347,6 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
             >
               {signUp ? "Sign up" : "Log In"}
             </Button>
-
             <Button
               variant="text"
               color="secondary"

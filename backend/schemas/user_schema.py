@@ -11,3 +11,4 @@ class UserSchema(Schema):
     profilePicture = fields.String(
         missing="https://res.cloudinary.com/dby0q8y9z/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1739815199/default-profile_crftml.png "
     )
+    bio = fields.String(missing="")

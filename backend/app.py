@@ -1,15 +1,11 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from database import connect_db  # Import the database connection function
 from routes.data import data_bp
 from routes.users import users_bp
 from routes.auth import auth_bp
-from config import Config
-
-# from routes.reviews import reviews_bp
-from flask import send_from_directory
-
+from services.config import Config
+from services.database import connect_db
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py

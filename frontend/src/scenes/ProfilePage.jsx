@@ -1,59 +1,33 @@
 import { Box, Button, Typography } from "@mui/material";
-import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUserByUsername } from "../api/users";
+import { getUserByToken, getUserByUsername } from "../api/users";
 import Navbar from "../components/Navbar";
+import ProfilePicture from "../components/modals/ProfilePicture";
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
   const { username } = useParams();
+  const navigate = useNavigate(); 
   const [userData, setUserData] = useState(null);
   const token = useSelector((state) => state.auth.token);
-  const fileInputRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const [viewerData, setViewerData] = useState([]);
+
+  useEffect(() => {
+    const loadViewerData = async () => {
+      const fetchedViewerData = await getUserByToken(token);
+      setViewerData(fetchedViewerData);
+    };
+    loadViewerData();
+  }, [token]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const fetchedProfile = await getUserByUsername(username);
       setUserData(fetchedProfile);
     };
-
     fetchProfile();
   }, [username]);
-
-  const handleFileChange = async (event) => {
-    const selectedFile = event.target.files[0];
-    if (!selectedFile) return;
-
-    const formData = new FormData();
-    formData.append("image", selectedFile);
-
-    try {
-      const response = await axios.post(
-        `http://127.0.0.1:5000/api/users/${username}/upload-profile-picture`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
-      );
-
-      // ✅ Update profile picture immediately
-      setUserData((prev) => ({
-        ...prev,
-        profilePicture: response.data.profilePicture,
-      }));
-
-      alert("Profile picture updated successfully!");
-    } catch (error) {
-      console.error("❌ Error uploading profile picture:", error);
-    }
-  };
 
   if (!userData) return <p>Loading...</p>;
 
@@ -62,124 +36,113 @@ const ProfilePage = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh", // ✅ Ensures full viewport height
-        // width: "100vw", // ✅ Forces it to take full width
-        overflowX: "hidden", // ✅ Prevents unwanted horizontal scrolling
+        minHeight: "100vh",
+        overflowX: "hidden",
       }}
     >
       <Navbar userData={userData} />
 
-      {/* ✅ Profile Section */}
-      <Box sx={{ textAlign: "center", mt: 10 }}>
-        {/* ✅ Clickable Profile Picture */}
-        <div
-          style={{
-            position: "relative",
-            display: "inline-block",
-            cursor: "pointer",
-          }}
-          onClick={() => fileInputRef.current.click()}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <img
-            src={userData.profilePicture}
-            alt="Profile"
-            width="150"
-            height="150"
-            style={{
-              borderRadius: "50%",
-              objectFit: "cover",
-              transition: "opacity 0.3s ease-in-out",
-              filter: isHovered ? "brightness(70%)" : "none",
-            //   filter: "invert(1)",
-            }}
+      {/* ✅ Profile Header Section (Flex Layout) */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 5, // Adds spacing between profile info & stats
+          mt: 10,
+          px: 4,
+          flexWrap: "wrap", // Ensures responsiveness on smaller screens
+        }}
+      >
+        {/* ✅ Left Section: Profile Picture & Username */}
+        <Box sx={{ textAlign: "center" }}>
+          <ProfilePicture
+            userData={userData}
+            viewerData={viewerData}
+            token={token}
           />
-          {isHovered && (
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                backgroundColor: "rgba(0, 0, 0, 0.6)",
-                color: "white",
-                padding: "5px 10px",
-                borderRadius: "5px",
-                fontSize: "14px",
-                fontWeight: "bold",
-                textAlign: "center",
-              }}
-            >
-              Edit
-            </div>
-          )}
-        </div>
+          <Typography variant="h4" sx={{ fontWeight: 400 }}>
+            {userData.username}
+          </Typography>
+          <Box sx={{ textAlign: "left", mt: 0 }}>
+            {userData.username === viewerData.username && (
+              <Button
+                sx={{
+                  textTransform: "none",
+                  fontSize: "0.75rem",
+                  color: "black",
+                  display: "block", // Ensures button is left-aligned with username
+                  textAlign: "left",
+                  "&:hover": { color: "black" },
+                  padding: 0, // Removes extra spacing
+                }}
+              onClick={()=>navigate("/settings")}>
+                Edit Profile
+              </Button>
+            )}
+          </Box>
+        </Box>
 
-        {/* ✅ Username */}
-        <Typography
-          variant="h4"
-          sx={{
-            // fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mt: 2,
-          }}
-        >
-          {userData.username}
-        </Typography>
-
-        {/* ✅ Profile Stats */}
+        {/* ✅ Right Section: Profile Statistics & Bio (Same Box) */}
         <Box
           sx={{
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
-            gap: 5,
-            mt: 2,
-            fontSize: "1.2rem",
+            alignItems: "center",
+            padding: "20px",
+            // backgroundColor: "rgba(0, 0, 0, 0.05)", // Light gray background
+            borderRadius: "10px",
+            maxWidth: "600px",
+            minWidth: "400px",
           }}
         >
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>0</strong> <br /> Reviews
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>0</strong> <br /> Lists
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>99</strong> <br /> Media
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>9B</strong> <br /> Followers
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>18B</strong> <br /> Following
+          {/* ✅ Stats (Horizontally Stacked) */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              gap: 5,
+              fontSize: "1.2rem",
+              textAlign: "center",
+              mb: 5, // Adds spacing before the bio
+            }}
+          >
+            {[
+              { label: "Reviews", value: 0 },
+              { label: "Lists", value: 0 },
+              { label: "Media", value: 99 },
+              { label: "Followers", value: "9B" },
+              { label: "Following", value: "18B" },
+            ].map((stat, index) => (
+              <Box key={index} sx={{ textAlign: "center" }}>
+                <Typography sx={{ fontWeight: 500, fontSize: "1.5rem" }}>
+                  {stat.value}
+                </Typography>
+                <Typography sx={{ fontWeight: 300, fontSize: "1rem" }}>
+                  {stat.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* ✅ Bio (Now Inside the Same Box) */}
+          <Typography
+            sx={{
+              color: "gray",
+              fontSize: "1rem",
+              textAlign: "center",
+              maxWidth: "500px",
+            }}
+          >
+            {userData.bio}
           </Typography>
         </Box>
-
-        {/* ✅ Bio Section */}
-        <Typography
-          sx={{
-            maxWidth: "600px",
-            margin: "auto",
-            mt: 2,
-            color: "gray",
-            fontSize: "1rem",
-          }}
-        >
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque
-          pharetra consectetur dolor at molestie.
-        </Typography>
       </Box>
 
       {/* ✅ Favorite Media Section */}
       <Box sx={{ maxWidth: "900px", margin: "auto", mt: 5 }}>
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-          }}
-        >
+        <Typography variant="h5" sx={{ fontWeight: 400, mb: 2 }}>
           Favorite Media:
         </Typography>
 
@@ -221,15 +184,6 @@ const ProfilePage = () => {
           ))}
         </Box>
       </Box>
-
-      {/* ✅ Hidden File Input */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
     </Box>
   );
 };

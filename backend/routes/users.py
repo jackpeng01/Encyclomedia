@@ -7,7 +7,7 @@ from pymongo.errors import DuplicateKeyError
 from schemas.user_schema import UserSchema
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from config import Config
+from services.config import Config
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -71,6 +71,27 @@ def check_username_unique():
     response = make_response(jsonify({"isUnique": is_unique}), 200)
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
+
+@users_bp.route("/api/users/check-email", methods=["GET"])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def check_email_unique():
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    email = request.args.get("email")
+    if not email:
+        response = make_response(jsonify({"error": "Missing username parameter"}), 400)
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+    user = users_col.find_one({"email": email})
+    is_unique = user is None
+
+    response = make_response(jsonify({"isUnique": is_unique}), 200)
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
 
 
 @users_bp.route("/api/users/<username>", methods=["GET"])

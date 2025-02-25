@@ -1,5 +1,5 @@
 from pymongo import MongoClient, errors
-from config import Config
+from services.config import Config
 
 def connect_db():
     """Connect to MongoDB"""

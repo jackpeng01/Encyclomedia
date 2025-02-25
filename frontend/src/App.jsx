@@ -10,6 +10,8 @@ import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
+import ResetPassPage from "./scenes/ResetPassPage";
+import AccountSettingsPage from "./scenes/AccountSettingsPage";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -40,12 +42,26 @@ function App() {
               />
               {/* ✅ Dynamic Profile Route */}
               <Route
-                path="/profile/:username"
+                path="/:username"
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
                   </ProtectedRoute>
                 }
+              />
+              {/* account settings page */}
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <AccountSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* reset password page */}
+              <Route
+                path="/user/reset-password/:token?"
+                element={<ResetPassPage />}
               />
               {/* Data Management Page */}
               <Route path="/data" element={<DataPage />} />

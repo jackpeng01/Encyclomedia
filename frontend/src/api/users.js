@@ -34,6 +34,7 @@ export const getUserByToken = async (token) => {
     return null;
   }
 };
+
 export const getUserByUsername = async (username) => {
   try {
     const response = await axios.get(`${API_URL}/users/${username}`, {
@@ -49,3 +50,5 @@ export const getUserByUsername = async (username) => {
     return null;
   }
 };
+
+
