@@ -84,49 +84,76 @@ const Navbar = ({ userData }) => {
 
         {/* Right Section - Buttons */}
         <Box sx={{ display: "flex", gap: 3 }}>
-          <Button
-            sx={{
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black", // ✅ Ensures black text
-              "&:hover": { color: "black" }, // ✅ Keeps text black on hover
-              display: "flex",
-              alignItems: "center", // ✅ Ensures image and text are aligned
-              gap: 1.5, // ✅ Adds spacing between the image and text
-              padding: "6px 10px", // ✅ Adds padding for better clickability
-            }}
-            component={Link}
-            to={`/profile/${userData?.username}`} // ✅ Navigates to profile
-          >
-            {/* ✅ Profile Picture Inside Button */}
-            <img
-              src={userData.profilePicture}
-              alt="Profile"
-              width="40"
-              height="40"
-              style={{
-                borderRadius: "50%",
-                objectFit: "cover",
+          {userData ? (
+            <>
+              {/* Profile Button */}
+              <Button
+                sx={{
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  color: "black", // ✅ Ensures black text
+                  "&:hover": { color: "black" }, // ✅ Keeps text black on hover
+                  display: "flex",
+                  alignItems: "center", // ✅ Ensures image and text are aligned
+                  gap: 1.5, // ✅ Adds spacing between the image and text
+                  padding: "6px 10px", // ✅ Adds padding for better clickability
+                }}
+                component={Link}
+                to={`/profile/${userData?.username}`} // ✅ Navigates to profile
+              >
+                {/* ✅ Profile Picture Inside Button */}
+                <img
+                  src={userData.profilePicture}
+                  alt="Profile"
+                  width="40"
+                  height="40"
+                  style={{
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+                {userData.username}
+              </Button>
+
+              {/* Logout Button */}
+              <Button
+                sx={{
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  color: "black",
+                  "&:hover": { color: "black" },
+                }}
+                onClick={() => {
+                  dispatch(setToken(null));
+                }}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            // Show Login button if user is not logged in
+            <Button
+              sx={{
+                textTransform: "none",
+                fontSize: "1rem",
+                color: "black",
+                "&:hover": { color: "black" },
               }}
-            />
-            {userData.username}
-          </Button>
-          <Button
-            sx={{
-              textTransform: "none",
-              //   mt: 2,
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-            }}
-            onClick={() => {
-              dispatch(setToken(null));
-            }}
-          >
-            Logout
-          </Button>
+              onClick={() => setLoginOpen(true)} // Open LoginModal on click
+            >
+              Login
+            </Button>
+          )}
         </Box>
       </Toolbar>
+
+      {/* LoginModal - This will be displayed if isLoginOpen is true */}
+      <LoginModal
+        open={isLoginOpen}
+        onClose={() => setLoginOpen(false)} // Close the modal when the user clicks outside or presses the close button
+        signUpMode={signUpMode}
+        setSignUpMode={setSignUpMode} // To toggle between Login and SignUp modes
+      />
     </AppBar>
   );
 };

@@ -5,6 +5,7 @@ from database import connect_db  # Import the database connection function
 from routes.data import data_bp
 from routes.users import users_bp
 from routes.auth import auth_bp
+from routes.movie import movie_bp
 from config import Config
 
 # from routes.reviews import reviews_bp
@@ -31,6 +32,7 @@ if db is not None:
         "data": db.get_collection("data"),
         "users": db.get_collection("users"),
         "reviews": db.get_collection("reviews"),
+        "movieLogs": db.get_collection("movieLogs")
     }
 else:
     app.config["collections"] = {}
@@ -39,6 +41,7 @@ else:
 app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(movie_bp)
 # app.register_blueprint(reviews_bp)
 
 @app.route("/api/test")
