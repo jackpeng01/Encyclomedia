@@ -109,7 +109,7 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
     }
   };
 
-  const handleResetPasswordRequest = async() => {
+  const handleResetPasswordRequest = async () => {
     await resetPasswordRequest("jackpeng3545@gmail.com");
   };
 
@@ -251,9 +251,9 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                   }));
                 }
               }}
-              error={errors.email}
+              error={signUp && errors.email}
               helperText={
-                errors.email
+                signUp && errors.email
                   ? email.length > 0
                     ? "Email already registered"
                     : "Invalid email"
@@ -270,7 +270,7 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
               onChange={(e) => setPassword(sanitizeInput(e.target.value))}
               error={errors.password}
               helperText={
-                errors.password
+                signUp && errors.password
                   ? "Password must be at least 12 characters, contain one uppercase, one lowercase, and one number."
                   : ""
               }
@@ -289,7 +289,9 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
                       textDecoration: "underline",
                     },
                   }}
-                  onClick={()=>{navigate("/user/reset-password")}}
+                  onClick={() => {
+                    navigate("/user/reset-password");
+                  }}
                 >
                   Forgot password?
                 </Typography>

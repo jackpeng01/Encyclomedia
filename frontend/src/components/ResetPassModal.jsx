@@ -9,9 +9,10 @@ import {
 import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { resetPassword } from "../api/ResetPass";
 // import { resetPassword } from "../api/ResetPass"; // API function
 
-const ResetPasswordModal = ({ open, onClose, token }) => {
+const ResetPasswordModal = ({ open, username }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -40,11 +41,11 @@ const ResetPasswordModal = ({ open, onClose, token }) => {
     if (!validateFields()) return;
 
     try {
-    //   await resetPassword(token, newPassword);
+      await resetPassword(username, newPassword);
       setSuccess(true);
       setTimeout(() => {
-        onClose();
-        navigate("/login"); // Redirect to login page
+        // onClose();
+        navigate("/"); // Redirect to login page
       }, 2000);
     } catch (err) {
       console.error("❌ Error resetting password:", err);
@@ -55,7 +56,7 @@ const ResetPasswordModal = ({ open, onClose, token }) => {
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      // onClose={onClose}
       maxWidth="xs"
       fullWidth
       slotProps={{
@@ -118,7 +119,7 @@ const ResetPasswordModal = ({ open, onClose, token }) => {
                 color="white"
                 fullWidth
                 sx={{ mt: 2 }}
-                // onClick={handleResetPassword}
+                onClick={handleResetPassword}
               >
                 Reset Password
               </Button>

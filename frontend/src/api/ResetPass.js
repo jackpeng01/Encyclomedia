@@ -22,3 +22,21 @@ export const resetPasswordRequest = async (email) => {
     throw error;
   }
 };
+
+export const resetPassword = async (username, newPassword) => {
+  try {
+    await axios.post(
+      `${API_URL}/auth/reset-password/${username}`,
+      {
+        newPassword: newPassword,
+        headers: {
+          // Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+  } catch (error) {
+    console.error("❌ Error:", error);
+  }
+};

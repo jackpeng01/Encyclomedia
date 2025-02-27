@@ -72,6 +72,7 @@ def check_username_unique():
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
+
 @users_bp.route("/api/users/check-email", methods=["GET"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def check_email_unique():
@@ -93,7 +94,6 @@ def check_email_unique():
     return response
 
 
-
 @users_bp.route("/api/users/<username>", methods=["GET"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_user(username):
@@ -109,6 +109,27 @@ def get_user(username):
         response = make_response(jsonify({"error": "User not found"}), 404)
         response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
+    response = make_response(jsonify(user), 200)
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
+@users_bp.route("/api/users/<username>", methods=["PATCH"])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def patch_user(username):
+    update_data = request.json
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        response = make_response(jsonify({"error": "database not connected"}), 500)
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+    user = users_col.find_one({"username": username}, {"_id": 0, "password": 0})
+    if user is None:
+        response = make_response(jsonify({"error": "User not found"}), 404)
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+    users_col.update_one({"username": username}, {"$set": update_data})
     response = make_response(jsonify(user), 200)
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response

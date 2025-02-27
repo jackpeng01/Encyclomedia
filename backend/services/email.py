@@ -23,7 +23,7 @@ def send_reset_email(to_email, reset_token):
     """
     try:
         subject = "Reset Your Password"
-        reset_link = f"http://localhost:3000/reset-password/{reset_token}"
+        reset_link = f"http://localhost:3000/user/reset-password/{reset_token}"
         body = f"""
         <p>You are receiving this email because you (or someone else) has requested to reset your password.</p>
         <p>Please click the following link to reset your password:</p>

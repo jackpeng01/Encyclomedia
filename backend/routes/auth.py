@@ -73,35 +73,43 @@ def verify_token():
         # response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
 
+
 @auth_bp.route("/api/auth/reset-password-request", methods=["POST", "OPTIONS"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def reset_password_request():
     try:
-        
         data = request.json
         email = data.get("email")
-        
+
         # find user
         users_col = current_app.config["collections"].get("users")
         user = users_col.find_one({"email": email})
-        
+
+        if not user:
+            # Fail gracefully with a generic message to prevent email enumeration
+            return jsonify(
+                {
+                    "message": "If an account exists with this email, a reset link will be sent."
+                }
+            ), 200
+
         # Generate a reset token (Replace with JWT logic)
         payload = {
-        "username": user["username"],  # User identity
-        "iat": int(time.time()),  # Issued at timestamp (ensures uniqueness)
-        "jti": str(uuid.uuid4())  # Unique token ID
+            "username": user["username"],  # User identity
+            "iat": int(time.time()),  # Issued at timestamp (ensures uniqueness)
+            "jti": str(uuid.uuid4()),  # Unique token ID
         }
 
         reset_token = jwt.encode(payload, Config.JWT_SECRET_KEY, algorithm="HS256")
 
         print("RESET_TOKEN:", reset_token)
-        print("decoded token:\n", verify_reset_token(reset_token))
+        # print("decoded token:\n", verify_reset_token(reset_token))
 
         # Send password reset email using Zoho Mail
-        # email_sent = send_reset_email(email, reset_token)
+        email_sent = send_reset_email(email, reset_token)
 
-        # if not email_sent:
-        #     return jsonify({"error": "Failed to send email"}), 500
+        if not email_sent:
+            return jsonify({"error": "Failed to send email"}), 500
 
         return jsonify({"resetToken": reset_token}), 200
 
@@ -109,20 +117,47 @@ def reset_password_request():
         print("ERROR:", err)
         return jsonify({"error": str(err)}), 500
 
-def verify_reset_token(token):
-    """
-    Verifies the password reset JWT.
 
-    Args:
+@auth_bp.route("/api/auth/verify-reset-token", methods=["GET"])
+def verify_reset_token():
+    """
+    Verifies the password reset JWT token.
+
+    Query Parameters:
         token (str): The JWT reset token.
 
     Returns:
-        dict | None: Decoded data if valid, None if invalid.
+        JSON response containing decoded data if valid, or an error message if invalid.
     """
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
     try:
         decoded = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
-        return decoded  # Returns decoded payload with username
+        return jsonify({"valid": True, "data": decoded}), 200
     except jwt.ExpiredSignatureError:
-        return None  # Token expired
+        return jsonify({"valid": False, "error": "Token has expired"}), 401
     except jwt.InvalidTokenError:
-        return None  # Invalid token
+        return jsonify({"valid": False, "error": "Invalid token"}), 400
+
+@auth_bp.route("/api/auth/reset-password/<username>", methods=["POST"])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def reset_password(username):
+    data = request.json
+    newPassword = data.get("newPassword")
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        response = make_response(jsonify({"error": "database not connected"}), 500)
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+    user = users_col.find_one({"username": username}, {"_id": 0, "password": 0})
+    if user is None:
+        response = make_response(jsonify({"error": "User not found"}), 404)
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+    users_col.update_one({"username": username}, {"$set": {"password": generate_password_hash(newPassword)}})
+    response = make_response(jsonify(user), 200)
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response

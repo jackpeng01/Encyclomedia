@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Dialog, DialogContent } from "@mui/material";
+import { Dialog, DialogContent, Button, Typography } from "@mui/material";
 import axios from "axios";
 
 const ProfilePicture = ({ userData, viewerData, token }) => {
@@ -9,6 +9,7 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
   const [profilePicture, setProfilePicture] = useState(userData.profilePicture);
 
   const isOwner = userData.username === viewerData.username;
+  const defaultProfilePicture = "https://res.cloudinary.com/dby0q8y9z/image/upload/v1739815199/default-profile_crftml.png";
 
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
@@ -30,7 +31,6 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
         }
       );
 
-      // ✅ Update profile picture immediately
       setProfilePicture(response.data.profilePicture);
       alert("Profile picture updated successfully!");
     } catch (error) {
@@ -38,11 +38,23 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
     }
   };
 
-  const handleClick = () => {
-    if (isOwner) {
-      fileInputRef.current.click();
-    } else {
-      setIsModalOpen(true); // Show enlarged image
+  const handleRemoveProfilePicture = async () => {
+    try {
+      await axios.patch(
+        `http://127.0.0.1:5000/api/users/${userData.username}`,
+        {
+          profilePicture: defaultProfilePicture,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+
+      setProfilePicture(defaultProfilePicture);
+      alert("Profile picture removed successfully!");
+    } catch (error) {
+      console.error("❌ Error removing profile picture:", error);
     }
   };
 
@@ -53,13 +65,16 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
           position: "relative",
           display: "inline-block",
           cursor: "pointer",
+          width: "150px",
+          height: "150px",
+          borderRadius: "50%",
+          overflow: "hidden",
         }}
-        onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <img
-          src={userData.profilePicture}
+          src={profilePicture || defaultProfilePicture}
           alt="Profile"
           width="150"
           height="150"
@@ -69,29 +84,61 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
             transition: "opacity 0.3s ease-in-out",
             filter: isHovered ? "brightness(70%)" : "none",
           }}
+          onClick={() => !isOwner && setIsModalOpen(true)}
         />
         {isOwner && isHovered && (
           <div
             style={{
               position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
               backgroundColor: "rgba(0, 0, 0, 0.6)",
-              color: "white",
-              padding: "5px 10px",
-              borderRadius: "5px",
-              fontSize: "14px",
-              fontWeight: "bold",
-              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
             }}
           >
-            Edit
+            <Button
+              sx={{
+                textTransform: "none",
+                fontSize: "1rem",
+                backgroundColor: "#333333", // Dark grey background
+                padding: "3px 3px", // Adjust padding if needed
+                "&:hover": {
+                  backgroundColor: "#444444", // Slightly lighter grey on hover
+                },
+              }}
+              variant="contained"
+              onClick={() => fileInputRef.current.click()}
+            >
+              Edit
+            </Button>
+            <Typography
+              variant="h7"
+              sx={{
+                // fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+                fontWeight: 100,
+                // ml: 1,
+                color: "white", // ✅ Ensures black text
+              }}
+            >
+              or
+            </Typography>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleRemoveProfilePicture}
+            >
+              Delete
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Hidden File Input */}
       <input
         type="file"
         accept="image/*"
@@ -100,7 +147,6 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
         onChange={handleFileChange}
       />
 
-      {/* Modal for Enlarged Profile Picture */}
       <Dialog
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -108,12 +154,8 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
         slotProps={{
           paper: {
             style: {
-              // filter: "invert(1)",
-              // backgroundColor: "#FFF",
-              backgroundColor: "transparent", // Removes background
-              boxShadow: "none", // Removes shadow
-              //   backdropFilter: "blur(5px)",
-              //   padding: "0px",
+              backgroundColor: "transparent",
+              boxShadow: "none",
               borderRadius: "50%",
             },
           },
@@ -125,11 +167,11 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
             justifyContent: "center",
             alignItems: "center",
             padding: 0,
-            borderRadius: "50%", // Ensures the dialog content is circular
+            borderRadius: "50%",
           }}
         >
           <img
-            src={userData.profilePicture}
+            src={profilePicture || defaultProfilePicture}
             alt="Enlarged Profile"
             style={{ width: "75%", height: "auto", borderRadius: "50%" }}
           />
