@@ -19,7 +19,7 @@ const PosterTest = () => {
       setMovies([]); // Clear movies for a fresh search
 
       // Make an Axios request to the Flask backend
-      const response = await axios.get("http://127.0.0.1:5000/api/poster", {
+      const response = await axios.get("http://127.0.0.1:5000/api/movie/poster", {
         params: { query: query }, // Send the query as a URL parameter
       });
 

@@ -9,7 +9,6 @@ import os
 from datetime import datetime
 from schemas.movie_logs_schema import MovieLogsSchema
 
-
 # Load environment variables
 load_dotenv()
 TMDB_API_KEY= os.getenv("TMDB_API_KEY")
@@ -17,10 +16,11 @@ TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500'
 movie_logs_schema = MovieLogsSchema()
 
+
 # Define Blueprint
 movie_bp = Blueprint("movie", __name__)
 
-@movie_bp.route('/api/poster', methods=['GET'])
+@movie_bp.route('/api/movie/poster', methods=['GET'])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_posters():
     query = request.args.get('query', '')
@@ -118,13 +118,16 @@ def get_movie_details(movie_id):
         return jsonify({"error": str(e)}), 500
 
 
-@movie_bp.route('/api/log_movie/<int:movie_id>', methods=['POST'])
+@movie_bp.route('/api/movie/log/<int:movie_id>', methods=['POST'])
 def log_movie(movie_id):
     
     data = request.get_json()
     watched_date = data.get('watched_date')
     tags = data.get('tags', '')
+    rating = data.get('rating')
     username = data.get('username')
+    title = data.get('title')
+    poster = data.get('poster')
         
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -156,9 +159,13 @@ def log_movie(movie_id):
     user_movie_log_item = movie_logs_col.find_one({"username": username})
 
     new_movie_log = {
+        "_id": ObjectId(),
         "movieId": movie_id,
         "watchDate": watched_date,
+        "rating": rating,
         "tags": tags.split(",") if tags else [],  # Convert tags into a list if provided
+        "title": title,
+        "poster": poster,  # Add poster path to the movie log
     }
     
     result = movie_logs_col.update_one(
@@ -174,11 +181,13 @@ def log_movie(movie_id):
         return {"error": "User not found or could not be updated."}, 400
 
 # Route to save a movie to the watch-later list
-@movie_bp.route('/api/watch_later_movie/<int:movie_id>', methods=['POST'])
+@movie_bp.route('/api/movie/watch_later/<int:movie_id>', methods=['POST'])
 def save_for_later(movie_id):
     
     data = request.get_json()
     username = data.get('username')
+    title = data.get('title')
+    poster = data.get('poster')
         
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -201,36 +210,38 @@ def save_for_later(movie_id):
         movie_logs_col.insert_one(insert)
     
     
+    new_entry = {
+        "_id": ObjectId(),
+        "movieId": movie_id,
+        "title": title,
+        "poster": poster,  # Add poster path to the movie log
+    }
+    
     result = movie_logs_col.update_one(
         {"username": username},  # Find the document by username
         {
-            "$push": {"watchLater": movie_id},  # Use $push to append to the logs array
+            "$push": {"watchLater": new_entry},  # Use $push to append to the logs array
         },
     )
+
     
     if result.matched_count > 0:
+        new_entry["_id"] = str(new_entry["_id"])
+        return new_entry
         return {"message": "Movie successfully added to your log."}, 200
     else:
         return {"error": "User not found or could not be updated."}, 400
 
 # Route to get all logged movies
-@movie_bp.route('/api/logged_movies', methods=['GET'])
+@movie_bp.route('/api/movie/log', methods=['GET'])
 def get_logged_movies():
-    return jsonify(watched_movies), 200
-
-# Route to get all movies in the watch-later list
-@movie_bp.route('/api/watch_later', methods=['GET'])
-@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
-def get_watch_later():
     username = request.args.get('username')  # Get username from query parameters
-    print(username)        
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
         return jsonify({"error": "Database not connected"}), 500
     
     user = users_col.find_one({"username": username})
     if user is None:
-        print("here")
         return jsonify({"error": "User not logged in!"}), 500
     
     movie_logs_col = current_app.config["collections"].get("movieLogs")
@@ -244,5 +255,73 @@ def get_watch_later():
         }
         insert = movie_logs_schema.load(info)
         movie_logs_col.insert_one(insert)
+        
+    movie_log = user_movie_log_item["movieLog"]
+    for entry in movie_log:
+        entry["_id"] = str(entry["_id"])  # Serialize ObjectId to string
+
+    return jsonify(movie_log)
     
-    return jsonify(user_movie_log_item["watchLater"])
+    # return jsonify(user_movie_log_item["movieLog"])
+
+# Route to get all movies in the watch-later list
+@movie_bp.route('/api/movie/watch_later', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def get_watch_later():
+    username = request.args.get('username')  # Get username from query parameters
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+    
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+    
+    movie_logs_col = current_app.config["collections"].get("movieLogs")
+    user_movie_log_item = movie_logs_col.find_one({"username": username})
+    
+    if user_movie_log_item is None:
+        info = {
+            "username": username,
+            "movieLog": [],
+            "watchLater": [],
+        }
+        insert = movie_logs_schema.load(info)
+        movie_logs_col.insert_one(insert)
+        
+    watch_log = user_movie_log_item["watchLater"]
+    for entry in watch_log:
+        entry["_id"] = str(entry["_id"])  # Serialize ObjectId to string
+
+    return jsonify(watch_log)
+    
+# Route to remove from log/watch later
+@movie_bp.route('/api/movie/remove', methods=['POST'])
+def remove_movie():
+    
+    data = request.get_json()
+    username = data.get('username')  # Get username from query parameters
+    entry = data.get('entry')
+    section = data.get('section')
+    print(entry)
+    
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+    
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+    
+    movie_logs_col = current_app.config["collections"].get("movieLogs")
+    user_movie_log_item = movie_logs_col.find_one({"username": username})
+    
+    result = movie_logs_col.update_one(
+            {"username": username},
+            {"$pull": {section: {"_id": ObjectId(entry)}}}  # Pull entry with matching movieId
+        )
+    
+    if result.modified_count == 0:
+        return jsonify({"error": "Movie not found in log or removal failed"}), 404
+        
+    return jsonify({"success": True, "message": f"Movie removed from {section}."}), 200

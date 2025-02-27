@@ -14,6 +14,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
 import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
+import MovieLog from "./scenes/MovieLog";
+import WatchLater from "./scenes/WatchLater";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -44,7 +46,7 @@ function App() {
               />
               {/* ✅ Dynamic Profile Route */}
               <Route
-                path="/profile/:username"
+                path="/:username"
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
@@ -63,6 +65,10 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
 
             <Route path="/movie/:id" element={<MovieDetails />} />
+
+            <Route path="/:username/movie-log" element={<MovieLog />} />
+            <Route path="/:username/watch-later" element={<WatchLater />} />
+
 
             </Routes>
           </Container>

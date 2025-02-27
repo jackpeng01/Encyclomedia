@@ -5,6 +5,7 @@ import axios from "axios";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
 import { Box } from "@mui/material";
+import { FaStar } from "react-icons/fa";
 
 const MovieDetails = () => {
   const { id } = useParams(); // Get the movie ID from the URL
@@ -17,6 +18,10 @@ const MovieDetails = () => {
   const [visibleActors, setVisibleActors] = useState(5); // Number of actors visible
   const token = useSelector((state) => state.auth.token);
   const [userData, setUserData] = useState([]);
+  const [rating, setRating] = useState(0); // Added rating state
+  const [hover, setHover] = useState(0); // Hover value for stars
+  const [currentMovie, setCurrentMovie] = useState(null);
+  const [buttonHover, setButtonHover] = useState(false); // Separate state for button hover
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -25,9 +30,8 @@ const MovieDetails = () => {
 
       // After userData is set, load the watch later items
       if (fetchedUserData) {
-        console.log("insie Fetched");
         try {
-          const response = await axios.get(`http://127.0.0.1:5000/api/watch_later`, {
+          const response = await axios.get(`http://127.0.0.1:5000/api/movie/watch_later`, {
             params: {
               username: fetchedUserData.username,
             },
@@ -36,20 +40,39 @@ const MovieDetails = () => {
               Accept: "application/json",
             },
           });
+
           setWatchLaterArray(response.data);
-          if (response.data.includes(parseInt(id))) {
-            console.log("Here");
+
+          // Log response for debugging
+          console.log("Response Data:", response.data);
+          console.log("Movie ID to Check:", id);
+
+          // Find the movie in the watchLaterArray
+          const currentMovie = response.data.find(
+            (entry) => entry.movieId === Number(id)
+          );
+
+          if (currentMovie) {
             setWatchLater(true);
+            console.log("Current Movie Found in Watch Later:", currentMovie);
+            // Set currentMovie here (you'll need a state for it)
+            setCurrentMovie(currentMovie);
+          } else {
+            setWatchLater(false);
           }
         } catch (err) {
-          console.log(err);
+          console.error("Error loading watch later data:", err);
           setError("Failed to load watch later.");
         }
       }
     };
 
     loadUserData();
+
+    const today = new Date(new Date().setHours(0, 0, 0, 0)).toISOString().split('T')[0];
+    setWatchedDate(today); // Set it as the initial state
   }, [token]); // This will re-run when token changes
+
 
   const calculateVisibleActors = () => {
     const containerWidth = window.innerWidth;
@@ -94,14 +117,19 @@ const MovieDetails = () => {
       const payload = {
         watched_date: watchedDate, // Example date; could be taken from a date picker
         tags: tags, // Example tags; could be taken from a user input field
+        rating: rating,
         username: userData.username, // Replace with the current user's ID (from context or props)
+        title: movie.title,
+        poster: movie.poster_path,
       };
 
       // Make the POST request to log the movie
-      const response = await axios.post(`http://127.0.0.1:5000/api/log_movie/${movie.id}`, payload);
+      const response = await axios.post(`http://127.0.0.1:5000/api/movie/log/${movie.id}`, payload);
 
       // Handle success
       alert("Movie logged successfully!");
+      setRating(0);
+      setTags("");
       console.log("Log response:", response.data);
     } catch (error) {
       // Handle errors
@@ -121,17 +149,20 @@ const MovieDetails = () => {
       // Example payload: replace these with dynamic values from your UI
       const payload = {
         username: userData.username, // Replace with the current user's ID (from context or props)
+        title: movie.title,
+        poster: movie.poster_path,
       };
 
       // Make the POST request to save the movie for later
-      const response = await axios.post(`http://127.0.0.1:5000/api/watch_later_movie/${movie.id}`, payload);
+      const response = await axios.post(`http://127.0.0.1:5000/api/movie/watch_later/${movie.id}`, payload);
 
       // Handle success
-      alert("Movie saved successfully!");
+      // alert("Movie saved successfully!");
       console.log("Log response:", response.data);
 
       // Update state to reflect the movie is saved to Watch Later
       setWatchLater(true); // Set the watchLater state to true, which will change the button's appearance
+      setCurrentMovie(response.data)
     } catch (error) {
       // Handle errors
       console.error("Error saving movie:", error);
@@ -139,6 +170,41 @@ const MovieDetails = () => {
     }
   };
 
+  const handleRemove = async (section, entryId) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/api/movie/remove',
+        {
+          username: userData.username,
+          entry: entryId,
+          section: section,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Update the state to remove the entry locally
+        // alert("Successfully removed!");
+        setWatchLater(false)
+      } else {
+        throw new Error("Failed to remove the entry.");
+      }
+    } catch (error) {
+      console.error("Error removing the entry:", error);
+      alert("An error occurred while trying to remove the entry.");
+    }
+  };
+
+  const handleRatingChange = (newRating) => {
+    setRating(newRating);
+  };
+
+  const clearRating = () => {
+    setRating(0);
+  };
 
   const handleLoadMoreActors = () => {
     setVisibleActors((prevVisible) => prevVisible + movie.cast.length); // Increase visible actors by 5
@@ -236,6 +302,30 @@ const MovieDetails = () => {
                     />
                   </label>
                 </Box>
+
+                {/* Rating Section */}
+                <Box
+                  sx={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
+                  onMouseLeave={() => setHover(0)} // Reset hover when the mouse leaves the star container
+                >
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      size={30}
+                      color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
+                      style={{
+                        cursor: "pointer",
+                        transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
+                        transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
+                      }}
+                      onMouseEnter={() => setHover(star)} // Set hover when entering a star
+                      onClick={() => setRating(star)} // Update rating on click
+                    />
+                  ))}
+                </Box>
+
+
+
                 <button
                   onClick={handleLogMovie}
                   style={{
@@ -253,19 +343,35 @@ const MovieDetails = () => {
                 <br />
                 {/* Save for Later */}
                 <button
-                  onClick={handleSaveForLater}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '5px',
-                    backgroundColor: watchLater ? '#28a745' : '#ffc107', // Green when saved, yellow otherwise
-                    color: '#fff',
-                    border: 'none',
-                    cursor: watchLater ? 'not-allowed' : 'pointer', // Change cursor when disabled
+                  onClick={() => {
+                    if (watchLater) {
+                      handleRemove("watchLater", currentMovie._id); // Call the unsave function
+                    } else {
+                      handleSaveForLater(); // Call the save function
+                    }
                   }}
-                  disabled={watchLater} // Disable button when watchLater is true
+                  onMouseEnter={() => setButtonHover(true)} // Set hover state to true
+                  onMouseLeave={() => setButtonHover(false)} // Reset hover state to false
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "5px",
+                    backgroundColor:
+                      buttonHover
+                        ? (watchLater ? "#dc3545" : "#28a745") // Red if saved, green if not saved on hover
+                        : (watchLater ? "#28a745" : "#ffc107"), // Red if saved, yellow if not saved when not hovered
+                    color: "#fff",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "background-color 0.3s ease", // Smooth background color transition
+                  }}
                 >
-                  {watchLater ? 'Saved to Watch Later' : 'Save to Watch Later'}
+                  {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
                 </button>
+
+
+
+
+
               </Box>
             </Box>
           </Box>

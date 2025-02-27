@@ -99,7 +99,7 @@ const Navbar = ({ userData }) => {
                   padding: "6px 10px", // ✅ Adds padding for better clickability
                 }}
                 component={Link}
-                to={`/profile/${userData?.username}`} // ✅ Navigates to profile
+                to={`/${userData?.username}`} // ✅ Navigates to profile
               >
                 {/* ✅ Profile Picture Inside Button */}
                 <img
