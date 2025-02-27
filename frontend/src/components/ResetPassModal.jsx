@@ -88,8 +88,8 @@ const ResetPasswordModal = ({ open, username }) => {
           </Typography>
 
           {success ? (
-            <Typography color="green" sx={{ mb: 2 }}>
-              ✅ Password reset successful! Redirecting to login...
+            <Typography sx={{ mb: 2 }}>
+              Password reset successful! Redirecting to login...
             </Typography>
           ) : (
             <>
