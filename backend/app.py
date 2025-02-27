@@ -6,6 +6,7 @@ from routes.data import data_bp
 from routes.users import users_bp
 from routes.auth import auth_bp
 from routes.movie import movie_bp
+from routes.books import books_bp
 from config import Config
 
 # from routes.reviews import reviews_bp
@@ -42,6 +43,8 @@ app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(movie_bp)
+app.register_blueprint(books_bp)
+
 # app.register_blueprint(reviews_bp)
 
 @app.route("/api/test")
