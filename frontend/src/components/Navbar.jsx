@@ -69,8 +69,7 @@ const Navbar = () => {
               gap: 1.5, // ✅ Adds spacing between the image and text
               padding: "6px 10px", // ✅ Adds padding for better clickability
             }}
-            component={Link}
-            to={`/${userData?.username}`} // ✅ Navigates to profile
+            onClick={()=>window.location.href = `/${userData.username}`}
           >
             {/* ✅ Profile Picture Inside Button */}
             <img
