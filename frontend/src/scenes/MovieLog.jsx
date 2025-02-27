@@ -85,7 +85,7 @@ const MovieLog = () => {
     // Handle reset filter and sort
     const handleReset = () => {
         setSortOrder("default");
-        setRatingRange([1, 5]);
+        setRatingRange([0, 5]);
         setFilteredMovieLog(movieLog); // Reset filtered movies to all movies
         setSortedMovieLog(movieLog); // Reset sorted movies to all movies
     };
@@ -155,9 +155,10 @@ const MovieLog = () => {
                             value={ratingRange}
                             onChange={handleRatingRangeChange}
                             valueLabelDisplay="auto"
-                            min={1}
+                            min={0}
                             max={5}
                             marks={[
+                                { value: 0, label: "0" },
                                 { value: 1, label: "1" },
                                 { value: 2, label: "2" },
                                 { value: 3, label: "3" },
