@@ -1,6 +1,6 @@
 import time
 import uuid
-
+from datetime import timedelta
 
 import jwt
 from flask import Blueprint, current_app, jsonify, make_response, request
@@ -40,7 +40,9 @@ def login_user():
     user = users_col.find_one({"email": email})
     if user and check_password_hash(user["password"], password):
         # Create JWT token
-        access_token = create_access_token(identity=user["username"])
+        access_token = create_access_token(
+            identity=user["username"], expires_delta=timedelta(hours=6)
+        )
         response = make_response(
             jsonify({"message": "Login successful", "token": access_token}), 200
         )
@@ -141,6 +143,7 @@ def verify_reset_token():
     except jwt.InvalidTokenError:
         return jsonify({"valid": False, "error": "Invalid token"}), 400
 
+
 @auth_bp.route("/api/auth/reset-password/<username>", methods=["POST"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def reset_password(username):
@@ -157,7 +160,10 @@ def reset_password(username):
         response = make_response(jsonify({"error": "User not found"}), 404)
         response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
-    users_col.update_one({"username": username}, {"$set": {"password": generate_password_hash(newPassword)}})
+    users_col.update_one(
+        {"username": username},
+        {"$set": {"password": generate_password_hash(newPassword)}},
+    )
     response = make_response(jsonify(user), 200)
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response

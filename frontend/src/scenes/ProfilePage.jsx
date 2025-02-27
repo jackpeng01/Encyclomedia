@@ -58,7 +58,7 @@ const ProfilePage = () => {
         <Box sx={{ textAlign: "center" }}>
           <ProfilePicture
             userData={userData}
-            viewerData={viewerData}
+            viewerData={[]}
             token={token}
           />
           <Typography variant="h4" sx={{ fontWeight: 400 }}>

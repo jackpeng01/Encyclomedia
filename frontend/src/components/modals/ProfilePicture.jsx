@@ -9,7 +9,8 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
   const [profilePicture, setProfilePicture] = useState(userData.profilePicture);
 
   const isOwner = userData.username === viewerData.username;
-  const defaultProfilePicture = "https://res.cloudinary.com/dby0q8y9z/image/upload/v1739815199/default-profile_crftml.png";
+  const defaultProfilePicture =
+    "https://res.cloudinary.com/dby0q8y9z/image/upload/v1739815199/default-profile_crftml.png";
 
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
@@ -106,12 +107,15 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
               sx={{
                 textTransform: "none",
                 fontSize: "1rem",
-                backgroundColor: "#333333", // Dark grey background
+                fontWeight: 10,
+
+                backgroundColor: "#222222", // Dark grey background
                 padding: "3px 3px", // Adjust padding if needed
                 "&:hover": {
-                  backgroundColor: "#444444", // Slightly lighter grey on hover
+                  backgroundColor: "#333333", // Slightly lighter grey on hover
                 },
               }}
+              // color="secondary"
               variant="contained"
               onClick={() => fileInputRef.current.click()}
             >
@@ -121,20 +125,31 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
               variant="h7"
               sx={{
                 // fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-                fontWeight: 100,
+                fontWeight: 10,
                 // ml: 1,
                 color: "white", // ✅ Ensures black text
               }}
             >
               or
             </Typography>
-            <Button
-              variant="contained"
-              color="secondary"
+            <Typography
+              // variant="h1"
               onClick={handleRemoveProfilePicture}
+              sx={{
+                fontWeight: 100,
+
+                textTransform: "none",
+                fontSize: "1rem",
+                color: "white", // Dark grey text
+                cursor: "pointer", // Show pointer cursor on hover
+                padding: "3px 3px",
+                "&:hover": {
+                  color: "#999999", // Slightly lighter grey on hover
+                },
+              }}
             >
               Delete
-            </Button>
+            </Typography>
           </div>
         )}
       </div>
@@ -173,7 +188,13 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
           <img
             src={profilePicture || defaultProfilePicture}
             alt="Enlarged Profile"
-            style={{ width: "75%", height: "auto", borderRadius: "50%" }}
+            width="510"
+            height="510"
+            style={{
+              borderRadius: "50%",
+              objectFit: "cover",
+              transition: "opacity 0.3s ease-in-out",
+            }}
           />
         </DialogContent>
       </Dialog>
