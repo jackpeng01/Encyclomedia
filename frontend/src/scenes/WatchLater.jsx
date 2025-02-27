@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import { Box, Button, Typography } from "@mui/material";
 import { FaStar } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
+import { getUserByToken } from "../api/users";
 
 const WatchLater = () => {
     const { username } = useParams(); // Get the username from the route
     const [watchLater, setWatchLater] = useState([]); // Store the movie logs
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState("");
+    const token = useSelector((state) => state.auth.token);
+    const [ownProfile, setOwnProfile] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
         // Fetch all movie logs on component mount
         const fetchWatchLater = async () => {
             const fetchedProfile = await getUserByUsername(username);
             setUserData(fetchedProfile);
+
+            const profileToken = await getUserByToken(token);
+            setCurrentUser(profileToken);
+            if (profileToken.username == username) {
+                setOwnProfile(true);
+            }
+
             try {
                 const response = await axios.get("http://127.0.0.1:5000/api/movie/watch_later", {
                     params: { username },
@@ -63,7 +75,7 @@ const WatchLater = () => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             {/* Navbar */}
-            <Navbar userData={userData} />
+            <Navbar userData={currentUser} />
 
             {/* Main Content */}
             <Box sx={{ maxWidth: "900px", margin: "auto", mt: 10 }}>
@@ -144,17 +156,20 @@ const WatchLater = () => {
                                             }}
                                         >
                                             {/* Remove Button */}
-                                            <Button
-                                                variant="contained"
-                                                color="error"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleRemove("watchLater", entry._id);
-                                                }}
-                                                sx={{ mt: 1 }}
-                                            >
-                                                Remove
-                                            </Button>
+                                            {ownProfile && (
+                                                <Button
+                                                    variant="contained"
+                                                    color="error"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleRemove("movieLog", entry._id);
+                                                        console.log("Remove movie:", entry.movieId);
+                                                    }}
+                                                    sx={{ mt: 1 }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            )}
                                         </Box>
                                     </Box>
                                 </Link>
