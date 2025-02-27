@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { SearchBar } from "../components/SearchBar";
 import { SearchResultsList } from "../components/SearchResultsList";
 
-const TvPage = () => {
+const TvSearchPage = () => {
   const [results, setResults] = useState([]);
 
     return (
@@ -15,4 +15,4 @@ const TvPage = () => {
     );
 };
 
-export default TvPage;
+export default TvSearchPage;

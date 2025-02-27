@@ -10,8 +10,9 @@ import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
-import TvPage from "./scenes/TvPage";
+import TvSearchPage from "./scenes/TvSearchPage";
 import axios from "axios";
+import TrendingTvPage from "./scenes/TrendingTvPage";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -56,7 +57,10 @@ function App() {
               <Route path="*" element={<NotFound />} />
 
               {/* TV Page */}
-            <Route path="/tv" element={<TvPage />} />
+            <Route path="/tv" element={<TvSearchPage />} />
+
+            {/* TV Page */}
+            <Route path="/trendingtv" element={<TrendingTvPage />} />
             </Routes>
           </Container>
         </div>

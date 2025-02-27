@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import TvInfoModal from './TvInfoModal';
 
 export const SearchResult = ({ result, info, poster}) => {
-  const [showTvInfo, setShowTvInfo] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
 
   const handleClick = () => {
-    setShowTvInfo(true); // Show the dialog when the result is clicked
+    setIsModalOpen(true); // Show the dialog when the result is clicked
   };
 
-  const handleClose = () => {
-    setShowTvInfo(false); // Close the dialog
+  const closeModal = () => {
+    setIsModalOpen(false); // Close the dialog
   };
 
     return (
+      <div>
       <div
         className="search-result"
         onClick={handleClick}
@@ -21,9 +22,10 @@ export const SearchResult = ({ result, info, poster}) => {
           }}
       >
         <img src={`https://image.tmdb.org/t/p/original/${poster}`} alt={result} style={{ width: '160px', height: '240px', objectFit: 'cover',}} />
+        </div>
         <TvInfoModal
-        open={showTvInfo} 
-        onClose={handleClose} 
+        open={isModalOpen} 
+        onClose={closeModal} 
         result={result} 
         info={info} 
         />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const SearchBar = ({ setResults }) => {
   const [input, setInput] = useState("");
@@ -7,7 +7,7 @@ export const SearchBar = ({ setResults }) => {
     method: 'GET',
     headers: {
       accept: 'application/json',
-      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+      Authorization: `${process.env.TMDB_API_KEY}`
     }
   };
 
