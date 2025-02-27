@@ -16,7 +16,7 @@ const MovieLog = () => {
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState("");
     const [sortOrder, setSortOrder] = useState("default"); // Sorting order
-    const [ratingRange, setRatingRange] = useState([1, 5]); // Current rating range filter
+    const [ratingRange, setRatingRange] = useState([0, 5]); // Current rating range filter
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
