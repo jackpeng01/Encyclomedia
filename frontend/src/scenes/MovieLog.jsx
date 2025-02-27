@@ -27,10 +27,12 @@ const MovieLog = () => {
             const fetchedProfile = await getUserByUsername(username);
             setUserData(fetchedProfile);
 
-            const profileToken = await getUserByToken(token);
-            setCurrentUser(profileToken);
-            if (profileToken.username == username) {
-                setOwnProfile(true);
+            if (token) {
+                const profileToken = await getUserByToken(token);
+                setCurrentUser(profileToken);
+                if (username && profileToken.username == username) {
+                    setOwnProfile(true);
+                }
             }
 
             try {
@@ -48,7 +50,7 @@ const MovieLog = () => {
         };
 
         fetchLogs();
-    }, [username]);
+    }, [token]);
 
     // Handle sorting changes
     const handleSortChange = () => {

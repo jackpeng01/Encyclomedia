@@ -62,11 +62,20 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
 
   const handleLogin = async () => {
     if (!validateFields()) return;
+  
     try {
       const response = await loginUser(email, password);
       console.log("Login successful:", response);
       dispatch(setToken(response.token));
-      navigate("/home");
+  
+      // Check if we're already on the home page
+      if (window.location.pathname === "/") {
+        // Redirect to /home if we're on the root path
+        navigate("/home");
+      } else {
+        // Reload the page otherwise
+        window.location.reload();
+      }
     } catch (error) {
       console.error("❌ Error logging in:", error);
       setErrors((prevErrors) => ({

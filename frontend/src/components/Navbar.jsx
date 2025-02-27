@@ -125,6 +125,7 @@ const Navbar = ({ userData }) => {
                 }}
                 onClick={() => {
                   dispatch(setToken(null));
+                  window.location.reload();
                 }}
               >
                 Logout

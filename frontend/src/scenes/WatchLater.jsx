@@ -23,10 +23,12 @@ const WatchLater = () => {
             const fetchedProfile = await getUserByUsername(username);
             setUserData(fetchedProfile);
 
-            const profileToken = await getUserByToken(token);
-            setCurrentUser(profileToken);
-            if (profileToken.username == username) {
-                setOwnProfile(true);
+            if (token) {
+                const profileToken = await getUserByToken(token);
+                setCurrentUser(profileToken);
+                if (profileToken.username == username) {
+                    setOwnProfile(true);
+                }
             }
 
             try {
@@ -42,7 +44,7 @@ const WatchLater = () => {
         };
 
         fetchWatchLater();
-    }, [username]);
+    }, [username], [token]);
 
     const handleRemove = async (section, entryId) => {
         try {
