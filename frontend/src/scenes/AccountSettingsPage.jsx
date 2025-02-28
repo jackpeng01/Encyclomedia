@@ -92,31 +92,27 @@ const AccountSettingsPage = () => {
           left: "20vw",
           width: "60vw",
           height: "80vh",
-          backdropFilter: "blur(10px)",
+          backdropFilter: "blur(5px)",
           backgroundColor: "rgba(255, 255, 255, .8)",
           borderRadius: "20px",
           zIndex: -1,
         }}
       />
-      <motion.div
-        initial={{ opacity: -1 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 5, ease: "easeOut" }}
+
+      <Box
+        sx={{
+          position: "fixed", // ✅ Ensures it stays behind other elements
+          top: 0,
+          left: 0,
+          width: "50vw",
+          height: "50vh",
+          zIndex: -100, // ✅ Places it behind UI elements
+          pointerEvents: "none",
+        }}
       >
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "50vw",
-            height: "50vh",
-            zIndex: -2,
-            pointerEvents: "none",
-          }}
-        >
-          <BouncingSphere />
-        </Box>
-      </motion.div>
+        <BouncingSphere />
+      </Box>
+
       <Navbar userData={userData} />
       <Box sx={{ textAlign: "center", mt: 10 }}>
         <Typography
