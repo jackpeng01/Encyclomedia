@@ -8,6 +8,7 @@ from schemas.user_schema import UserSchema
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from services.config import Config
+import datetime
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -34,6 +35,8 @@ def allowed_file(filename):
 def create_user():
     """Register a new user with schema validation"""
     users_col = current_app.config["collections"].get("users")
+    lists_col = current_app.config["collections"].get("lists")
+
     if users_col is None:
         return jsonify({"error": "Database not connected"}), 500
 
@@ -48,6 +51,10 @@ def create_user():
     # ✅ Insert user into MongoDB
     users_col.insert_one(data)
 
+    lists_col.insert_one({
+    "user_id": data["username"],
+    "list_ids": [],
+})
     return jsonify({"message": "User registered successfully"}), 201
 
 

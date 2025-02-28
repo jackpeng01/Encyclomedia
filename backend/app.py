@@ -6,6 +6,7 @@ from routes.users import users_bp
 from routes.auth import auth_bp
 from services.config import Config
 from services.database import connect_db
+from routes.lists import lists_bp, init_db as init_lists_db 
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py
@@ -27,14 +28,18 @@ if db is not None:
         "data": db.get_collection("data"),
         "users": db.get_collection("users"),
         "reviews": db.get_collection("reviews"),
+        "lists": db.get_collection("lists"),
     }
+    init_lists_db(db.mongo_client, db.get_collection("lists"), db.get_collection("users"))
 else:
     app.config["collections"] = {}
+
 
 # ✅ Register Blueprints
 app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(lists_bp) 
 # app.register_blueprint(reviews_bp)
 
 @app.route("/api/test")
