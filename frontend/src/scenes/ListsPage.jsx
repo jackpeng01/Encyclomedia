@@ -33,6 +33,11 @@ const ListsPage = () => {
   const [sortMethod, setSortMethod] = useState(() => {
     return localStorage.getItem('listsSortMethod') || "default";
   });
+  
+  // Track sort direction (ascending or descending)
+  const [sortDirection, setSortDirection] = useState(() => {
+    return localStorage.getItem('listsSortDirection') || "desc";
+  });
 
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
 
@@ -74,26 +79,31 @@ const ListsPage = () => {
     loadLists();
   }, []);
 
-  // Apply sort method whenever lists or sort method change
+  // Apply sort method whenever lists, sort method, or direction change
   useEffect(() => {
-    sortLists(sortMethod);
-    // Save sort method to localStorage
+    sortLists(sortMethod, sortDirection);
+    // Save sort method and direction to localStorage
     localStorage.setItem('listsSortMethod', sortMethod);
-  }, [lists, sortMethod]);
+    localStorage.setItem('listsSortDirection', sortDirection);
+  }, [lists, sortMethod, sortDirection]);
 
-  // Sort lists according to selected method
-  const sortLists = (method) => {
+  // Sort lists according to selected method and direction
+  const sortLists = (method, direction) => {
     let sortedLists = [...lists];
+    const isAscending = direction === "asc";
 
     switch (method) {
       case "alphabetical":
-        sortedLists.sort((a, b) => a.name.localeCompare(b.name));
+        sortedLists.sort((a, b) => {
+          const comparison = a.name.localeCompare(b.name);
+          return isAscending ? comparison : -comparison;
+        });
         break;
       case "date":
         sortedLists.sort((a, b) => {
           const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
           const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
-          return dateB - dateA; // newest first
+          return isAscending ? dateA - dateB : dateB - dateA;
         });
         break;
       case "manual":
@@ -159,7 +169,17 @@ const ListsPage = () => {
   };
 
   const handleSortMethodSelect = (method) => {
-    setSortMethod(method);
+    if (method === sortMethod && (method === "alphabetical" || method === "date")) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      if (method === "alphabetical") {
+        setSortDirection("asc"); // A to Z by default
+      } else if (method === "date") {
+        setSortDirection("desc"); // Newest first by default
+      }
+      setSortMethod(method);
+    }
+    
     handleCloseSortMenu();
     
     // If switching to manual sort, initialize the manual order with current display order
@@ -341,13 +361,13 @@ const ListsPage = () => {
                 onClick={() => handleSortMethodSelect('alphabetical')}
                 selected={sortMethod === 'alphabetical'}
               >
-                Alphabetical (A-Z)
+                Alphabetical {sortMethod === 'alphabetical' && (sortDirection === 'asc' ? '(A to Z)' : '(Z to A)')}
               </MenuItem>
               <MenuItem
                 onClick={() => handleSortMethodSelect('date')}
                 selected={sortMethod === 'date'}
               >
-                Date Added (Newest first)
+                Date Added {sortMethod === 'date' && (sortDirection === 'desc' ? '(Newest first)' : '(Oldest first)')}
               </MenuItem>
               <MenuItem
                 onClick={() => handleSortMethodSelect('manual')}
