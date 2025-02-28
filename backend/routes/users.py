@@ -129,8 +129,18 @@ def patch_user(username):
         response = make_response(jsonify({"error": "User not found"}), 404)
         response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
-    users_col.update_one({"username": username}, {"$set": update_data})
-    response = make_response(jsonify(user), 200)
+
+    # Filter update_data to only include keys that exist in the user schema
+    allowed_fields = set(user.keys())  # Get existing user fields
+    filtered_update_data = {k: v for k, v in update_data.items() if k in allowed_fields}
+
+    if filtered_update_data:
+        users_col.update_one({"username": username}, {"$set": filtered_update_data})
+
+    response = make_response(
+        jsonify(users_col.find_one({"username": username}, {"_id": 0, "password": 0})),
+        200,
+    )
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 

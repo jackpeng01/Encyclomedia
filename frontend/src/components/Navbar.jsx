@@ -23,7 +23,8 @@ const Navbar = () => {
     <AppBar
       position="fixed"
       sx={{
-        backgroundColor: "rgb(255, 255, 255)", // ✅ Light gray for better contrast
+        // backdropFilter: "blur(10px)",
+        backgroundColor: "rgb(255, 255, 255, 0)", // ✅ Light gray for better contrast
         boxShadow: "none",
         width: "100vw",
         left: 0,
@@ -69,7 +70,7 @@ const Navbar = () => {
               gap: 1.5, // ✅ Adds spacing between the image and text
               padding: "6px 10px", // ✅ Adds padding for better clickability
             }}
-            onClick={()=>window.location.href = `/${userData.username}`}
+            onClick={() => (window.location.href = `/${userData.username}`)}
           >
             {/* ✅ Profile Picture Inside Button */}
             <img

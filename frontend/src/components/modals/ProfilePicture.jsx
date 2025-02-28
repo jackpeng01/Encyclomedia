@@ -33,7 +33,7 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
       );
 
       setProfilePicture(response.data.profilePicture);
-      alert("Profile picture updated successfully!");
+      // alert("Profile picture updated successfully!");
     } catch (error) {
       console.error("❌ Error uploading profile picture:", error);
     }
@@ -53,7 +53,7 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
       );
 
       setProfilePicture(defaultProfilePicture);
-      alert("Profile picture removed successfully!");
+      // alert("Profile picture removed successfully!");
     } catch (error) {
       console.error("❌ Error removing profile picture:", error);
     }
@@ -83,7 +83,7 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
             borderRadius: "50%",
             objectFit: "cover",
             transition: "opacity 0.3s ease-in-out",
-            filter: isHovered ? "brightness(70%)" : "none",
+            filter: isHovered ? "brightness(100%)" : "none",
           }}
           onClick={() => !isOwner && setIsModalOpen(true)}
         />
@@ -95,56 +95,59 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
               left: 0,
               width: "100%",
               height: "100%",
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              backgroundColor: "rgba(0, 0, 0, 0.3)",
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row", // Change to row for horizontal layout
               justifyContent: "center",
               alignItems: "center",
               borderRadius: "50%",
+              gap: "5px", // Adds space between elements
             }}
           >
-            <Button
+            <Typography
+              onClick={() => fileInputRef.current.click()}
               sx={{
+                fontWeight: 100,
                 textTransform: "none",
                 fontSize: "1rem",
-                fontWeight: 10,
-
-                backgroundColor: "#222222", // Dark grey background
-                padding: "3px 3px", // Adjust padding if needed
+                color: "white",
+                cursor: "pointer",
+                padding: "3px 6px",
+                transition: "border 0.2s ease-in-out",
                 "&:hover": {
-                  backgroundColor: "#333333", // Slightly lighter grey on hover
+                  padding: "3px 6px",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                  borderRadius: "4px",
                 },
               }}
-              // color="secondary"
-              variant="contained"
-              onClick={() => fileInputRef.current.click()}
             >
               Edit
-            </Button>
+            </Typography>
+
             <Typography
               variant="h7"
               sx={{
-                // fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
                 fontWeight: 10,
-                // ml: 1,
-                color: "white", // ✅ Ensures black text
+                color: "white",
               }}
             >
-              or
+              /
             </Typography>
+
             <Typography
-              // variant="h1"
               onClick={handleRemoveProfilePicture}
               sx={{
                 fontWeight: 100,
-
                 textTransform: "none",
                 fontSize: "1rem",
-                color: "white", // Dark grey text
-                cursor: "pointer", // Show pointer cursor on hover
-                padding: "3px 3px",
+                color: "white",
+                cursor: "pointer",
+                padding: "3px 6px",
+                transition: "border 0.2s ease-in-out",
                 "&:hover": {
-                  color: "#999999", // Slightly lighter grey on hover
+                  padding: "3px 6px",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                  borderRadius: "4px",
                 },
               }}
             >

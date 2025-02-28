@@ -61,7 +61,7 @@ const ProfilePage = () => {
             viewerData={[]}
             token={token}
           />
-          <Typography variant="h4" sx={{ fontWeight: 400 }}>
+          <Typography variant="h5" sx={{ fontWeight: 400 }}>
             {userData.username}
           </Typography>
           <Box sx={{ textAlign: "left", mt: 0 }}>
