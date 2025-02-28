@@ -74,6 +74,19 @@ const LandingPage = () => {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
+          <Button
+              sx={{
+                textTransform: "none",
+                mt: 2,
+                fontSize: "1rem",
+                color: "black",
+              }}
+              component={Link}
+              to="/tv"
+              color="inherit"
+            >
+              TV
+            </Button>
             <Button
               sx={{
                 textTransform: "none",

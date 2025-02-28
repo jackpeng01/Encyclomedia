@@ -18,6 +18,8 @@ import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
+import TvPage from "./scenes/TvPage";
+
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -74,6 +76,9 @@ function App() {
 
               {/* 404 Not Found Page */}
               <Route path="*" element={<NotFound />} />
+
+              {/* TV Page */}
+            <Route path="/tv" element={<TvPage />} />
 
             {/* Poster Test */}
             <Route path="/poster" element={<PosterTest />} />
