@@ -53,7 +53,7 @@ const Navbar = () => {
 
   
   const handleListsClick = () => {
-    navigate("/lists");
+    navigate("/myLists");
   };
   
   const handleLocalDemoClick = () => {
@@ -100,6 +100,7 @@ const Navbar = () => {
           {/* My Lists Button */}
           <Button
             sx={{
+              ml: "10px",
               textTransform: "none",
               fontSize: "1rem",
               color: "black",
@@ -114,22 +115,6 @@ const Navbar = () => {
             My Lists
           </Button>
           
-          {/* Local Demo Button */}
-          <Button
-            sx={{
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={handleLocalDemoClick}
-            startIcon={<DemoIcon />}
-          >
-            Local Demo
-          </Button>
           {/* ✅ Centers items vertically */}
           {/* ✅ Profile Picture */}
         </Box>

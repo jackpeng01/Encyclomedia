@@ -67,7 +67,8 @@ const ListsPage = () => {
   // Fetch all lists on component mount
   useEffect(() => {
     const loadLists = async () => {
-      const fetchedLists = await getLists();
+      console.log("token line 70: ", token)
+      const fetchedLists = await getLists(token);
       setLists(fetchedLists);
     };
     loadLists();
@@ -184,13 +185,13 @@ const ListsPage = () => {
         items: []
       };
 
-      await createList(newList);
+      await createList(newList, token);
 
       setOpenCreateDialog(false);
       setNewListName("");
       setNewListDescription("");
 
-      const updatedLists = await getLists();
+      const updatedLists = await getLists(token);
       setLists(updatedLists);
     } catch (error) {
       console.error("❌ Error creating list:", error);
@@ -213,11 +214,11 @@ const ListsPage = () => {
       await updateList(renameListId, {
         name: renameListName,
         description: renameListDescription
-      });
+      }, token);
 
       setOpenRenameDialog(false);
 
-      const updatedLists = await getLists();
+      const updatedLists = await getLists(token);
       setLists(updatedLists);
     } catch (error) {
       console.error("❌ Error renaming list:", error);
@@ -232,11 +233,11 @@ const ListsPage = () => {
 
   const handleDeleteList = async () => {
     try {
-      await deleteList(deleteListId);
+      await deleteList(deleteListId, token);
 
       setOpenDeleteDialog(false);
 
-      const updatedLists = await getLists();
+      const updatedLists = await getLists(token);
       setLists(updatedLists);
     } catch (error) {
       console.error("❌ Error deleting list:", error);
@@ -253,9 +254,9 @@ const ListsPage = () => {
           items: listToDuplicate.items
         };
 
-        await createList(duplicatedList);
+        await createList(duplicatedList, token);
 
-        const updatedLists = await getLists();
+        const updatedLists = await getLists(token);
         setLists(updatedLists);
       }
     } catch (error) {
@@ -274,9 +275,9 @@ const ListsPage = () => {
 
   const handleUpdateList = async (updatedList) => {
     try {
-      await updateList(updatedList._id, updatedList);
+      await updateList(updatedList._id, updatedList, token);
 
-      const updatedLists = await getLists();
+      const updatedLists = await getLists(token);
       setLists(updatedLists);
 
       setSelectedList(updatedList);

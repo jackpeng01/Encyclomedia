@@ -9,7 +9,7 @@ from routes.movie import movie_bp
 from routes.books import books_bp
 from services.config import Config
 from services.database import connect_db
-from routes.lists import lists_bp, init_db as init_lists_db 
+from routes.lists import lists_bp
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py
@@ -34,7 +34,6 @@ if db is not None:
         "movieLogs": db.get_collection("movieLogs"),
         "lists": db.get_collection("lists")
     }
-    init_lists_db(db.mongo_client, db.get_collection("lists"), db.get_collection("users"))
 else:
     app.config["collections"] = {}
 
