@@ -16,6 +16,8 @@ import ResetPassPage from "./scenes/ResetPassPage";
 import AccountSettingsPage from "./scenes/AccountSettingsPage";
 import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
+import BookSearch from "./scenes/BookSearch";
+import BookDetails from "./scenes/BookDetails";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvPage from "./scenes/TvPage";
@@ -89,6 +91,11 @@ function App() {
 
             <Route path="/:username/movie-log" element={<MovieLog />} />
             <Route path="/:username/watch-later" element={<WatchLater />} />
+
+            <Route path="/booksearch" element={<BookSearch />} />
+
+            <Route path="/book/:id" element={<BookDetails />} />
+
 
 
             </Routes>

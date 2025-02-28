@@ -5,7 +5,7 @@ import {
   Button,
   Toolbar,
   Typography,
-  TextField,
+  TextField, MenuItem, Select,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
@@ -31,14 +31,21 @@ const Navbar = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("movies"); 
+
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Redirect to search results page with the query
-      window.location.href = `/search?query=${encodeURIComponent(
-        searchQuery.trim()
-      )}`;
+      // Redirect to correct search results page with the query and category
+      if (category === "books") {
+        navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
+      } else if (category === "movies") {
+        navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+      } else {
+        // TV Shows will go here but for now just going to movies
+        navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+      }
     }
   };
 
@@ -110,6 +117,29 @@ const Navbar = () => {
                 },
               }}
             />
+            {/* Category Dropdown */}
+            <Select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              sx={{
+                ml: 2,
+                width: "150px",
+                backgroundColor: "white",
+                borderRadius: "10px",
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': { borderColor: 'gray' },
+                  '&:hover fieldset': { borderColor: 'black' },
+                  '&.Mui-focused fieldset': { borderColor: 'black' },
+                },
+              }}
+            >
+              <MenuItem value="movies">Movies</MenuItem>
+              <MenuItem value="tv">TV Shows</MenuItem>
+              <MenuItem value="books">Books</MenuItem>
+            </Select>
+
+            {/* Hidden submit button */}
+            <button type="submit" style={{ display: "none" }}></button>
           </form>
         </Box>
 
