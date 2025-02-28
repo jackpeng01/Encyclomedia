@@ -85,7 +85,20 @@ const LandingPage = () => {
               to="/tv"
               color="inherit"
             >
-              TV
+              Search TV
+            </Button>
+            <Button
+              sx={{
+                textTransform: "none",
+                mt: 2,
+                fontSize: "1rem",
+                color: "black",
+              }}
+              component={Link}
+              to="/trendingtv"
+              color="inherit"
+            >
+              Trending TV
             </Button>
             <Button
               sx={{
