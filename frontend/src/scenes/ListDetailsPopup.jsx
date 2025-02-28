@@ -45,11 +45,13 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   const [error, setError] = useState(null);
   const [mediaTypeMenu, setMediaTypeMenu] = useState(null);
   const [items, setItems] = useState([]);
+  const [listModified, setListModified] = useState(false);
 
   useEffect(() => {
     if (list) {
       setItems(list.items || []);
       setEditedDescription(list.description || "");
+      setListModified(false);
     }
   }, [list]);
 
@@ -77,6 +79,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
     reorderedItems.splice(result.destination.index, 0, movedItem);
 
     setItems(reorderedItems);
+    setListModified(true);
   };
 
   const handleEditMode = () => {
@@ -85,8 +88,11 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       setEditedDescription(list.description || "");
       setShowAddDescription(false);
     } else {
+      if (listModified) {
+        setItems(list.items || []);
+        setListModified(false);
+      }
       setShowAddDescription(false);
-      setItems(list.items || []);
     }
   };
 
@@ -105,12 +111,21 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
     onUpdateList(updatedList);
     setIsEditMode(false);
     setShowAddDescription(false);
+    setListModified(false);
   };
 
   const handleRemoveItem = (index) => {
     const newItems = [...items];
     newItems.splice(index, 1);
     setItems(newItems);
+    setListModified(true);
+  };
+
+  const handleClosePopup = () => {
+    if (isEditMode && listModified) {
+      setIsEditMode(false);
+    }
+    onClose();
   };
 
   useEffect(() => {
@@ -187,10 +202,21 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
 
   const handleAddMedia = (item) => {
     try {
-      setItems([...items, item]);
+      const updatedItems = [...items, item];
+      setItems(updatedItems);
       setSearchOpen(false);
       setSearchQuery('');
       setSearchResults([]);
+      setListModified(true);
+      
+      if (!isEditMode) {
+        const updatedList = {
+          ...list,
+          items: updatedItems,
+          updatedAt: new Date().toISOString()
+        };
+        onUpdateList(updatedList);
+      }
     } catch (err) {
       setError(`Failed to add item to list: ${err.message}`);
     }
@@ -199,7 +225,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   return (
     <Dialog
       open={open}
-      onClose={isEditMode ? null : onClose}
+      onClose={isEditMode && listModified ? null : handleClosePopup}
       maxWidth="md"
       fullWidth
       PaperProps={{
@@ -233,7 +259,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                 <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
                   <EditIcon />
                 </IconButton>
-                <IconButton onClick={onClose}>
+                <IconButton onClick={handleClosePopup}>
                   <CloseIcon />
                 </IconButton>
               </>
@@ -251,7 +277,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
         {/* Edit mode description */}
         {isEditMode && (
           <Box sx={{ mt: 2 }}>
-            {showAddDescription ? (
+            {showAddDescription || editedDescription ? (
               <TextField
                 fullWidth
                 label="Description"
@@ -259,7 +285,10 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                 multiline
                 rows={2}
                 value={editedDescription}
-                onChange={(e) => setEditedDescription(e.target.value)}
+                onChange={(e) => {
+                  setEditedDescription(e.target.value);
+                  setListModified(true);
+                }}
                 sx={{ mb: 2 }}
               />
             ) : (
@@ -427,6 +456,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                         newItems.splice(draggedIdx, 1);
                         newItems.splice(index, 0, movedItem);
                         setItems(newItems);
+                        setListModified(true);
                       }
                     }}
                   >

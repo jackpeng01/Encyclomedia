@@ -161,6 +161,11 @@ const ListsPage = () => {
   const handleSortMethodSelect = (method) => {
     setSortMethod(method);
     handleCloseSortMenu();
+    
+    // If switching to manual sort, initialize the manual order with current display order
+    if (method === 'manual') {
+      saveManualOrder(displayedLists.map(list => list._id));
+    }
   };
 
   const handleContextMenu = (event, listId) => {
@@ -239,6 +244,12 @@ const ListsPage = () => {
 
       const updatedLists = await getLists(token);
       setLists(updatedLists);
+      
+      if (sortMethod === 'manual') {
+        const currentManualOrder = JSON.parse(localStorage.getItem('listsManualOrder') || '[]');
+        const updatedManualOrder = currentManualOrder.filter(id => id !== deleteListId);
+        saveManualOrder(updatedManualOrder);
+      }
     } catch (error) {
       console.error("❌ Error deleting list:", error);
     }
@@ -280,7 +291,8 @@ const ListsPage = () => {
       const updatedLists = await getLists(token);
       setLists(updatedLists);
 
-      setSelectedList(updatedList);
+      const refreshedList = updatedLists.find(list => list._id === updatedList._id);
+      setSelectedList(refreshedList);
     } catch (error) {
       console.error("❌ Error updating list:", error);
     }
@@ -533,7 +545,14 @@ const ListsPage = () => {
           <ListDetailsPopup
             open={listDetailsOpen}
             list={selectedList}
-            onClose={() => setListDetailsOpen(false)}
+            onClose={() => {
+              setListDetailsOpen(false);
+              const reloadLists = async () => {
+                const refreshedLists = await getLists(token);
+                setLists(refreshedLists);
+              };
+              reloadLists();
+            }}
             onUpdateList={handleUpdateList}
           />
         )}
