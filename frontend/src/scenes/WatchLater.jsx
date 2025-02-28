@@ -164,7 +164,7 @@ const WatchLater = () => {
                                                     color="error"
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        handleRemove("movieLog", entry._id);
+                                                        handleRemove("watchLater", entry._id);
                                                         console.log("Remove movie:", entry.movieId);
                                                     }}
                                                     sx={{ mt: 1 }}
