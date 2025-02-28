@@ -11,10 +11,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
 import React, { useEffect, useState } from "react";
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import DemoIcon from '@mui/icons-material/Code';
 import LoginModal from "./LoginModal";
 
 const Navbar = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const token = useSelector((state) => state.auth.token);
   const [userData, setUserData] = useState([]);
@@ -23,11 +26,10 @@ const Navbar = () => {
     const loadUserData = async () => {
       const fetchedUserData = await getUserByToken(token);
       setUserData(fetchedUserData);
-      console.log("userdata: ", userData);
     };
     loadUserData();
   }, [token]);
-  const navigate = useNavigate();
+
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,12 +51,20 @@ const Navbar = () => {
     }
   };
 
+  
+  const handleListsClick = () => {
+    navigate("/lists");
+  };
+  
+  const handleLocalDemoClick = () => {
+    navigate("/local-lists");
+  };
+  
   return (
     <AppBar
       position="fixed"
       sx={{
-        // backdropFilter: "blur(10px)",
-        backgroundColor: "rgb(255, 255, 255, 0)", // ✅ Light gray for better contrast
+        backgroundColor: "rgb(255, 255, 255, 0)",
         boxShadow: "none",
         width: "100vw",
         left: 0,
@@ -65,7 +75,7 @@ const Navbar = () => {
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
-        {/* ✅ Left Section - Logo */}
+        {/* Left Section - Logo */}
         <Box
           sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
           onClick={() => (window.location.href = "/home")}
@@ -77,6 +87,7 @@ const Navbar = () => {
               fontWeight: 100,
               ml: 1,
               color: "black",
+              color: "black",
             }}
           >
             <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
@@ -84,8 +95,41 @@ const Navbar = () => {
           </Typography>
         </Box>
 
-        {/* ✅ Right Section - Buttons */}
+        {/* Right Section - Buttons */}
         <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
+          {/* My Lists Button */}
+          <Button
+            sx={{
+              textTransform: "none",
+              fontSize: "1rem",
+              color: "black",
+              "&:hover": { color: "black" },
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+            onClick={handleListsClick}
+            startIcon={<FormatListBulletedIcon />}
+          >
+            My Lists
+          </Button>
+          
+          {/* Local Demo Button */}
+          <Button
+            sx={{
+              textTransform: "none",
+              fontSize: "1rem",
+              color: "black",
+              "&:hover": { color: "black" },
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+            onClick={handleLocalDemoClick}
+            startIcon={<DemoIcon />}
+          >
+            Local Demo
+          </Button>
           {/* ✅ Centers items vertically */}
           {/* ✅ Profile Picture */}
         </Box>
