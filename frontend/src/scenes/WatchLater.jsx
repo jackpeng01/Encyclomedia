@@ -85,8 +85,10 @@ const WatchLater = () => {
                     {username}'s Watch Later List
                 </Typography>
 
-                {error ? (
-                    <Typography color="error">{error}</Typography>
+                {watchLater.length === 0 ? (
+                    <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
+                        No movies found in your watch later.
+                    </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
                         {watchLater.map((entry, index) => {
