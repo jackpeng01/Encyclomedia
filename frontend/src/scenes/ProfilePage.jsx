@@ -24,6 +24,8 @@ const ProfilePage = () => {
   }, [token]);
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
+  const [readLaterArray, setReadLaterArray] = useState([]);
+  const [loggedBooks, setLoggedBooks] = useState([]);
   const [error, setError] = useState("");
   const [ownProfile, setOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -80,6 +82,18 @@ const ProfilePage = () => {
           console.log(err);
           setError("Failed to load watch later.");
         }
+
+        // Fetch Read Later Books
+        try {
+          const response = await axios.get("http://127.0.0.1:5000/api/book/read_later", {
+              params: { username: username },
+          });
+
+          setReadLaterArray(response.data);
+        } catch (err) {
+          console.error(err);
+          setError("Failed to load Read Later list.");
+        }
       }
     };
     fetchProfile();
@@ -109,7 +123,10 @@ const ProfilePage = () => {
           setWatchLaterArray((prev) =>
             prev.filter((entry) => entry._id !== entryId)
           );
+        } else if (section === "readLater") {
+          setReadLaterArray((prev) => prev.filter((entry) => entry._id !== entryId));
         }
+        
 
         // alert("Successfully removed!");
       } else {
@@ -593,6 +610,66 @@ const ProfilePage = () => {
             );
           })}
         </Box>
+          {/* Read Later Section */}
+          <Typography
+            variant="h5"
+            sx={{
+              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+              fontWeight: 400,
+              mb: 2,
+              mt: 5,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+            onClick={() => navigate(`/${username}/read-later`)} // Redirect to Read Later page
+          >
+            Read Later:
+          </Typography>
+
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            {readLaterArray.slice(0, 5).map((entry, index) => (
+              <Link
+                to={`/book/${entry.bookId}`}
+                key={index}
+                style={{ textDecoration: "none" }}
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                <Box
+                  sx={{
+                    width: "160px",
+                    height: "240px",
+                    display: "inline-block",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <img
+                    src={entry.cover || `${process.env.PUBLIC_URL}/default-book-cover.png`}
+                    alt={entry.title}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "5px",
+                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                    }}
+                  />
+                  <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
+                    {entry.title}
+                  </Typography>
+                </Box>
+              </Link>
+            ))}
+          </Box>
       </Box>
     </Box>
   );

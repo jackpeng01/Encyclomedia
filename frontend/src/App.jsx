@@ -18,6 +18,7 @@ import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
 import BookSearch from "./scenes/BookSearch";
 import BookDetails from "./scenes/BookDetails";
+import ReadLater from "./scenes/ReadLater";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
@@ -99,6 +100,8 @@ function App() {
             <Route path="/booksearch" element={<BookSearch />} />
 
             <Route path="/book/:id" element={<BookDetails />} />
+
+            <Route path="/:username/read-later" element={<ReadLater />} />
 
 
 

@@ -30,7 +30,8 @@ if db is not None:
         "data": db.get_collection("data"),
         "users": db.get_collection("users"),
         "reviews": db.get_collection("reviews"),
-        "movieLogs": db.get_collection("movieLogs")
+        "movieLogs": db.get_collection("movieLogs"),
+        "bookLogs": db["bookLogs"]
     }
 else:
     app.config["collections"] = {}
