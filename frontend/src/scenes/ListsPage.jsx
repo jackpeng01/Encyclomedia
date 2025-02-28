@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Typography, 
-  Box, 
-  Button, 
+import {
+  Typography,
+  Box,
+  Button,
   Grid,
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import {
   IconButton
 } from "@mui/material";
 import { Add as AddIcon, Sort as SortIcon } from "@mui/icons-material";
-import {getLists, createList, updateList, deleteList } from "../api/listsService.js";
+import { getLists, createList, updateList, deleteList } from "../api/listsService.js";
 import ListDetailsPopup from "./ListDetailsPopup";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -33,9 +33,9 @@ const ListsPage = () => {
   const [sortMethod, setSortMethod] = useState(() => {
     return localStorage.getItem('listsSortMethod') || "default";
   });
-  
+
   const [sortAnchorEl, setSortAnchorEl] = useState(null);
-  
+
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [newListDescription, setNewListDescription] = useState("");
@@ -44,16 +44,16 @@ const ListsPage = () => {
   const [renameListId, setRenameListId] = useState(null);
   const [renameListName, setRenameListName] = useState("");
   const [renameListDescription, setRenameListDescription] = useState("");
-  
+
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteListId, setDeleteListId] = useState(null);
-  
+
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedListId, setSelectedListId] = useState(null);
-  
+
   const [selectedList, setSelectedList] = useState(null);
   const [listDetailsOpen, setListDetailsOpen] = useState(false);
-  
+
   useEffect(() => {
     const loadUserData = async () => {
       const fetchedUserData = await getUserByToken(token);
@@ -63,7 +63,7 @@ const ListsPage = () => {
       loadUserData();
     }
   }, [token]);
-  
+
   // Fetch all lists on component mount
   useEffect(() => {
     const loadLists = async () => {
@@ -83,7 +83,7 @@ const ListsPage = () => {
   // Sort lists according to selected method
   const sortLists = (method) => {
     let sortedLists = [...lists];
-    
+
     switch (method) {
       case "alphabetical":
         sortedLists.sort((a, b) => a.name.localeCompare(b.name));
@@ -100,7 +100,7 @@ const ListsPage = () => {
         const manualOrder = JSON.parse(localStorage.getItem('listsManualOrder') || '[]');
         if (manualOrder.length > 0) {
           const orderMap = new Map(manualOrder.map((id, index) => [id, index]));
-          
+
           // Sort based on the manual order
           sortedLists.sort((a, b) => {
             const orderA = orderMap.has(a._id) ? orderMap.get(a._id) : Number.MAX_SAFE_INTEGER;
@@ -117,7 +117,7 @@ const ListsPage = () => {
           return dateB - dateA;
         });
     }
-    
+
     setDisplayedLists(sortedLists);
   };
 
@@ -127,24 +127,24 @@ const ListsPage = () => {
 
   const handleMoveListUp = (index) => {
     if (index <= 0 || sortMethod !== 'manual') return;
-    
+
     const newDisplayedLists = [...displayedLists];
     const temp = newDisplayedLists[index];
     newDisplayedLists[index] = newDisplayedLists[index - 1];
     newDisplayedLists[index - 1] = temp;
-    
+
     setDisplayedLists(newDisplayedLists);
     saveManualOrder(newDisplayedLists.map(list => list._id));
   };
 
   const handleMoveListDown = (index) => {
     if (index >= displayedLists.length - 1 || sortMethod !== 'manual') return;
-    
+
     const newDisplayedLists = [...displayedLists];
     const temp = newDisplayedLists[index];
     newDisplayedLists[index] = newDisplayedLists[index + 1];
     newDisplayedLists[index + 1] = temp;
-    
+
     setDisplayedLists(newDisplayedLists);
     saveManualOrder(newDisplayedLists.map(list => list._id));
   };
@@ -189,7 +189,7 @@ const ListsPage = () => {
       setOpenCreateDialog(false);
       setNewListName("");
       setNewListDescription("");
-      
+
       const updatedLists = await getLists();
       setLists(updatedLists);
     } catch (error) {
@@ -216,7 +216,7 @@ const ListsPage = () => {
       });
 
       setOpenRenameDialog(false);
-      
+
       const updatedLists = await getLists();
       setLists(updatedLists);
     } catch (error) {
@@ -235,7 +235,7 @@ const ListsPage = () => {
       await deleteList(deleteListId);
 
       setOpenDeleteDialog(false);
-      
+
       const updatedLists = await getLists();
       setLists(updatedLists);
     } catch (error) {
@@ -254,7 +254,7 @@ const ListsPage = () => {
         };
 
         await createList(duplicatedList);
-        
+
         const updatedLists = await getLists();
         setLists(updatedLists);
       }
@@ -275,10 +275,10 @@ const ListsPage = () => {
   const handleUpdateList = async (updatedList) => {
     try {
       await updateList(updatedList._id, updatedList);
-      
+
       const updatedLists = await getLists();
       setLists(updatedLists);
-      
+
       setSelectedList(updatedList);
     } catch (error) {
       console.error("❌ Error updating list:", error);
@@ -296,7 +296,7 @@ const ListsPage = () => {
     >
       {/* Navbar */}
       <Navbar userData={userData} />
-      
+
       {/* Main Content */}
       <Box
         sx={{
@@ -311,7 +311,7 @@ const ListsPage = () => {
             Your Lists
           </Typography>
           <Box>
-            <Button 
+            <Button
               variant="outlined"
               startIcon={<SortIcon />}
               onClick={handleSortClick}
@@ -324,27 +324,27 @@ const ListsPage = () => {
               open={Boolean(sortAnchorEl)}
               onClose={handleCloseSortMenu}
             >
-              <MenuItem 
+              <MenuItem
                 onClick={() => handleSortMethodSelect('alphabetical')}
                 selected={sortMethod === 'alphabetical'}
               >
                 Alphabetical (A-Z)
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={() => handleSortMethodSelect('date')}
                 selected={sortMethod === 'date'}
               >
                 Date Added (Newest first)
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={() => handleSortMethodSelect('manual')}
                 selected={sortMethod === 'manual'}
               >
                 Manual Order
               </MenuItem>
             </Menu>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setOpenCreateDialog(true)}
             >
@@ -352,62 +352,62 @@ const ListsPage = () => {
             </Button>
           </Box>
         </Box>
-        
+
         {/* Lists Grid */}
         <Grid container spacing={3}>
           {displayedLists.map((list, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={list._id}>
-              <Card 
-                onClick={() => handleListClick(list._id)}
-                onContextMenu={(e) => handleContextMenu(e, list._id)}
-                sx={{ 
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 3
-                  },
-                  position: 'relative'
+              <div
+                draggable={sortMethod === 'manual'}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', index.toString());
+                  e.currentTarget.style.opacity = '0.5';
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const draggedIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                  if (draggedIdx !== index) {
+                    const newLists = [...displayedLists];
+                    const movedItem = newLists[draggedIdx];
+                    newLists.splice(draggedIdx, 1);
+                    newLists.splice(index, 0, movedItem);
+                    setDisplayedLists(newLists);
+                    saveManualOrder(newLists.map(list => list._id));
+                  }
                 }}
               >
-                {sortMethod === 'manual' && (
-                  <Box sx={{ position: 'absolute', right: 8, top: 8, zIndex: 1 }}>
-                    <IconButton
-                      size="small"
-                      disabled={index === 0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveListUp(index);
-                      }}
-                      sx={{ bgcolor: 'background.paper', mr: 0.5 }}
-                    >
-                      ↑
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      disabled={index === displayedLists.length - 1}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveListDown(index);
-                      }}
-                      sx={{ bgcolor: 'background.paper' }}
-                    >
-                      ↓
-                    </IconButton>
-                  </Box>
-                )}
-                <CardContent>
-                  <Typography variant="h6" noWrap>
-                    {list.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {list.description || "No description"}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {list.items ? `${list.items.length} items` : "0 items"}
-                  </Typography>
-                </CardContent>
-              </Card>
+                <Card
+                  onClick={() => handleListClick(list._id)}
+                  onContextMenu={(e) => handleContextMenu(e, list._id)}
+                  sx={{
+                    cursor: sortMethod === 'manual' ? 'grab' : 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 3
+                    }
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" noWrap>
+                      {list.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {list.description || "No description"}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {list.items ? `${list.items.length} items` : "0 items"}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </div>
             </Grid>
           ))}
           {displayedLists.length === 0 && (
@@ -418,7 +418,7 @@ const ListsPage = () => {
             </Grid>
           )}
         </Grid>
-        
+
         {/* Context Menu */}
         <Menu
           open={contextMenu !== null}
@@ -434,7 +434,7 @@ const ListsPage = () => {
           <MenuItem onClick={handleDuplicateList}>Duplicate</MenuItem>
           <MenuItem onClick={handleOpenDeleteDialog} sx={{ color: 'error.main' }}>Delete</MenuItem>
         </Menu>
-        
+
         {/* Create List Dialog */}
         <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Create New List</DialogTitle>
@@ -463,8 +463,8 @@ const ListsPage = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenCreateDialog(false)}>Cancel</Button>
-            <Button 
-              onClick={handleCreateList} 
+            <Button
+              onClick={handleCreateList}
               variant="contained"
               disabled={!newListName.trim()}
             >
@@ -472,7 +472,7 @@ const ListsPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        
+
         {/* Rename Dialog */}
         <Dialog open={openRenameDialog} onClose={() => setOpenRenameDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Rename List</DialogTitle>
@@ -501,8 +501,8 @@ const ListsPage = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenRenameDialog(false)}>Cancel</Button>
-            <Button 
-              onClick={handleRenameList} 
+            <Button
+              onClick={handleRenameList}
               variant="contained"
               disabled={!renameListName.trim()}
             >
@@ -510,7 +510,7 @@ const ListsPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        
+
         {/* Delete Confirmation Dialog */}
         <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
           <DialogTitle>Delete List</DialogTitle>
@@ -526,10 +526,10 @@ const ListsPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        
+
         {/* List Details Popup */}
         {selectedList && (
-          <ListDetailsPopup 
+          <ListDetailsPopup
             open={listDetailsOpen}
             list={selectedList}
             onClose={() => setListDetailsOpen(false)}

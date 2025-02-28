@@ -19,16 +19,15 @@ import {
   Alert,
   Divider
 } from "@mui/material";
-import { 
-  Add as AddIcon, 
+import {
+  Add as AddIcon,
   Close as CloseIcon,
   Edit as EditIcon,
   Save as SaveIcon,
-  KeyboardArrowUp as UpIcon,
-  KeyboardArrowDown as DownIcon,
   Delete as DeleteIcon,
   Search as SearchIcon
 } from "@mui/icons-material";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const TMDB_API_KEY = 'a9302b42220aa7e2d0d7ce9d9e988203';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -70,6 +69,16 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
     handleCloseMediaMenu();
   };
 
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const reorderedItems = Array.from(items);
+    const [movedItem] = reorderedItems.splice(result.source.index, 1);
+    reorderedItems.splice(result.destination.index, 0, movedItem);
+
+    setItems(reorderedItems);
+  };
+
   const handleEditMode = () => {
     setIsEditMode(!isEditMode);
     if (!isEditMode) {
@@ -92,32 +101,10 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       items: items,
       updatedAt: new Date().toISOString()
     };
-    
+
     onUpdateList(updatedList);
     setIsEditMode(false);
     setShowAddDescription(false);
-  };
-
-  const handleMoveUp = (index) => {
-    if (index <= 0) return;
-    
-    const newItems = [...items];
-    const temp = newItems[index];
-    newItems[index] = newItems[index - 1];
-    newItems[index - 1] = temp;
-    
-    setItems(newItems);
-  };
-
-  const handleMoveDown = (index) => {
-    if (index >= items.length - 1) return;
-    
-    const newItems = [...items];
-    const temp = newItems[index];
-    newItems[index] = newItems[index + 1];
-    newItems[index + 1] = temp;
-    
-    setItems(newItems);
   };
 
   const handleRemoveItem = (index) => {
@@ -133,10 +120,10 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       const fetchSearchResults = async () => {
         setIsLoading(true);
         setError(null);
-        
+
         try {
           let results = [];
-          
+
           if (searchType === 'movie') {
             const response = await fetch(
               `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}`
@@ -147,11 +134,11 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
               title: movie.title,
               type: 'movie',
               year: movie.release_date ? new Date(movie.release_date).getFullYear() : '',
-              image: movie.poster_path 
-                ? `${TMDB_IMG_BASE}${movie.poster_path}` 
+              image: movie.poster_path
+                ? `${TMDB_IMG_BASE}${movie.poster_path}`
                 : '/api/placeholder/150/225'
             }));
-          } 
+          }
           else if (searchType === 'tv') {
             const response = await fetch(
               `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}`
@@ -162,11 +149,11 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
               title: show.name,
               type: 'tv',
               year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : '',
-              image: show.poster_path 
-                ? `${TMDB_IMG_BASE}${show.poster_path}` 
+              image: show.poster_path
+                ? `${TMDB_IMG_BASE}${show.poster_path}`
                 : '/api/placeholder/150/225'
             }));
-          } 
+          }
           else if (searchType === 'book') {
             const response = await fetch(
               `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&limit=10`
@@ -177,12 +164,12 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
               title: book.title,
               type: 'book',
               year: book.first_publish_year || '',
-              image: book.cover_i 
-                ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` 
+              image: book.cover_i
+                ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
                 : '/api/placeholder/150/225'
             }));
           }
-          
+
           setSearchResults(results);
         } catch (err) {
           console.error('Search error:', err);
@@ -191,14 +178,13 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
           setIsLoading(false);
         }
       };
-      
+
       fetchSearchResults();
     }, 500);
 
     return () => clearTimeout(searchTimeout);
   }, [searchQuery, searchType, searchOpen]);
 
-  // Handle adding a media item to the list
   const handleAddMedia = (item) => {
     try {
       setItems([...items, item]);
@@ -211,10 +197,10 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={isEditMode ? null : onClose} // Prevent closing when in edit mode
-      maxWidth="md" 
+    <Dialog
+      open={open}
+      onClose={isEditMode ? null : onClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: { height: '80vh', display: 'flex', flexDirection: 'column' }
@@ -229,7 +215,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
           <Box>
             {isEditMode ? (
               <>
-                <Button 
+                <Button
                   startIcon={<SaveIcon />}
                   variant="contained"
                   color="primary"
@@ -238,37 +224,30 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                 >
                   Save
                 </Button>
-                <IconButton 
-                  onClick={handleEditMode}
-                >
+                <IconButton onClick={handleEditMode}>
                   <CloseIcon />
                 </IconButton>
               </>
             ) : (
               <>
-                <IconButton 
-                  onClick={handleEditMode}
-                  sx={{ mr: 1 }}
-                >
+                <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
                   <EditIcon />
                 </IconButton>
-                <IconButton 
-                  onClick={onClose}
-                >
+                <IconButton onClick={onClose}>
                   <CloseIcon />
                 </IconButton>
               </>
             )}
           </Box>
         </Box>
-        
+
         {/* Description section */}
         {!isEditMode && list?.description && (
           <Typography variant="body1" sx={{ mt: 1, color: 'text.secondary' }}>
             {list.description}
           </Typography>
         )}
-        
+
         {/* Edit mode description */}
         {isEditMode && (
           <Box sx={{ mt: 2 }}>
@@ -284,8 +263,8 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                 sx={{ mb: 2 }}
               />
             ) : (
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 onClick={handleAddDescriptionClick}
               >
                 Add Description
@@ -296,17 +275,17 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       </DialogTitle>
 
       {/* Content area */}
-      <DialogContent 
-        dividers 
-        sx={{ 
-          p: 0, 
-          flexGrow: 1, 
+      <DialogContent
+        dividers
+        sx={{
+          p: 0,
+          flexGrow: 1,
           overflow: 'auto'
         }}
       >
         {error && (
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             onClose={() => setError(null)}
             sx={{ m: 2 }}
           >
@@ -329,8 +308,8 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
               />
-              <Button 
-                variant="text" 
+              <Button
+                variant="text"
                 onClick={() => setSearchOpen(false)}
                 sx={{ ml: 1 }}
               >
@@ -345,28 +324,34 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
             ) : (
               <List sx={{ pb: 2 }}>
                 {searchResults.map((item) => (
-                  <ListItem 
+                  <ListItem
                     key={item.id}
-                    sx={{ 
+                    sx={{
                       cursor: 'pointer',
                       '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
                     }}
                     onClick={() => handleAddMedia(item)}
                   >
                     <ListItemAvatar>
-                      <Avatar 
-                        variant="rounded" 
+                      <Avatar
+                        variant="square"
                         src={item.image}
                         alt={item.title}
-                        sx={{ width: 56, height: 56 }}
+                        sx={{ width: 40, height: 60, borderRadius: 1 }}
                       />
                     </ListItemAvatar>
-                    <ListItemText 
-                      primary={item.title}
-                      secondary={
-                        `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} • ${item.year || 'Unknown year'}`
+                    <ListItemText
+                      primary={
+                        <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          {item.title}
+                        </Typography>
                       }
-                      sx={{ marginLeft: 2 }}
+                      secondary={
+                        <Typography variant="body2" color="text.secondary">
+                          {item.type.charAt(0).toUpperCase() + item.type.slice(1)} • {item.year || 'Unknown year'}
+                        </Typography>
+                      }
+                      sx={{ ml: 1 }}
                     />
                     <AddIcon color="primary" sx={{ ml: 2 }} />
                   </ListItem>
@@ -416,60 +401,83 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
             )}
 
             {/* Items list */}
-            <List>
+            <List sx={{ width: '100%' }}>
               {items.length > 0 ? (
                 items.map((item, index) => (
-                  <React.Fragment key={item.id}>
+                  <div
+                    key={item.id}
+                    draggable={isEditMode}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/plain', index.toString());
+                      e.currentTarget.style.opacity = '0.5';
+                    }}
+                    onDragEnd={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const draggedIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                      if (draggedIdx !== index) {
+                        const newItems = [...items];
+                        const movedItem = newItems[draggedIdx];
+                        newItems.splice(draggedIdx, 1);
+                        newItems.splice(index, 0, movedItem);
+                        setItems(newItems);
+                      }
+                    }}
+                  >
                     <ListItem
-                      sx={{ 
+                      sx={{
                         py: 1.5,
                         px: 2,
-                        '&:hover': { bgcolor: isEditMode ? 'transparent' : 'rgba(0,0,0,0.04)' }
+                        '&:hover': {
+                          bgcolor: isEditMode ? 'rgba(0,0,0,0.04)' : 'transparent',
+                          boxShadow: isEditMode ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
+                        },
+                        cursor: isEditMode ? 'grab' : 'default',
+                        transition: 'all 0.2s',
+                        borderRadius: '4px',
+                        mb: 1
                       }}
                     >
                       <ListItemAvatar>
-                        <Avatar 
-                          variant="rounded" 
+                        <Avatar
+                          variant="square"
                           src={item.image}
                           alt={item.title}
-                          sx={{ width: 56, height: 56 }}
+                          sx={{ width: 40, height: 60, borderRadius: 1 }}
                         />
                       </ListItemAvatar>
-                      <ListItemText 
-                        primary={item.title}
-                        secondary={
-                          `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} • ${item.year || 'Unknown year'}`
+                      <ListItemText
+                        primary={
+                          <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
+                            {item.title}
+                          </Typography>
                         }
-                        sx={{ marginLeft: 2 }}
+                        secondary={
+                          <Typography variant="body2" color="text.secondary">
+                            {item.type.charAt(0).toUpperCase() + item.type.slice(1)} • {item.year || 'Unknown year'}
+                          </Typography>
+                        }
+                        sx={{ ml: 1 }}
                       />
-                      
+
                       {isEditMode && (
-                        <Box>
-                          <IconButton 
-                            disabled={index === 0}
-                            onClick={() => handleMoveUp(index)}
-                            color="primary"
-                          >
-                            <UpIcon />
-                          </IconButton>
-                          <IconButton 
-                            disabled={index === items.length - 1}
-                            onClick={() => handleMoveDown(index)}
-                            color="primary"
-                          >
-                            <DownIcon />
-                          </IconButton>
-                          <IconButton 
-                            onClick={() => handleRemoveItem(index)}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
+                        <IconButton
+                          onClick={() => handleRemoveItem(index)}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
                       )}
                     </ListItem>
                     <Divider />
-                  </React.Fragment>
+                  </div>
                 ))
               ) : (
                 <Box sx={{ width: '100%', textAlign: 'center', py: 4 }}>
