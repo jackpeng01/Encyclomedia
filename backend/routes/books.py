@@ -80,3 +80,30 @@ def get_book_details(book_id):
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
+    
+@books_bp.route("/api/book/suggestions", methods=["GET"])
+def book_suggestions():
+    query = request.args.get("query", "")
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
+
+    try:
+        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": query, "limit": 5})  # Get top 5 suggestions
+        response.raise_for_status()
+        data = response.json()
+
+        suggestions = []
+        for book in data.get("docs", []):
+            suggestions.append({
+                "title": book.get("title", "Unknown Title"),
+                "id": book.get("key", "").replace("/works/", ""),  # Extract book ID for linking
+                "author": book.get("author_name", ["Unknown Author"])[0]
+            })
+
+        return jsonify({"suggestions": suggestions})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
