@@ -8,10 +8,16 @@ import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
 import HomePage from "./scenes/HomePage";
+import PosterTest from "./scenes/PosterTest";
+import axios from "axios";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
 import ResetPassPage from "./scenes/ResetPassPage";
 import AccountSettingsPage from "./scenes/AccountSettingsPage";
+import MovieDetails from "./scenes/MovieDetails";
+import SearchResults from "./scenes/SearchResults";
+import MovieLog from "./scenes/MovieLog";
+import WatchLater from "./scenes/WatchLater";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -68,6 +74,18 @@ function App() {
 
               {/* 404 Not Found Page */}
               <Route path="*" element={<NotFound />} />
+
+            {/* Poster Test */}
+            <Route path="/poster" element={<PosterTest />} />
+
+            <Route path="/search" element={<SearchResults />} />
+
+            <Route path="/movie/:id" element={<MovieDetails />} />
+
+            <Route path="/:username/movie-log" element={<MovieLog />} />
+            <Route path="/:username/watch-later" element={<WatchLater />} />
+
+
             </Routes>
           </Container>
         </div>
