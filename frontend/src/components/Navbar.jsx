@@ -5,8 +5,9 @@ import {
   Button,
   Toolbar,
   Typography,
-  TextField, MenuItem, Select,
+  TextField, MenuItem, Select, List, ListItem, ListItemText
 } from "@mui/material";
+
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
@@ -14,6 +15,7 @@ import React, { useEffect, useState } from "react";
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import DemoIcon from '@mui/icons-material/Code';
 import LoginModal from "./LoginModal";
+import axios from "axios";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -34,7 +36,26 @@ const Navbar = () => {
   const [signUpMode, setSignUpMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("movies"); 
+  const [suggestions, setSuggestions] = useState([]);
 
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+        if (searchQuery.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        try {
+            const response = await axios.get(`http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`);
+            setSuggestions(response.data.suggestions || []);
+        } catch (error) {
+            console.error("Error fetching book suggestions:", error);
+        }
+    };
+
+    fetchSuggestions();
+}, [searchQuery]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -42,6 +63,7 @@ const Navbar = () => {
       // Redirect to correct search results page with the query and category
       if (category === "books") {
         navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
+        setSuggestions([]);
       } else if (category === "movies") {
         navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
       } else {
@@ -170,6 +192,43 @@ const Navbar = () => {
             {/* Hidden submit button */}
             <button type="submit" style={{ display: "none" }}></button>
           </form>
+          {/* Autocomplete Suggestions (Only for Books) */}
+          {category === "books" && suggestions.length > 0 && (
+            <List
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "50%",
+                backgroundColor: "white",
+                boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+                borderRadius: "5px",
+                maxHeight: "200px",
+                overflowY: "auto",
+              }}
+            >
+              {suggestions.map((suggestion) => (
+                <ListItem
+                  key={suggestion.id}
+                  button="true" 
+                  onClick={() => {
+                  navigate(`/book/${suggestion.id}`);
+                  setSearchQuery("");
+                  setSuggestions([]);
+                }}
+                sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
+              >
+              
+                  <ListItemText
+                    primary={suggestion.title}
+                    secondary={suggestion.author}
+                    sx={{ color: "black" }} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
         </Box>
 
         {/* Right Section - Buttons */}
@@ -181,16 +240,16 @@ const Navbar = () => {
                 sx={{
                   textTransform: "none",
                   fontSize: "1rem",
-                  color: "black", // ✅ Ensures black text
-                  "&:hover": { color: "black" }, // ✅ Keeps text black on hover
+                  color: "black",
+                  "&:hover": { color: "black" }, 
                   display: "flex",
-                  alignItems: "center", // ✅ Ensures image and text are aligned
-                  gap: 1.5, // ✅ Adds spacing between the image and text
-                  padding: "6px 10px", // ✅ Adds padding for better clickability
+                  alignItems: "center", 
+                  gap: 1.5, 
+                  padding: "6px 10px", 
                 }}
                 onClick={() => (window.location.href = `/${userData.username}`)}
               >
-                {/* ✅ Profile Picture Inside Button */}
+                {/* Profile Picture Inside Button */}
                 <img
                   src={userData.profilePicture}
                   alt="Profile"

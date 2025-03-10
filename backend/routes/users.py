@@ -8,6 +8,8 @@ from schemas.user_schema import UserSchema
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from services.config import Config
+from bson import ObjectId
+
 import datetime
 
 cloudinary.config(
@@ -101,25 +103,43 @@ def check_email_unique():
     return response
 
 
+# @users_bp.route("/api/users/<username>", methods=["GET"])
+# @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+# def get_user(username):
+#     """Fetch user data by username"""
+#     users_col = current_app.config["collections"].get("users")
+#     if users_col is None:
+#         response = make_response(jsonify({"error": "database not connected"}), 500)
+#         response.headers["Access-Control-Allow-Credentials"] = "true"
+#         return response
+
+#     user = users_col.find_one({"username": username}, {"_id": 0, "password": 0})
+#     if user is None:
+#         response = make_response(jsonify({"error": "User not found"}), 404)
+#         response.headers["Access-Control-Allow-Credentials"] = "true"
+#         return response
+#     response = make_response(jsonify(user), 200)
+#     response.headers["Access-Control-Allow-Credentials"] = "true"
+#     return response
+
 @users_bp.route("/api/users/<username>", methods=["GET"])
-@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_user(username):
-    """Fetch user data by username"""
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
-        response = make_response(jsonify({"error": "database not connected"}), 500)
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
+        return jsonify({"error": "Database not connected"}), 500
 
-    user = users_col.find_one({"username": username}, {"_id": 0, "password": 0})
-    if user is None:
-        response = make_response(jsonify({"error": "User not found"}), 404)
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
-    response = make_response(jsonify(user), 200)
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
+    user = users_col.find_one({"username": username})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
+    # Convert ObjectId to string
+    user["_id"] = str(user["_id"])
+
+    if "readLater" in user:
+        for entry in user["readLater"]:
+            entry["_id"] = str(entry["_id"])  
+
+    return jsonify(user), 200
 
 @users_bp.route("/api/users/<username>", methods=["PATCH"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])

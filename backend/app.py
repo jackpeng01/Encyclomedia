@@ -32,6 +32,7 @@ if db is not None:
         "users": db.get_collection("users"),
         "reviews": db.get_collection("reviews"),
         "movieLogs": db.get_collection("movieLogs"),
+        "bookLogs": db["bookLogs"],
         "lists": db.get_collection("lists")
     }
 else:

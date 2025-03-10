@@ -4,13 +4,6 @@ import axios from "axios";
 export const SearchBar = ({ setResults }) => {
   const [input, setInput] = useState("");
 
-  const options = {
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${process.env.REACT_APP_TMDB_API_KEY}`,
-    },
-  };
-
   const fetchData = async (value) => {
     let results = [];
     let currentPage = 1;
