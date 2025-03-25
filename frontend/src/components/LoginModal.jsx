@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   addUser,
@@ -23,14 +23,7 @@ import { WaveText } from "./WaveText";
 import { resetPasswordRequest } from "../api/ResetPass";
 
 const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
-  const bubbleAnimation = {
-    hidden: { scale: 0.1, opacity: 1 },
-    visible: {
-      scale: 1.1,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100, damping: 10 },
-    },
-  };
+  const isDarkMode = useSelector((state)=>state.user.isDarkMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -136,7 +129,7 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
       slotProps={{
         paper: {
           style: {
-            // filter: "invert(1)",
+            filter: isDarkMode ? "invert(1)" : "invert(0)",
             // backgroundColor: "#FFF",
             backgroundColor: "rgba(255, 255, 255, 0.8)",
             backdropFilter: "blur(5px)",
@@ -147,11 +140,11 @@ const LoginModal = ({ open, onClose, signUp, setSignUp }) => {
       }}
     >
       <div
-      // style={{
-      //   filter: "invert(1)",
+      style={{
+        // filter: isDarkMode ? "invert(1)" : "invert(0)",
       //   backgroundColor: "#FFF",
       //   // padding: "20px",
-      // }}
+      }}
       >
         <DialogContent>
           <motion.div

@@ -5,15 +5,20 @@ import {
   Button,
   Toolbar,
   Typography,
-  TextField, MenuItem, Select, List, ListItem, ListItemText
+  TextField,
+  MenuItem,
+  Select,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
 import React, { useEffect, useState } from "react";
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import DemoIcon from '@mui/icons-material/Code';
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import DemoIcon from "@mui/icons-material/Code";
 import LoginModal from "./LoginModal";
 import axios from "axios";
 
@@ -35,27 +40,28 @@ const Navbar = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
   const [signUpMode, setSignUpMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [category, setCategory] = useState("movies"); 
+  const [category, setCategory] = useState("movies");
   const [suggestions, setSuggestions] = useState([]);
-
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-        if (searchQuery.length < 2) {
-            setSuggestions([]);
-            return;
-        }
+      if (searchQuery.length < 2) {
+        setSuggestions([]);
+        return;
+      }
 
-        try {
-            const response = await axios.get(`http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`);
-            setSuggestions(response.data.suggestions || []);
-        } catch (error) {
-            console.error("Error fetching book suggestions:", error);
-        }
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`
+        );
+        setSuggestions(response.data.suggestions || []);
+      } catch (error) {
+        console.error("Error fetching book suggestions:", error);
+      }
     };
 
     fetchSuggestions();
-}, [searchQuery]);
+  }, [searchQuery]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -65,23 +71,30 @@ const Navbar = () => {
         navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
         setSuggestions([]);
       } else if (category === "movies") {
-        navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+        navigate(
+          `/search?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`
+        );
       } else {
         // TV Shows will go here but for now just going to movies
-        navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+        navigate(
+          `/search?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`
+        );
       }
     }
   };
 
-  
   const handleListsClick = () => {
     navigate("/myLists");
   };
-  
+
   const handleLocalDemoClick = () => {
     navigate("/local-lists");
   };
-  
+
   return (
     <AppBar
       position="fixed"
@@ -115,6 +128,7 @@ const Navbar = () => {
             <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
             <span style={{ fontSize: "1.3em" }}>A</span>
           </Typography>
+          
         </Box>
 
         {/* Right Section - Buttons */}
@@ -136,7 +150,7 @@ const Navbar = () => {
           >
             My Lists
           </Button>
-          
+
           {/* ✅ Centers items vertically */}
           {/* ✅ Profile Picture */}
         </Box>
@@ -177,10 +191,10 @@ const Navbar = () => {
                 width: "150px",
                 backgroundColor: "white",
                 borderRadius: "10px",
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: 'gray' },
-                  '&:hover fieldset': { borderColor: 'black' },
-                  '&.Mui-focused fieldset': { borderColor: 'black' },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: "gray" },
+                  "&:hover fieldset": { borderColor: "black" },
+                  "&.Mui-focused fieldset": { borderColor: "black" },
                 },
               }}
             >
@@ -211,19 +225,18 @@ const Navbar = () => {
               {suggestions.map((suggestion) => (
                 <ListItem
                   key={suggestion.id}
-                  button="true" 
+                  button="true"
                   onClick={() => {
-                  navigate(`/book/${suggestion.id}`);
-                  setSearchQuery("");
-                  setSuggestions([]);
-                }}
-                sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
-              >
-              
+                    navigate(`/book/${suggestion.id}`);
+                    setSearchQuery("");
+                    setSuggestions([]);
+                  }}
+                  sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
+                >
                   <ListItemText
                     primary={suggestion.title}
                     secondary={suggestion.author}
-                    sx={{ color: "black" }} 
+                    sx={{ color: "black" }}
                   />
                 </ListItem>
               ))}
@@ -241,11 +254,11 @@ const Navbar = () => {
                   textTransform: "none",
                   fontSize: "1rem",
                   color: "black",
-                  "&:hover": { color: "black" }, 
+                  "&:hover": { color: "black" },
                   display: "flex",
-                  alignItems: "center", 
-                  gap: 1.5, 
-                  padding: "6px 10px", 
+                  alignItems: "center",
+                  gap: 1.5,
+                  padding: "6px 10px",
                 }}
                 onClick={() => (window.location.href = `/${userData.username}`)}
               >

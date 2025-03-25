@@ -7,7 +7,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
@@ -15,11 +15,13 @@ import ProfilePicture from "../components/modals/ProfilePicture";
 import { motion } from "framer-motion";
 import BouncingSphere from "../components/BouncingSphere";
 import axios from "axios";
+import { setDarkMode } from "../state/userSlice";
 
 const MAX_BIO_LENGTH = 150;
 
 const AccountSettingsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [userData, setUserData] = useState(null);
   const [formData, setFormData] = useState({
     username: "",
@@ -28,6 +30,7 @@ const AccountSettingsPage = () => {
   });
   const [successMessage, setSuccessMessage] = useState(false);
   const token = useSelector((state) => state.auth.token);
+  const isDarkMode = useSelector((state) => state.user.isDarkMode);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -115,15 +118,22 @@ const AccountSettingsPage = () => {
 
       <Navbar userData={userData} />
       <Box sx={{ textAlign: "center", mt: 10 }}>
-        <Typography
-          variant="h3"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            mb: "30px",
+        <Box
+          sx={{ cursor: "pointer" }}
+          onClick={() => {
+            dispatch(setDarkMode(!isDarkMode));
           }}
         >
-          Account Settings
-        </Typography>
+          <Typography
+            variant="h3"
+            sx={{
+              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+              mb: "30px",
+            }}
+          >
+            Account Settings
+          </Typography>
+        </Box>
         <ProfilePicture
           userData={userData}
           viewerData={userData}

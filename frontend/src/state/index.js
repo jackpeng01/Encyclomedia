@@ -20,7 +20,7 @@ const rootReducer = combineReducers({
 });
 
 // ✅ Persist Reducer Configuration (only persist auth slice, not everything)
-const persistConfig = { key: "root", storage, version: 1, whitelist: ["auth"] };
+const persistConfig = { key: "root", storage, version: 1 };
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 // ✅ Create Redux Store

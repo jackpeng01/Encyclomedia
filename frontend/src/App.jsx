@@ -33,12 +33,13 @@ function App() {
 
   // Authentication state (if used later)
   const isAuth = Boolean(useSelector((state) => state.token));
+  const isDarkMode = useSelector((state)=>state.user.isDarkMode);
 
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div style={{ backgroundColor: "#fff", filter: "invert(0)" }}>
+        <div style={{ backgroundColor: "#fff", filter: isDarkMode ? "invert(1)" : "invert(0)" }}>
           <Container>
             <Routes>
               {/* Landing Page */}
