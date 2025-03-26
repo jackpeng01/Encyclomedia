@@ -128,80 +128,76 @@ const Navbar = () => {
             <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
             <span style={{ fontSize: "1.3em" }}>A</span>
           </Typography>
-          
-        </Box>
-
-        {/* Right Section - Buttons */}
-        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
-          {/* My Lists Button */}
-          <Button
-            sx={{
-              ml: "10px",
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={handleListsClick}
-            startIcon={<FormatListBulletedIcon />}
-          >
-            My Lists
-          </Button>
-
-          {/* ✅ Centers items vertically */}
-          {/* ✅ Profile Picture */}
         </Box>
         {/* Center Section - Search Bar */}
         <Box sx={{ flexGrow: 1, mx: 5 }}>
           <form
             onSubmit={handleSearchSubmit}
-            style={{ display: "flex", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              justifyContent: "left",
+              alignItems: "center",
+            }}
           >
-            <TextField
-              variant="outlined"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+            <Box
               sx={{
-                width: "50%", // Adjusted width for a more compact look
+                display: "flex",
+                alignItems: "center",
+                width: "60%", // total width of the combined component
                 backgroundColor: "white",
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "gray",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "black",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "black",
-                  },
-                  borderRadius: "10px", // More rounded corners
-                },
-              }}
-            />
-            {/* Category Dropdown */}
-            <Select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              sx={{
-                ml: 2,
-                width: "150px",
-                backgroundColor: "white",
-                borderRadius: "10px",
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": { borderColor: "gray" },
-                  "&:hover fieldset": { borderColor: "black" },
-                  "&.Mui-focused fieldset": { borderColor: "black" },
+                borderRadius: "20px",
+                overflow: "hidden", // ensure no radius leaks
+                border: "1px solid gray", // unified border
+                "&:hover": {
+                  borderColor: "black",
                 },
               }}
             >
-              <MenuItem value="movies">Movies</MenuItem>
-              <MenuItem value="tv">TV Shows</MenuItem>
-              <MenuItem value="books">Books</MenuItem>
-            </Select>
+              <TextField
+                variant="outlined"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { border: "none" },
+                    borderRadius: 0, // remove internal rounding
+                    paddingRight: 0, // no gap between inputs
+                  },
+                  "& .MuiInputBase-root": {
+                    height: "15px",
+                  },
+                }}
+              />
+
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                disableUnderline
+                sx={{
+                  backgroundColor: "#f4f4f4",
+
+                  minWidth: "100px",
+                  height: "30px",
+                  borderLeft: "1px solid gray",
+                  borderRadius: 0,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    border: "none",
+                  },
+                  "&:hover": {
+                    borderColor: "black",
+                  },
+                  "&.Mui-focused": {
+                    borderColor: "black",
+                  },
+                }}
+              >
+                <MenuItem value="movies">Movies</MenuItem>
+                <MenuItem value="tv">TV</MenuItem>
+                <MenuItem value="books">Books</MenuItem>
+              </Select>
+            </Box>
 
             {/* Hidden submit button */}
             <button type="submit" style={{ display: "none" }}></button>
@@ -246,6 +242,22 @@ const Navbar = () => {
 
         {/* Right Section - Buttons */}
         <Box sx={{ display: "flex", gap: 3 }}>
+          <Button
+            sx={{
+              ml: "10px",
+              textTransform: "none",
+              fontSize: "1rem",
+              color: "black",
+              "&:hover": { color: "black" },
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+            onClick={handleListsClick}
+            // startIcon={<FormatListBulletedIcon />}
+          >
+            My Lists
+          </Button>
           {userData ? (
             <>
               {/* Profile Button */}
