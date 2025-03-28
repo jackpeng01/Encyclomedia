@@ -12,3 +12,5 @@ class UserSchema(Schema):
         missing="https://res.cloudinary.com/dby0q8y9z/image/upload/v1739815199/default-profile_crftml.png"
     )
     bio = fields.String(missing="")
+    followers = fields.List(fields.String(), missing=list)
+    following = fields.List(fields.String(), missing=list)

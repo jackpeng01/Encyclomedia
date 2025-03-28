@@ -7,6 +7,9 @@ import Navbar from "../components/Navbar";
 import { FaStar } from "react-icons/fa";
 import ProfilePicture from "../components/modals/ProfilePicture";
 import axios from "axios";
+import FollowButton from "../components/FollowButton";
+import { view } from "framer-motion";
+import ProfileStats from "../components/modals/ProfileStats";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -14,14 +17,37 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const token = useSelector((state) => state.auth.token);
   const [viewerData, setViewerData] = useState([]);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   useEffect(() => {
-    const loadViewerData = async () => {
-      const fetchedViewerData = await getUserByToken(token);
-      setViewerData(fetchedViewerData);
+    const loadData = async () => {
+      try {
+        // Fetch viewerData if token is present
+        let fetchedViewerData = {};
+        if (token) {
+          fetchedViewerData = await getUserByToken(token);
+        }
+
+        // Fetch userData if username is provided
+        let fetchedProfile = {};
+        if (username) {
+          fetchedProfile = await getUserByUsername(username);
+        }
+
+        // Ensure default values to avoid undefined properties
+        fetchedViewerData.following = fetchedViewerData.following || [];
+        fetchedProfile.following = fetchedProfile.following || [];
+
+        setViewerData(fetchedViewerData);
+        setUserData(fetchedProfile);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
     };
-    loadViewerData();
-  }, [token]);
+
+    loadData();
+  }, [token, username, forceRefresh]);
+
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
   const [readLaterArray, setReadLaterArray] = useState([]);
@@ -32,9 +58,6 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const fetchedProfile = await getUserByUsername(username);
-      setUserData(fetchedProfile);
-
       const profileToken = await getUserByToken(token);
       setCurrentUser(profileToken);
       if (profileToken.username == username) {
@@ -85,9 +108,12 @@ const ProfilePage = () => {
 
         // Fetch Read Later Books
         try {
-          const response = await axios.get("http://127.0.0.1:5000/api/book/read_later", {
+          const response = await axios.get(
+            "http://127.0.0.1:5000/api/book/read_later",
+            {
               params: { username: username },
-          });
+            }
+          );
 
           setReadLaterArray(response.data);
         } catch (err) {
@@ -97,7 +123,7 @@ const ProfilePage = () => {
       }
     };
     fetchProfile();
-  }, [username]);
+  }, []);
 
   const handleRemove = async (section, entryId) => {
     try {
@@ -124,9 +150,10 @@ const ProfilePage = () => {
             prev.filter((entry) => entry._id !== entryId)
           );
         } else if (section === "readLater") {
-          setReadLaterArray((prev) => prev.filter((entry) => entry._id !== entryId));
+          setReadLaterArray((prev) =>
+            prev.filter((entry) => entry._id !== entryId)
+          );
         }
-        
 
         // alert("Successfully removed!");
       } else {
@@ -169,6 +196,18 @@ const ProfilePage = () => {
           <Typography variant="h5" sx={{ fontWeight: 400 }}>
             {userData.username}
           </Typography>
+          <Box sx={{ mt: "10px" }}>
+            {!ownProfile && viewerData && (
+              <FollowButton
+                userData={userData}
+                viewerData={viewerData}
+                initialIsFollowing={viewerData.following.includes(
+                  userData.username
+                )}
+                setForceRefresh={setForceRefresh}
+              />
+            )}
+          </Box>
           <Box sx={{ textAlign: "left", mt: 0 }}>
             {userData.username === viewerData.username && (
               <Button
@@ -204,33 +243,7 @@ const ProfilePage = () => {
           }}
         >
           {/* ✅ Stats (Horizontally Stacked) */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 5,
-              fontSize: "1.2rem",
-              textAlign: "center",
-              mb: 5, // Adds spacing before the bio
-            }}
-          >
-            {[
-              { label: "Reviews", value: 0 },
-              { label: "Lists", value: 0 },
-              { label: "Media", value: 99 },
-              { label: "Followers", value: "9B" },
-              { label: "Following", value: "18B" },
-            ].map((stat, index) => (
-              <Box key={index} sx={{ textAlign: "center" }}>
-                <Typography sx={{ fontWeight: 500, fontSize: "1.5rem" }}>
-                  {stat.value}
-                </Typography>
-                <Typography sx={{ fontWeight: 300, fontSize: "1rem" }}>
-                  {stat.label}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
+          <ProfileStats userData={userData}/>
 
           {/* ✅ Bio (Now Inside the Same Box) */}
           <Typography
@@ -610,66 +623,72 @@ const ProfilePage = () => {
             );
           })}
         </Box>
-          {/* Read Later Section */}
-          <Typography
-            variant="h5"
-            sx={{
-              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-              fontWeight: 400,
-              mb: 2,
-              mt: 5,
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-            onClick={() => navigate(`/${username}/read-later`)} // Redirect to Read Later page
-          >
-            Read Later:
-          </Typography>
+        {/* Read Later Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => navigate(`/${username}/read-later`)} // Redirect to Read Later page
+        >
+          Read Later:
+        </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
-            {readLaterArray.slice(0, 5).map((entry, index) => (
-              <Link
-                to={`/book/${entry.bookId}`}
-                key={index}
-                style={{ textDecoration: "none" }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {readLaterArray.slice(0, 5).map((entry, index) => (
+            <Link
+              to={`/book/${entry.bookId}`}
+              key={index}
+              style={{ textDecoration: "none" }}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              <Box
+                sx={{
+                  width: "160px",
+                  height: "240px",
+                  display: "inline-block",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
               >
-                <Box
-                  sx={{
-                    width: "160px",
-                    height: "240px",
-                    display: "inline-block",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    overflow: "hidden",
+                <img
+                  src={
+                    entry.cover ||
+                    `${process.env.PUBLIC_URL}/default-book-cover.png`
+                  }
+                  alt={entry.title}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: "5px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                   }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
                 >
-                  <img
-                    src={entry.cover || `${process.env.PUBLIC_URL}/default-book-cover.png`}
-                    alt={entry.title}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      borderRadius: "5px",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
-                    {entry.title}
-                  </Typography>
-                </Box>
-              </Link>
-            ))}
-          </Box>
+                  {entry.title}
+                </Typography>
+              </Box>
+            </Link>
+          ))}
+        </Box>
       </Box>
     </Box>
   );
