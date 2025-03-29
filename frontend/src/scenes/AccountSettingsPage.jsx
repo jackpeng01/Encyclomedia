@@ -5,6 +5,8 @@ import {
   Button,
   Snackbar,
   Alert,
+  Autocomplete,
+  Chip,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +21,25 @@ import { setDarkMode } from "../state/userSlice";
 
 const MAX_BIO_LENGTH = 150;
 
+// Define the genre options
+const genreOptions = [
+  "Comedy",
+  "Romance",
+  "Crime",
+  "Drama",
+  "Fantasy",
+  "Thriller",
+  "Action",
+  "Adventure",
+  "Sci-Fi",
+  "Horror",
+  "Mystery",
+  "Documentary",
+  "Animation",
+  "Family",
+  "Biography",
+];
+
 const AccountSettingsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -27,6 +48,7 @@ const AccountSettingsPage = () => {
     username: "",
     email: "",
     bio: "",
+    genrePreferences: [],
   });
   const [successMessage, setSuccessMessage] = useState(false);
   const token = useSelector((state) => state.auth.token);
@@ -40,6 +62,8 @@ const AccountSettingsPage = () => {
         username: fetchedUserData.username || "",
         email: fetchedUserData.email || "",
         bio: fetchedUserData.bio || "",
+        // If the API returns genre preferences, use them; otherwise default to an empty array
+        genrePreferences: fetchedUserData.genrePreferences || [],
       });
     };
     loadUserData();
@@ -51,6 +75,14 @@ const AccountSettingsPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handler to update genre preferences from the Autocomplete field
+  const handleGenreChange = (event, newValue) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      genrePreferences: newValue,
+    }));
+  };
+
   const handleSubmit = async () => {
     console.log("Updated user data: ", formData);
     try {
@@ -58,13 +90,20 @@ const AccountSettingsPage = () => {
         `http://127.0.0.1:5000/api/users/${userData.username}`,
         {
           bio: formData.bio,
+          genrePreferences: formData.genrePreferences,
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         }
       );
-      setFormData(response.data);
+      setFormData((prevData) => ({
+        ...prevData,
+        bio: response.data.bio,
+        genrePreferences: response.data.genrePreferences,
+      }));
       setSuccessMessage(true);
     } catch (error) {
       console.error("❌ Error :", error);
@@ -104,12 +143,12 @@ const AccountSettingsPage = () => {
 
       <Box
         sx={{
-          position: "fixed", // ✅ Ensures it stays behind other elements
+          position: "fixed",
           top: 0,
           left: 0,
           width: "50vw",
           height: "50vh",
-          zIndex: -100, // ✅ Places it behind UI elements
+          zIndex: -100,
           pointerEvents: "none",
         }}
       >
@@ -191,6 +230,31 @@ const AccountSettingsPage = () => {
           >
             {formData.bio.length}/{MAX_BIO_LENGTH} characters used
           </Typography>
+        </Box>
+        {/* New Genre Preferences Field */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ color: "gray" }}>
+            Genre Preferences
+          </Typography>
+          <Autocomplete
+            multiple
+            options={genreOptions}
+            value={formData.genrePreferences}
+            onChange={handleGenreChange}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip
+                  variant="outlined"
+                  label={option}
+                  {...getTagProps({ index })}
+                  key={option}
+                />
+              ))
+            }
+            renderInput={(params) => (
+              <TextField {...params} variant="outlined" size="small" />
+            )}
+          />
         </Box>
         <Button
           variant="text"

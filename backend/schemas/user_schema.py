@@ -14,3 +14,4 @@ class UserSchema(Schema):
     bio = fields.String(missing="")
     followers = fields.List(fields.String(), missing=list)
     following = fields.List(fields.String(), missing=list)
+    genrePreferences = fields.List(fields.String(), missing=list)
