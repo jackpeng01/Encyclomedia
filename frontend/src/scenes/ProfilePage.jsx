@@ -1,83 +1,134 @@
-import { Box, Button, Typography } from "@mui/material";
-import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { Box, Button, Typography, Chip } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getUserByToken, getUserByUsername } from "../api/users";
 import Navbar from "../components/Navbar";
 import { FaStar } from "react-icons/fa";
+import ProfilePicture from "../components/modals/ProfilePicture";
+import axios from "axios";
+import FollowButton from "../components/FollowButton";
+import { view } from "framer-motion";
+import ProfileStats from "../components/modals/ProfileStats";
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
   const { username } = useParams();
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const token = useSelector((state) => state.auth.token);
-  const fileInputRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const [viewerData, setViewerData] = useState([]);
+  const [forceRefresh, setForceRefresh] = useState(0);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Fetch viewerData if token is present
+        let fetchedViewerData = {};
+        if (token) {
+          fetchedViewerData = await getUserByToken(token);
+        }
+
+        // Fetch userData if username is provided
+        let fetchedProfile = {};
+        if (username) {
+          fetchedProfile = await getUserByUsername(username);
+        }
+
+        // Ensure default values to avoid undefined properties
+        fetchedViewerData.following = fetchedViewerData.following || [];
+        fetchedProfile.following = fetchedProfile.following || [];
+
+        setViewerData(fetchedViewerData);
+        setUserData(fetchedProfile);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    loadData();
+  }, [token, username, forceRefresh]);
+
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
+  const [readLaterArray, setReadLaterArray] = useState([]);
+  const [loggedBooks, setLoggedBooks] = useState([]);
   const [error, setError] = useState("");
   const [ownProfile, setOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-
   useEffect(() => {
     const fetchProfile = async () => {
-      const fetchedProfile = await getUserByUsername(username);
-      setUserData(fetchedProfile);
-
       const profileToken = await getUserByToken(token);
       setCurrentUser(profileToken);
-      if (profileToken.username == username) {
+      if (profileToken.username === username) {
         setOwnProfile(true);
       }
 
       if (fetchProfile) {
-
         // Gets user's movie log
         try {
-          const response = await axios.get(`http://127.0.0.1:5000/api/movie/log`, {
-            params: {
-              username: username,
-            },
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          });
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/movie/log`,
+            {
+              params: {
+                username: username,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
           setMovieLog(response.data);
-          console.log(response.data)
+          console.log(response.data);
         } catch (err) {
           console.log(err);
           setError("Failed to load movie log.");
         }
 
-
         // Gets user's watch later
         try {
-          const response = await axios.get(`http://127.0.0.1:5000/api/movie/watch_later`, {
-            params: {
-              username: username,
-            },
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          });
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/movie/watch_later`,
+            {
+              params: {
+                username: username,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
           setWatchLaterArray(response.data);
         } catch (err) {
           console.log(err);
           setError("Failed to load watch later.");
         }
+
+        // Fetch Read Later Books
+        try {
+          const response = await axios.get(
+            "http://127.0.0.1:5000/api/book/read_later",
+            {
+              params: { username: username },
+            }
+          );
+
+          setReadLaterArray(response.data);
+        } catch (err) {
+          console.error(err);
+          setError("Failed to load Read Later list.");
+        }
       }
     };
     fetchProfile();
-  }, [username]);
+  }, [token, username]);
 
   const handleRemove = async (section, entryId) => {
     try {
-
-      const response = await axios.post('http://127.0.0.1:5000/api/movie/remove',
+      const response = await axios.post(
+        "http://127.0.0.1:5000/api/movie/remove",
         {
           username: username,
           entry: entryId,
@@ -95,50 +146,20 @@ const ProfilePage = () => {
         if (section === "movieLog") {
           setMovieLog((prev) => prev.filter((entry) => entry._id !== entryId));
         } else if (section === "watchLater") {
-          setWatchLaterArray((prev) => prev.filter((entry) => entry._id !== entryId));
+          setWatchLaterArray((prev) =>
+            prev.filter((entry) => entry._id !== entryId)
+          );
+        } else if (section === "readLater") {
+          setReadLaterArray((prev) =>
+            prev.filter((entry) => entry._id !== entryId)
+          );
         }
-
-        // alert("Successfully removed!");
       } else {
         throw new Error("Failed to remove the entry.");
       }
     } catch (error) {
       console.error("Error removing the entry:", error);
       alert("An error occurred while trying to remove the entry.");
-    }
-  };
-
-
-
-  const handleFileChange = async (event) => {
-    const selectedFile = event.target.files[0];
-    if (!selectedFile) return;
-
-    const formData = new FormData();
-    formData.append("image", selectedFile);
-
-    try {
-      const response = await axios.post(
-        `http://127.0.0.1:5000/api/users/${username}/upload-profile-picture`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
-      );
-
-      // ✅ Update profile picture immediately
-      setUserData((prev) => ({
-        ...prev,
-        profilePicture: response.data.profilePicture,
-      }));
-
-      alert("Profile picture updated successfully!");
-    } catch (error) {
-      console.error("❌ Error uploading profile picture:", error);
     }
   };
 
@@ -149,114 +170,94 @@ const ProfilePage = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh", // ✅ Ensures full viewport height
-        // width: "100vw", // ✅ Forces it to take full width
-        overflowX: "hidden", // ✅ Prevents unwanted horizontal scrolling
+        minHeight: "100vh",
+        overflowX: "hidden",
       }}
     >
       <Navbar userData={currentUser} />
 
-      {/* ✅ Profile Section */}
-      <Box sx={{ textAlign: "center", mt: 10 }}>
-        {/* ✅ Clickable Profile Picture */}
-        <div
-          style={{
-            position: "relative",
-            display: "inline-block",
-            cursor: "pointer",
-          }}
-          onClick={() => fileInputRef.current.click()}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <img
-            src={userData.profilePicture}
-            alt="Profile"
-            width="150"
-            height="150"
-            style={{
-              borderRadius: "50%",
-              objectFit: "cover",
-              transition: "opacity 0.3s ease-in-out",
-              filter: isHovered ? "brightness(70%)" : "none",
-              //   filter: "invert(1)",
-            }}
-          />
-          {isHovered && (
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                backgroundColor: "rgba(0, 0, 0, 0.6)",
-                color: "white",
-                padding: "5px 10px",
-                borderRadius: "5px",
-                fontSize: "14px",
-                fontWeight: "bold",
-                textAlign: "center",
-              }}
-            >
-              Edit
-            </div>
-          )}
-        </div>
+      {/* Profile Header Section */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 5,
+          mt: 10,
+          px: 4,
+          flexWrap: "wrap",
+        }}
+      >
+        {/* Left Section: Profile Picture & Username */}
+        <Box sx={{ textAlign: "center" }}>
+          <ProfilePicture userData={userData} viewerData={[]} token={token} />
+          <Typography variant="h5" sx={{ fontWeight: 400 }}>
+            {userData.username}
+          </Typography>
+          <Box sx={{ mt: "10px" }}>
+            {!ownProfile && viewerData && (
+              <FollowButton
+                userData={userData}
+                viewerData={viewerData}
+                initialIsFollowing={viewerData.following.includes(
+                  userData.username
+                )}
+                setForceRefresh={setForceRefresh}
+              />
+            )}
+          </Box>
+          <Box sx={{ textAlign: "left", mt: 0 }}>
+            {userData.username === viewerData.username && (
+              <Button
+                sx={{
+                  textTransform: "none",
+                  fontSize: "0.75rem",
+                  color: "black",
+                  display: "block",
+                  textAlign: "left",
+                  "&:hover": { color: "black" },
+                  padding: 0,
+                }}
+                onClick={() => navigate("/settings")}
+              >
+                Edit Profile
+              </Button>
+            )}
+          </Box>
+        </Box>
 
-        {/* ✅ Username */}
-        <Typography
-          variant="h4"
-          sx={{
-            // fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mt: 2,
-          }}
-        >
-          {userData.username}
-        </Typography>
-
-        {/* ✅ Profile Stats */}
+        {/* Right Section: Profile Statistics, Bio & Genre Preferences */}
         <Box
           sx={{
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
-            gap: 5,
-            mt: 2,
-            fontSize: "1.2rem",
+            alignItems: "center",
+            padding: "20px",
+            borderRadius: "10px",
+            maxWidth: "600px",
+            minWidth: "400px",
           }}
         >
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>0</strong> <br /> Reviews
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>0</strong> <br /> Lists
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>99</strong> <br /> Media
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>9B</strong> <br /> Followers
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }}>
-            <strong>18B</strong> <br /> Following
+          {/* Profile Statistics */}
+          <ProfileStats userData={userData} />
+
+          {/* Bio */}
+          <Typography
+            sx={{
+              color: "gray",
+              fontSize: "1rem",
+              textAlign: "center",
+              maxWidth: "500px",
+              mt: 2,
+            }}
+          >
+            {userData.bio}
           </Typography>
         </Box>
-
-        {/* ✅ Bio Section */}
-        <Typography
-          sx={{
-            maxWidth: "600px",
-            margin: "auto",
-            mt: 2,
-            color: "gray",
-            fontSize: "1rem",
-          }}
-        >
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque
-          pharetra consectetur dolor at molestie.
-        </Typography>
       </Box>
 
+      {/* The rest of your ProfilePage content (Favorite Media, Movie Log, etc.) */}
       <Box sx={{ maxWidth: "900px", margin: "auto", mt: 5 }}>
         {/* Favorite Media Section */}
         <Typography
@@ -269,7 +270,33 @@ const ProfilePage = () => {
         >
           Favorite Media:
         </Typography>
-
+        {userData.genrePreferences && userData.genrePreferences.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 3,
+              width: "100%",
+              // pl: 2, // optional padding to align with the rest of the content
+            }}
+          >
+            {/* <Typography variant="body2" sx={{ color: "gray", mr: 1 }}>
+                Favorite Genres:
+              </Typography> */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                justifyContent: "flex-start",
+              }}
+            >
+              {userData.genrePreferences.map((genre, idx) => (
+                <Chip key={idx} label={genre} variant="outlined" />
+              ))}
+            </Box>
+          </Box>
+        )}
         <Box
           sx={{
             display: "flex",
@@ -318,11 +345,10 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/movie-log`)} // Redirect to Movie Log page
+          onClick={() => navigate(`/${username}/movie-log`)}
         >
           Movie Log:
         </Typography>
-
 
         <Box
           sx={{
@@ -333,10 +359,10 @@ const ProfilePage = () => {
           }}
         >
           {movieLog.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; // Check if there's no poster
+            const isDefaultPoster = !entry.poster;
             return (
               <Link
-                to={`/movie/${entry.movieId}`} // Redirect to the movie details page
+                to={`/movie/${entry.movieId}`}
                 key={index}
                 style={{ textDecoration: "none" }}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -352,32 +378,37 @@ const ProfilePage = () => {
                     textAlign: "center",
                     borderRadius: "8px",
                     overflow: "hidden",
-                    position: "relative", // Required for hover effect
+                    position: "relative",
                     "&:hover .overlay": {
-                      display: "flex", // Show the overlay content on hover
+                      display: "flex",
                     },
                   }}
-                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <img
-                    src={isDefaultPoster ? `${process.env.PUBLIC_URL}/default-poster-icon.png` : entry.poster}
+                    src={
+                      isDefaultPoster
+                        ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                        : entry.poster
+                    }
                     alt={entry.title || "Movie Poster"}
                     style={{
-                      width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
-                      height: "auto", // Maintains aspect ratio
-                      maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
+                      width: isDefaultPoster ? "85%" : "100%",
+                      height: "auto",
+                      maxHeight: isDefaultPoster ? "85%" : "auto",
                       borderRadius: "5px",
                       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                       cursor: "pointer",
                     }}
                   />
                   {isDefaultPoster && (
-                    <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                    >
                       {entry.title || "Unknown Title"}
                     </Typography>
                   )}
-
-                  {/* Hover Overlay */}
                   <Box
                     className="overlay"
                     sx={{
@@ -386,11 +417,11 @@ const ProfilePage = () => {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      display: "none", // Initially hidden
+                      display: "none",
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
+                      backgroundColor: "rgba(0, 0, 0, 0.7)",
                       color: "white",
                       padding: 2,
                       borderRadius: "8px",
@@ -400,26 +431,34 @@ const ProfilePage = () => {
                       gap: 1,
                     }}
                   >
-                    {/* Display Rating */}
-                    <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: "0.2rem",
+                        justifyContent: "center",
+                      }}
+                    >
                       {[1, 2, 3, 4, 5].map((star) => (
                         <FaStar
                           key={star}
                           size={20}
-                          color={star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"}
+                          color={
+                            star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
+                          }
                         />
                       ))}
                     </Box>
-
-                    {/* Watch Date */}
                     <Typography>
-                      {entry.watchDate ? `Watched on: ${entry.watchDate}` : "No Watch Date"}
+                      {entry.watchDate
+                        ? `Watched on: ${entry.watchDate}`
+                        : "No Watch Date"}
                     </Typography>
-
-                    {/* Tags */}
                     {entry.tags && entry.tags.length > 0 && (
                       <Box sx={{ mt: 1 }}>
-                        <Typography variant="subtitle2" sx={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontSize: "0.8rem", fontWeight: 600 }}
+                        >
                           Tags:
                         </Typography>
                         <Box
@@ -447,8 +486,6 @@ const ProfilePage = () => {
                         </Box>
                       </Box>
                     )}
-
-                    {/* Remove Button */}
                     {ownProfile && (
                       <Button
                         variant="contained"
@@ -456,7 +493,6 @@ const ProfilePage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           handleRemove("movieLog", entry._id);
-                          console.log("Remove movie:", entry.movieId);
                         }}
                         sx={{ mt: 1 }}
                       >
@@ -470,8 +506,6 @@ const ProfilePage = () => {
           })}
         </Box>
 
-
-
         {/* Watch Later Section */}
         <Typography
           variant="h5"
@@ -483,7 +517,7 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/watch-later`)} // Redirect to Watch Later page
+          onClick={() => navigate(`/${username}/watch-later`)}
         >
           Watch Later:
         </Typography>
@@ -497,10 +531,10 @@ const ProfilePage = () => {
           }}
         >
           {watchLaterArray.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; // Check if there's no poster
+            const isDefaultPoster = !entry.poster;
             return (
               <Link
-                to={`/movie/${entry.movieId}`} // Redirect to the movie details page
+                to={`/movie/${entry.movieId}`}
                 key={index}
                 style={{ textDecoration: "none" }}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -516,24 +550,30 @@ const ProfilePage = () => {
                     textAlign: "center",
                     borderRadius: "8px",
                     overflow: "hidden",
-                    position: "relative", // Required for hover effect
+                    position: "relative",
                     "&:hover .overlay": {
-                      display: "flex", // Show the overlay content on hover
+                      display: "flex",
                     },
                   }}
-                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <Link
                     to={`/movie/${entry.movieId}`}
-                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    onClick={() =>
+                      window.scrollTo({ top: 0, behavior: "smooth" })
+                    }
                   >
                     <img
-                      src={isDefaultPoster ? `${process.env.PUBLIC_URL}/default-poster-icon.png` : entry.poster}
+                      src={
+                        isDefaultPoster
+                          ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                          : entry.poster
+                      }
                       alt={entry.title || "Movie Poster"}
                       style={{
-                        width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
-                        height: "auto", // Maintains aspect ratio
-                        maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
+                        width: isDefaultPoster ? "85%" : "100%",
+                        height: "auto",
+                        maxHeight: isDefaultPoster ? "85%" : "auto",
                         borderRadius: "5px",
                         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                         cursor: "pointer",
@@ -541,12 +581,13 @@ const ProfilePage = () => {
                     />
                   </Link>
                   {isDefaultPoster && (
-                    <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                    >
                       {entry.title || "Unknown Title"}
                     </Typography>
                   )}
-
-                  {/* Hover Overlay */}
                   <Box
                     className="overlay"
                     sx={{
@@ -555,11 +596,11 @@ const ProfilePage = () => {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      display: "none", // Initially hidden
+                      display: "none",
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
+                      backgroundColor: "rgba(0, 0, 0, 0.7)",
                       color: "white",
                       padding: 2,
                       borderRadius: "8px",
@@ -569,14 +610,9 @@ const ProfilePage = () => {
                       gap: 1,
                     }}
                   >
-                    {/* Tags (Optional Section) */}
                     {entry.tags && entry.tags.length > 0 && (
-                      <Typography>
-                        Tags: {entry.tags.join(", ")}
-                      </Typography>
+                      <Typography>Tags: {entry.tags.join(", ")}</Typography>
                     )}
-
-                    {/* Remove Button */}
                     {ownProfile && (
                       <Button
                         variant="contained"
@@ -584,7 +620,6 @@ const ProfilePage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           handleRemove("watchLater", entry._id);
-                          console.log("Remove movie:", entry.movieId);
                         }}
                         sx={{ mt: 1 }}
                       >
@@ -598,22 +633,73 @@ const ProfilePage = () => {
           })}
         </Box>
 
+        {/* Read Later Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => navigate(`/${username}/read-later`)}
+        >
+          Read Later:
+        </Typography>
 
-
-
-
-
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {readLaterArray.slice(0, 5).map((entry, index) => (
+            <Link
+              to={`/book/${entry.bookId}`}
+              key={index}
+              style={{ textDecoration: "none" }}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              <Box
+                sx={{
+                  width: "160px",
+                  height: "240px",
+                  display: "inline-block",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src={
+                    entry.cover ||
+                    `${process.env.PUBLIC_URL}/default-book-cover.png`
+                  }
+                  alt={entry.title}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: "5px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                >
+                  {entry.title}
+                </Typography>
+              </Box>
+            </Link>
+          ))}
+        </Box>
       </Box>
-
-
-      {/* ✅ Hidden File Input */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
     </Box>
   );
 };

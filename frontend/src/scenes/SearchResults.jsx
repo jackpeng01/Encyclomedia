@@ -9,7 +9,9 @@ import Navbar from "../components/Navbar";
 const SearchResults = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const query = new URLSearchParams(location.search).get("query");
+    const queryParams = new URLSearchParams(location.search);
+    const query = queryParams.get("query");
+    const category = queryParams.get("category") || "movies"; // Default to "movies"
     const [movies, setMovies] = useState([]);
     const [error, setError] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -33,7 +35,7 @@ const SearchResults = () => {
             try {
                 setError("");
                 const response = await axios.get("http://127.0.0.1:5000/api/movie/poster", {
-                    params: { query, page },
+                    params: { query, category, page }, 
                 });
                 setMovies(response.data.movies);
                 setTotalPages(response.data.total_pages);
@@ -55,7 +57,7 @@ const SearchResults = () => {
         if (currentPage < totalPages) {
             const nextPage = currentPage + 1;
             setCurrentPage(nextPage);
-            navigate(`?query=${query}&page=${nextPage}`);
+            navigate(`?query=${query}&category=${category}&page=${nextPage}`);
         }
         window.scrollTo({
             top: 0,
@@ -67,7 +69,7 @@ const SearchResults = () => {
         if (currentPage > 1) {
             const prevPage = currentPage - 1;
             setCurrentPage(prevPage);
-            navigate(`?query=${query}&page=${prevPage}`);
+            navigate(`?query=${query}&category=${category}&page=${prevPage}`);
         }
         window.scrollTo({
             top: 0,
@@ -87,7 +89,7 @@ const SearchResults = () => {
             const page = Number(pageInput);
             if (page >= 1 && page <= totalPages) {
                 setCurrentPage(page);
-                navigate(`?query=${query}&page=${page}`);
+                navigate(`?query=${query}&category=${category}&page=${page}`);
             }
         }
         window.scrollTo({

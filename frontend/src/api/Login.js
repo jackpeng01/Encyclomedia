@@ -33,6 +33,24 @@ export const checkUsernameUnique = async (username) => {
   }
 };
 
+
+export const checkEmailUnique = async (email) => {
+  try {
+    const response = await axios.get(`${API_URL}/users/check-email`, {
+      params: { email: email },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    return response.data.isUnique;
+  } catch (error) {
+    console.error("❌ Error checking email:", error);
+    return false;
+  }
+};
+
 export const loginUser = async (email, password) => {
   try {
     const response = await axios.post(`${API_URL}/auth/login`, {
@@ -50,3 +68,5 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+
+

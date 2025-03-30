@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 const Model = () => {
   const [rotation, setRotation] = useState(0);
   const { scene } = useGLTF("/sphere.glb");
-
   scene.traverse((child) => {
     if (child.isMesh) {
       child.material.transparent = true;
@@ -26,10 +25,15 @@ const BouncingSphere = () => {
     width: window.innerWidth / 2,
     height: window.innerHeight / 2,
   });
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    let x = Math.random() * windowSize.width / 2;
-    let y = Math.random() * -windowSize.height / 2;
+    setTimeout(() => setLoaded(true), 1);
+  }, []);
+
+  useEffect(() => {
+    let x = (Math.random() * windowSize.width) / 2;
+    let y = (Math.random() * -windowSize.height) / 2;
     let dx = Math.random() > 0.5 ? 1 : -1;
     let dy = Math.random() > 0.5 ? 1 : -1;
     const speed = 5;
@@ -54,28 +58,34 @@ const BouncingSphere = () => {
 
   return (
     <motion.div
-      animate={controls}
-      style={{
-        position: "absolute",
-        zIndex: -1, // ✅ Keeps it in the background
-      }}
+      initial={{ opacity: -1 }} // ✅ Start at zero size
+      animate={{ opacity: 1 }} // ✅ Expand to full size
+      transition={{ duration: 5, ease: "easeOut" }} // ✅ Smooth transition
     >
-      <Canvas
-        style={{ height: "100vh", width: "100vw" }}
-        camera={{ position: [0, 2, 5] }}
+      <motion.div
+        animate={controls}
+        style={{
+          position: "absolute",
+          zIndex: -1, // ✅ Keeps it in the background
+        }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 5, 5]} intensity={3} />
-        <directionalLight position={[-5, -5, -5]} intensity={3} />
-        {/* ✅ Render the semi-transparent model in the background */}
-        <Model />
-        <OrbitControls
-          enableZoom={false}
-          enableRotate={true}
-          enablePan={false}
-        />{" "}
-        {/* ✅ Keeps model interactive but prevents zooming */}
-      </Canvas>
+        <Canvas
+          style={{ height: "100vh", width: "100vw" }}
+          camera={{ position: [0, 2, 5] }}
+        >
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[5, 5, 5]} intensity={3} />
+          <directionalLight position={[-5, -5, -5]} intensity={3} />
+          {/* ✅ Render the semi-transparent model in the background */}
+          <Model />
+          <OrbitControls
+            enableZoom={false}
+            enableRotate={true}
+            enablePan={false}
+          />{" "}
+          {/* ✅ Keeps model interactive but prevents zooming */}
+        </Canvas>
+      </motion.div>
     </motion.div>
   );
 };

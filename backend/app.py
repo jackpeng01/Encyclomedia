@@ -1,16 +1,15 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from database import connect_db  # Import the database connection function
 from routes.data import data_bp
 from routes.users import users_bp
 from routes.auth import auth_bp
+from routes.tv import tv_bp
 from routes.movie import movie_bp
-from config import Config
-
-# from routes.reviews import reviews_bp
-from flask import send_from_directory
-
+from routes.books import books_bp
+from services.config import Config
+from services.database import connect_db
+from routes.lists import lists_bp
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py
@@ -32,16 +31,23 @@ if db is not None:
         "data": db.get_collection("data"),
         "users": db.get_collection("users"),
         "reviews": db.get_collection("reviews"),
-        "movieLogs": db.get_collection("movieLogs")
+        "movieLogs": db.get_collection("movieLogs"),
+        "bookLogs": db["bookLogs"],
+        "lists": db.get_collection("lists")
     }
 else:
     app.config["collections"] = {}
+
 
 # ✅ Register Blueprints
 app.register_blueprint(data_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(tv_bp)
 app.register_blueprint(movie_bp)
+app.register_blueprint(books_bp)
+
+app.register_blueprint(lists_bp) 
 # app.register_blueprint(reviews_bp)
 
 @app.route("/api/test")

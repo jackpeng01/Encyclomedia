@@ -1,21 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialUserState = {
-  token: null,
+  isDarkMode: false
 };
 
 const userSlice = createSlice({
   name: "user",
   initialState: initialUserState,
   reducers: {
-    setToken: (state, action) => {
-      state.token = action.payload;
-    },
-    logout: (state) => {
-      state.token = null;
+    setDarkMode: (state, action) => {
+      state.isDarkMode = action.payload;
     },
   },
 });
 
-export const { setToken, logout } = userSlice.actions;
+export const { setDarkMode} = userSlice.actions;
 export default userSlice.reducer;

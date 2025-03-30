@@ -23,7 +23,7 @@ movie_bp = Blueprint("movie", __name__)
 @movie_bp.route('/api/movie/poster', methods=['GET'])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_posters():
-    query = request.args.get('query', '')
+    query = request.args.get('query', 'category')
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
     

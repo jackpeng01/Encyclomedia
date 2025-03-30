@@ -74,6 +74,32 @@ const LandingPage = () => {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
+          <Button
+              sx={{
+                textTransform: "none",
+                mt: 2,
+                fontSize: "1rem",
+                color: "black",
+              }}
+              component={Link}
+              to="/tv"
+              color="inherit"
+            >
+              Search TV
+            </Button>
+            <Button
+              sx={{
+                textTransform: "none",
+                mt: 2,
+                fontSize: "1rem",
+                color: "black",
+              }}
+              component={Link}
+              to="/trendingtv"
+              color="inherit"
+            >
+              Trending TV
+            </Button>
             <Button
               sx={{
                 textTransform: "none",
@@ -128,32 +154,26 @@ const LandingPage = () => {
         }}
       >
         {/* ✅ Logo */}
-        <motion.div
-          initial={{ opacity: -1 }} // ✅ Start at zero size
-          animate={{ opacity: 1 }} // ✅ Expand to full size
-          transition={{ duration: 5, ease: "easeOut" }} // ✅ Smooth transition
+        <Box
+          sx={{
+            position: "fixed", // ✅ Ensures it stays behind other elements
+            top: 0,
+            left: 0,
+            width: "50vw",
+            height: "50vh",
+            // zIndex: 100, // ✅ Places it behind UI elements
+            pointerEvents: "none",
+          }}
         >
-          <Box
-            sx={{
-              position: "fixed", // ✅ Ensures it stays behind other elements
-              top: 0,
-              left: 0,
-              width: "50vw",
-              height: "50vh",
-              zIndex: 100, // ✅ Places it behind UI elements
-              pointerEvents: "none",
-            }}
-          >
-            <BouncingSphere />
-          </Box>
-        </motion.div>
+          <BouncingSphere />
+        </Box>
         ;
         <motion.img
           src="/encyclomediaglobe.png"
           alt="Logo"
-          width="500"
-          height="470"
-          sx={{ zIndex: 100 }}
+          width="600"
+          height="600"
+          style={{ opacity: 0.9,  zIndex: 100 }}
           animate={{ rotate: [0, 360] }} // ✅ Rotates once per cycle
           transition={{
             duration: 10, // ✅ Controls how many seconds per rotation

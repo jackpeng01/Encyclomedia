@@ -4,6 +4,8 @@ import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
+import ListsPage from "./scenes/ListsPage";
+import LocalListsPage from "./scenes/LocalListsPage";
 import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
@@ -12,10 +14,17 @@ import PosterTest from "./scenes/PosterTest";
 import axios from "axios";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
+import ResetPassPage from "./scenes/ResetPassPage";
+import AccountSettingsPage from "./scenes/AccountSettingsPage";
 import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
+import BookSearch from "./scenes/BookSearch";
+import BookDetails from "./scenes/BookDetails";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
+import TvSearchPage from "./scenes/TvSearchPage";
+
+import TrendingTvPage from "./scenes/TrendingTvPage";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -24,12 +33,13 @@ function App() {
 
   // Authentication state (if used later)
   const isAuth = Boolean(useSelector((state) => state.token));
+  const isDarkMode = useSelector((state)=>state.user.isDarkMode);
 
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div style={{ backgroundColor: "#fff", filter: "invert(0)" }}>
+        <div style={{ backgroundColor: "#fff", filter: isDarkMode ? "invert(1)" : "invert(0)" }}>
           <Container>
             <Routes>
               {/* Landing Page */}
@@ -53,11 +63,37 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* account settings page */}
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <AccountSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* reset password page */}
+              <Route
+                path="/user/reset-password/:token?"
+                element={<ResetPassPage />}
+              />
               {/* Data Management Page */}
               <Route path="/data" element={<DataPage />} />
 
+              {/* List Management Page */}
+              <Route path="/mylists" element={<ListsPage />} />
+
+              {/* Local List Management Page */}
+              <Route path="/local-lists" element={<LocalListsPage />} />
+
               {/* 404 Not Found Page */}
               <Route path="*" element={<NotFound />} />
+
+              {/* TV Page */}
+            <Route path="/tv" element={<TvSearchPage />} />
+
+            {/* TV Page */}
+            <Route path="/trendingtv" element={<TrendingTvPage />} />
 
             {/* Poster Test */}
             <Route path="/poster" element={<PosterTest />} />
@@ -68,6 +104,11 @@ function App() {
 
             <Route path="/:username/movie-log" element={<MovieLog />} />
             <Route path="/:username/watch-later" element={<WatchLater />} />
+
+            <Route path="/booksearch" element={<BookSearch />} />
+
+            <Route path="/book/:id" element={<BookDetails />} />
+
 
 
             </Routes>

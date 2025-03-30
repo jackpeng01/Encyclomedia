@@ -1,10 +1,6 @@
-import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
-import { motion } from "framer-motion";
+import { Box, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import LoginModal from "../components/LoginModal";
-import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
 
