@@ -16,6 +16,28 @@ TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500'
 movie_logs_schema = MovieLogsSchema()
 
+# Define the genre ID to name mapping
+genre_id_to_name = {
+    28: "Action",
+    12: "Adventure",
+    16: "Animation",
+    35: "Comedy",
+    80: "Crime",
+    99: "Documentary",
+    18: "Drama",
+    10751: "Family",
+    14: "Fantasy",
+    36: "History",
+    27: "Horror",
+    10402: "Music",
+    9648: "Mystery",
+    10749: "Romance",
+    878: "Science Fiction",
+    10770: "TV Movie",
+    53: "Thriller",
+    10752: "War",
+    37: "Western",
+}
 
 # Define Blueprint
 movie_bp = Blueprint("movie", __name__)
@@ -23,23 +45,33 @@ movie_bp = Blueprint("movie", __name__)
 @movie_bp.route('/api/movie/poster', methods=['GET'])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_posters():
-    query = request.args.get('query', 'category')
+    query = request.args.get('query', '')
+    year_start = request.args.get('yearStart', type=int)
+    year_end = request.args.get('yearEnd', type=int)
+    rating_min = request.args.get('ratingMin', type=float)
+    rating_max = request.args.get('ratingMax', type=float)
+    genre = request.args.get('genre', '')
+    genre = genre.split(",") if genre else ''
+    print(request)
+    
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
     
     # Retrieve the page number from the query parameters, defaulting to 1
     page = request.args.get('page', 1, type=int)
-    
+
+    # Set up the TMDB API parameters for initial search based on the title
+    params = {
+        "query": query,
+        "include_adult": False,
+        "language": "en-US",
+        "page": page,
+    }
+
     try:
-        # Search movies by query
+        # Search movies by query (title)
         url = f"{TMDB_BASE_URL}/search/movie"
         headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
-        params = {
-            "query": query,
-            "include_adult": False,
-            "language": "en-US",
-            "page": page
-        }
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
@@ -49,19 +81,55 @@ def get_posters():
             {
                 "id": movie["id"],
                 "title": movie["title"],
-                "poster_path": f"https://image.tmdb.org/t/p/w500{movie['poster_path']}" if movie.get("poster_path") else None,
+                "release_date": movie.get("release_date"),
+                "vote_average": movie.get("vote_average"),
+                "poster_path": f"{TMDB_IMAGE_BASE_URL}{movie['poster_path']}" if movie.get("poster_path") else None,
+                "genre_ids": movie.get("genre_ids", []),  # Genre IDs from TMDB
+                # Map genre IDs to names
+                "genres": [genre_id_to_name.get(genre_id, "Unknown") for genre_id in movie.get("genre_ids", [])],
             }
             for movie in data.get("results", [])
         ]
 
-        # Return the movies and total number of pages
+        # Filter the movies locally based on the additional parameters (if provided)
+        filtered_movies = []
+
+        for movie in movies:
+            # Apply year range filter
+            if year_start:
+                movie_year = int(movie["release_date"][:4]) if movie["release_date"] else None
+                if movie_year and movie_year < year_start:
+                    continue  # Skip this movie if it doesn't match the year range
+            if year_end:
+                movie_year = int(movie["release_date"][:4]) if movie["release_date"] else None
+                if movie_year and movie_year > year_end:
+                    continue  # Skip this movie if it doesn't match the year range
+
+            # Apply rating filter
+            if rating_min and movie["vote_average"] < rating_min:
+                continue  # Skip this movie if it doesn't meet the rating threshold
+            if rating_max and movie["vote_average"] > rating_max:
+                continue  # Skip this movie if it doesn't meet the rating threshold
+
+            # Apply genre filter (Check if all genres in the filter are in the movie's genres)
+            if genre and not all(g in movie["genres"] for g in genre):
+                continue  # Skip this movie if it doesn't match all genres
+
+            # Add the movie to the filtered list if it passes all filters
+            filtered_movies.append(movie)
+
+
+        # Return the filtered movies and total number of pages
         return jsonify({
-            "movies": movies,
+            "movies": filtered_movies,
             "total_pages": data.get("total_pages", 1),  # Include total pages information
             "current_page": page
         })
+
     except requests.RequestException as e:
-        return jsonify({"error": str(e)}), 500  
+        return jsonify({"error": str(e)}), 500
+
+
     
 @movie_bp.route('/api/movie/<int:movie_id>', methods=['GET'])
 def get_movie_details(movie_id):

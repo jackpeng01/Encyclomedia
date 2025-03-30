@@ -1,17 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Box, TextField, Select, MenuItem, List, ListItem, ListItemText } from "@mui/material";
+import {
+    Box,
+    TextField,
+    Select,
+    MenuItem,
+    Button,
+} from "@mui/material";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import { getUserByToken } from "../api/users";
+import AdvancedSearchModal from "../components/modals/AdvancedSearchModal";
 
 const Discover = () => {
     const token = useSelector((state) => state.auth.token);
     const [searchQuery, setSearchQuery] = useState("");
     const [category, setCategory] = useState("movies");
-    const [suggestions, setSuggestions] = useState([]);
+    const [yearStart, setYearStart] = useState("");
+    const [yearEnd, setYearEnd] = useState("");
+    const [genre, setGenre] = useState([]);
+    const [minRating, setMinRating] = useState(""); // Min rating
+    const [maxRating, setMaxRating] = useState(""); // Max rating
+    const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
     const [userData, setUserData] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
 
     const navigate = useNavigate();
 
@@ -19,59 +32,59 @@ const Discover = () => {
         const loadUserData = async () => {
             const fetchedUserData = await getUserByToken(token);
             setUserData(fetchedUserData);
-            console.log("userdata: ", userData);
         };
         loadUserData();
     }, [token]);
 
-    useEffect(() => {
-        const fetchSuggestions = async () => {
-            if (searchQuery.length < 2) {
-                setSuggestions([]);
-                return;
-            }
-
-            try {
-                const response = await axios.get(
-                    `http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`
-                );
-                setSuggestions(response.data.suggestions || []);
-            } catch (error) {
-                console.error("Error fetching book suggestions:", error);
-            }
-        };
-
-        fetchSuggestions();
-    }, [searchQuery]);
-
-
     const handleSearchSubmit = (e) => {
         e.preventDefault();
+
+        // if (searchQuery === "") return;
+
+
+        let params = new URLSearchParams({
+            query: searchQuery.trim()
+        }).toString();
         if (category === "users") {
-            navigate(`/discover/users?query=${encodeURIComponent(
-                searchQuery.trim()
-            )}&category=${category}`);
+            navigate(`/discover/users?${params}`);
+            return;
         }
-        else if (searchQuery.trim()) {
+
+        
+        if (searchQuery.trim()) {
             // Redirect to correct search results page with the query and category
             if (category === "books") {
-                navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
+                params = new URLSearchParams({
+                    query: searchQuery.trim(),
+                    yearStart: yearStart || '',
+                    yearEnd: yearEnd || '',
+                    subjects: genre.join(",") || '',
+                    category: category,
+                }).toString();
+                navigate(`/booksearch?${params}`);
                 setSuggestions([]);
             } else if (category === "movies") {
-                navigate(
-                    `/search?query=${encodeURIComponent(
-                        searchQuery.trim()
-                    )}&category=${category}`
-                );
+                params = new URLSearchParams({
+                    query: searchQuery.trim(),
+                    yearStart: yearStart || '',
+                    yearEnd: yearEnd || '',
+                    genre: genre.join(",") || '',
+                    minRating: minRating || '', // Add minRating
+                    maxRating: maxRating || '', // Add maxRating
+                    category: category,
+                }).toString();
+                navigate(`/search?${params}`);
             } else {
                 // TV Shows will go here but for now just going to movies
-                navigate(
-                    `/search?query=${encodeURIComponent(
-                        searchQuery.trim()
-                    )}&category=${category}`
-                );
+                navigate(`/search?${params}}`);
             }
         }
+
+        // Navigate to the search results page with the parameters
+        //navigate(`/search?${params}`);
+
+        // Close the advanced search modal after the search is triggered
+        setIsAdvancedSearchOpen(false);
     };
 
     return (
@@ -146,45 +159,46 @@ const Discover = () => {
                     <MenuItem value="users">Users</MenuItem>
                 </Select>
 
+                {/* Advanced Search Button */}
+                {category !== "users" && (
+                    <Button
+                        onClick={() => setIsAdvancedSearchOpen(true)}
+                        sx={{
+                            textTransform: "none",
+                            color: "black",
+                            borderLeft: "1px solid gray",
+                            borderRadius: 0,
+                            height: "100%",
+                            padding: "0 10px",
+                        }}
+                    >
+                        Advanced
+                    </Button>
+                )}
+
                 {/* Hidden submit button */}
                 <button type="submit" style={{ display: "none" }}></button>
             </Box>
-            {/* Autocomplete Suggestions (Only for Books) */}
-            {category === "books" && suggestions.length > 0 && (
-                <List
-                    sx={{
-                        position: "absolute",
-                        top: "55%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: "50%",
-                        backgroundColor: "white",
-                        boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                        borderRadius: "5px",
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                    }}
-                >
-                    {suggestions.map((suggestion) => (
-                        <ListItem
-                            key={suggestion.id}
-                            button="true"
-                            onClick={() => {
-                                navigate(`/book/${suggestion.id}`);
-                                setSearchQuery("");
-                                setSuggestions([]);
-                            }}
-                            sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
-                        >
-                            <ListItemText
-                                primary={suggestion.title}
-                                secondary={suggestion.author}
-                                sx={{ color: "black" }}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-            )}
+
+            {/* Use the AdvancedSearchModal component */}
+            <AdvancedSearchModal
+                isOpen={isAdvancedSearchOpen}
+                onClose={() => setIsAdvancedSearchOpen(false)}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                yearStart={yearStart}
+                setYearStart={setYearStart}
+                yearEnd={yearEnd}
+                setYearEnd={setYearEnd}
+                genre={genre}
+                setGenre={setGenre}
+                minRating={minRating} // Pass minRating
+                setMinRating={setMinRating} // Set minRating
+                maxRating={maxRating} // Pass maxRating
+                setMaxRating={setMaxRating} // Set maxRating
+                handleSearchSubmit={handleSearchSubmit}
+                category={category}
+            />
         </Box>
     );
 };
