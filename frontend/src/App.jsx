@@ -23,6 +23,8 @@ import BookDetails from "./scenes/BookDetails";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
+import Discover from "./scenes/Discover";
+import UserSearch from "./scenes/UserSearch";
 
 import TrendingTvPage from "./scenes/TrendingTvPage";
 
@@ -108,6 +110,10 @@ function App() {
             <Route path="/booksearch" element={<BookSearch />} />
 
             <Route path="/book/:id" element={<BookDetails />} />
+
+            <Route path="/discover" element={<Discover />} />
+
+            <Route path="/discover/users" element={<UserSearch />} />
 
 
 
