@@ -23,8 +23,12 @@ import BookDetails from "./scenes/BookDetails";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
+import TVDetails from "./scenes/TVDetails";
 
 import TrendingTvPage from "./scenes/TrendingTvPage";
+import TVSearch from "./scenes/TVSearch";
+import WatchLaterTV from "./scenes/WatchLaterTV";
+import TVLog from "./scenes/TVLog";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -108,6 +112,11 @@ function App() {
             <Route path="/booksearch" element={<BookSearch />} />
 
             <Route path="/book/:id" element={<BookDetails />} />
+
+            <Route path="/tvsearch" element={<TVSearch />} />
+            <Route path="/tv/:id" element={<TVDetails />} />
+            <Route path="/:username/watch-later-tv" element={<WatchLaterTV />} />
+            <Route path="/:username/tv-log" element={<TVLog />} />
 
 
 

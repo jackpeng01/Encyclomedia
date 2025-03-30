@@ -79,7 +79,7 @@ const Navbar = () => {
       } else {
         // TV Shows will go here but for now just going to movies
         navigate(
-          `/search?query=${encodeURIComponent(
+          `/tvsearch?query=${encodeURIComponent(
             searchQuery.trim()
           )}&category=${category}`
         );
