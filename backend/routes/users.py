@@ -53,10 +53,12 @@ def create_user():
     # ✅ Insert user into MongoDB
     users_col.insert_one(data)
 
-    lists_col.insert_one({
-    "user_id": data["username"],
-    "list_ids": [],
-})
+    lists_col.insert_one(
+        {
+            "user_id": data["username"],
+            "list_ids": [],
+        }
+    )
     return jsonify({"message": "User registered successfully"}), 201
 
 
@@ -122,6 +124,7 @@ def check_email_unique():
 #     response.headers["Access-Control-Allow-Credentials"] = "true"
 #     return response
 
+
 @users_bp.route("/api/users/<username>", methods=["GET"])
 def get_user(username):
     users_col = current_app.config["collections"].get("users")
@@ -137,9 +140,10 @@ def get_user(username):
 
     if "readLater" in user:
         for entry in user["readLater"]:
-            entry["_id"] = str(entry["_id"])  
+            entry["_id"] = str(entry["_id"])
 
     return jsonify(user), 200
+
 
 @users_bp.route("/api/users/<username>", methods=["PATCH"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
@@ -176,7 +180,6 @@ def patch_user(username):
 @jwt_required()
 def upload_profile_picture(username):
     users_col = current_app.config["collections"].get("users")
-
     if users_col is None:
         return make_response(jsonify({"error": "Database not connected"}), 500)
 
@@ -188,28 +191,22 @@ def upload_profile_picture(username):
     if file.filename == "":
         return make_response(jsonify({"error": "Invalid file name"}), 400)
 
-    # ✅ Retrieve the user's current profile picture (if any)
-    user = users_col.find_one({"username": username})
-    old_picture_url = user.get("profilePicture")
-
-    # ✅ Upload new image to Cloudinary
+    # Upload new image to Cloudinary with a fixed public_id and overwrite enabled.
     try:
-        upload_result = cloudinary.uploader.upload(file, folder="profile_pictures")
+        upload_result = cloudinary.uploader.upload(
+            file,
+            public_id=username,  # Force the public_id to be the username
+            folder="profile_pictures",  # Upload into the designated folder
+            overwrite=True,  # Overwrite any existing file with the same public_id
+            format="png",  # Force the file format to PNG
+        )
         new_picture_url = upload_result["secure_url"]
     except Exception as e:
         return make_response(
             jsonify({"error": f"Cloudinary upload failed: {str(e)}"}), 500
         )
 
-    # ✅ Delete the old profile picture from Cloudinary (if not default)
-    if old_picture_url and "res.cloudinary.com" in old_picture_url:
-        public_id = old_picture_url.split("/")[-1].split(".")[0]  # Extract public_id
-        try:
-            cloudinary.uploader.destroy(f"profile_pictures/{public_id}")
-        except Exception as e:
-            print(f"Failed to delete old Cloudinary image: {str(e)}")
-
-    # ✅ Update MongoDB with the new image URL
+    # Update MongoDB with the new image URL
     users_col.update_one(
         {"username": username}, {"$set": {"profilePicture": new_picture_url}}
     )

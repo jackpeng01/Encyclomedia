@@ -4,6 +4,99 @@ from bson.objectid import ObjectId
 from schemas.book_logs_schema import BookLogsSchema  # Import the new schema
 import requests
 
+genres_and_subjects = [
+    "Arts",
+    "Architecture",
+    "Art Instruction",
+    "Art History",
+    "Dance",
+    "Design",
+    "Fashion",
+    "Film",
+    "Graphic Design",
+    "Music",
+    "Music Theory",
+    "Painting",
+    "Photography",
+    "Animals",
+    "Bears",
+    "Cats",
+    "Kittens",
+    "Dogs",
+    "Puppies",
+    "Fiction",
+    "Fantasy",
+    "Historical Fiction",
+    "Horror",
+    "Humor",
+    "Literature",
+    "Magic",
+    "Mystery and detective stories",
+    "Plays",
+    "Poetry",
+    "Romance",
+    "Science Fiction",
+    "Short Stories",
+    "Thriller",
+    "Young Adult",
+    "Science & Mathematics",
+    "Biology",
+    "Chemistry",
+    "Mathematics",
+    "Physics",
+    "Programming",
+    "Business & Finance",
+    "Management",
+    "Entrepreneurship",
+    "Business Economics",
+    "Business Success",
+    "Finance",
+    "Children's",
+    "Kids Books",
+    "Stories in Rhyme",
+    "Baby Books",
+    "Bedtime Books",
+    "Picture Books",
+    "History",
+    "Ancient Civilization",
+    "Archaeology",
+    "Anthropology",
+    "World War II",
+    "Social Life and Customs",
+    "Health & Wellness",
+    "Cooking",
+    "Cookbooks",
+    "Mental Health",
+    "Exercise",
+    "Nutrition",
+    "Self-help",
+    "Biography",
+    "Autobiographies",
+    "History",
+    "Politics and Government",
+    "World War II",
+    "Women",
+    "Kings and Rulers",
+    "Composers",
+    "Artists",
+    "Social Sciences",
+    "Anthropology",
+    "Religion",
+    "Political Science",
+    "Psychology",
+    "Places",
+    "Brazil",
+    "India",
+    "Indonesia",
+    "United States",
+    "Textbooks",
+    "History",
+    "Mathematics",
+    "Geography",
+    "Psychology",
+    "Algebra"
+]
+
 
 book_logs_schema = BookLogsSchema()  # Initialize schema
 
@@ -15,26 +108,48 @@ OPEN_LIBRARY_DETAILS_URL = "https://openlibrary.org/works"
 @books_bp.route("/api/book/search", methods=["GET"])
 def search_books():
     query = request.args.get("query", "")
+    subjects = request.args.get("subjects", "")  # Get selected subjects
+    year_start = request.args.get("yearStart", None)  # Get yearStart from request
+    year_end = request.args.get("yearEnd", None)  # Get yearEnd from request
+    
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
 
+    # Construct the full query to include subjects if they are provided
+    full_query = query
+    if subjects:
+        full_query += f" subject:{subjects}"
+
     try:
-        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": query, "limit": 10})
-        response.raise_for_status() 
+        # Perform the search request to Open Library
+        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": full_query, "limit": 10})
+        response.raise_for_status()  # Raise error for bad responses
         data = response.json()
 
         books = []
         for book in data.get("docs", []):
+            # Get the publish year from the book data (if available)
+            publish_year = int(book.get("first_publish_year", [None]))  # Default to None if no year
+
+            # Filter by yearStart and yearEnd if those values are provided
+            if year_start and publish_year and publish_year < int(year_start):
+                continue
+            if year_end and publish_year and publish_year > int(year_end):
+                continue
+
+            # Add book data to the list
             books.append({
                 "id": book.get("key", "").replace("/works/", ""),  # Extracting book ID
                 "title": book.get("title", "Unknown Title"),
                 "author": book.get("author_name", ["Unknown Author"])[0],  # Take first author
                 "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg"  # Default cover if missing
             })
+
         return jsonify({"books": books})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 @books_bp.route("/api/book/<book_id>", methods=["GET"])

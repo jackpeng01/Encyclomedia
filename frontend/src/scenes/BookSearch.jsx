@@ -9,6 +9,9 @@ const BookSearch = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const query = queryParams.get("query");
+    const yearStart = queryParams.get("yearStart");
+    const yearEnd = queryParams.get("yearEnd");
+    const subjects = queryParams.get("subjects");
     const [books, setBooks] = useState([]);
     const [error, setError] = useState("");
     const token = useSelector((state) => state.auth.token);
@@ -34,7 +37,14 @@ const BookSearch = () => {
         const fetchBooks = async () => {
             try {
                 setError("");
-                const response = await axios.get(`http://127.0.0.1:5000/api/book/search?query=${query}`);
+                const response = await axios.get("http://127.0.0.1:5000/api/book/search", {
+                    params: { 
+                        query, 
+                        yearStart, 
+                        yearEnd, 
+                        subjects 
+                    }
+                });
                 setBooks(response.data.books);
             } catch (err) {
                 setError("Error fetching books.");

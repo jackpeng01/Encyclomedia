@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Chip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -7,6 +7,9 @@ import Navbar from "../components/Navbar";
 import { FaStar } from "react-icons/fa";
 import ProfilePicture from "../components/modals/ProfilePicture";
 import axios from "axios";
+import FollowButton from "../components/FollowButton";
+import { view } from "framer-motion";
+import ProfileStats from "../components/modals/ProfileStats";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -14,14 +17,37 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const token = useSelector((state) => state.auth.token);
   const [viewerData, setViewerData] = useState([]);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   useEffect(() => {
-    const loadViewerData = async () => {
-      const fetchedViewerData = await getUserByToken(token);
-      setViewerData(fetchedViewerData);
+    const loadData = async () => {
+      try {
+        // Fetch viewerData if token is present
+        let fetchedViewerData = {};
+        if (token) {
+          fetchedViewerData = await getUserByToken(token);
+        }
+
+        // Fetch userData if username is provided
+        let fetchedProfile = {};
+        if (username) {
+          fetchedProfile = await getUserByUsername(username);
+        }
+
+        // Ensure default values to avoid undefined properties
+        fetchedViewerData.following = fetchedViewerData.following || [];
+        fetchedProfile.following = fetchedProfile.following || [];
+
+        setViewerData(fetchedViewerData);
+        setUserData(fetchedProfile);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
     };
-    loadViewerData();
-  }, [token]);
+
+    loadData();
+  }, [token, username, forceRefresh]);
+
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
   const [tvLog, setTvLog] = useState([]);
@@ -34,12 +60,9 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const fetchedProfile = await getUserByUsername(username);
-      setUserData(fetchedProfile);
-
       const profileToken = await getUserByToken(token);
       setCurrentUser(profileToken);
-      if (profileToken.username == username) {
+      if (profileToken.username === username) {
         setOwnProfile(true);
       }
 
@@ -127,9 +150,12 @@ const ProfilePage = () => {
 
         // Fetch Read Later Books
         try {
-          const response = await axios.get("http://127.0.0.1:5000/api/book/read_later", {
+          const response = await axios.get(
+            "http://127.0.0.1:5000/api/book/read_later",
+            {
               params: { username: username },
-          });
+            }
+          );
 
           setReadLaterArray(response.data);
         } catch (err) {
@@ -139,7 +165,7 @@ const ProfilePage = () => {
       }
     };
     fetchProfile();
-  }, [username]);
+  }, [token, username]);
 
   const handleRemove = async (section, entryId) => {
     try {
@@ -230,24 +256,36 @@ const ProfilePage = () => {
     >
       <Navbar userData={currentUser} />
 
-      {/* ✅ Profile Header Section (Flex Layout) */}
+      {/* Profile Header Section */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 5, // Adds spacing between profile info & stats
+          gap: 5,
           mt: 10,
           px: 4,
-          flexWrap: "wrap", // Ensures responsiveness on smaller screens
+          flexWrap: "wrap",
         }}
       >
-        {/* ✅ Left Section: Profile Picture & Username */}
+        {/* Left Section: Profile Picture & Username */}
         <Box sx={{ textAlign: "center" }}>
           <ProfilePicture userData={userData} viewerData={[]} token={token} />
           <Typography variant="h5" sx={{ fontWeight: 400 }}>
             {userData.username}
           </Typography>
+          <Box sx={{ mt: "10px" }}>
+            {!ownProfile && viewerData && (
+              <FollowButton
+                userData={userData}
+                viewerData={viewerData}
+                initialIsFollowing={viewerData.following.includes(
+                  userData.username
+                )}
+                setForceRefresh={setForceRefresh}
+              />
+            )}
+          </Box>
           <Box sx={{ textAlign: "left", mt: 0 }}>
             {userData.username === viewerData.username && (
               <Button
@@ -255,10 +293,10 @@ const ProfilePage = () => {
                   textTransform: "none",
                   fontSize: "0.75rem",
                   color: "black",
-                  display: "block", // Ensures button is left-aligned with username
+                  display: "block",
                   textAlign: "left",
                   "&:hover": { color: "black" },
-                  padding: 0, // Removes extra spacing
+                  padding: 0,
                 }}
                 onClick={() => navigate("/settings")}
               >
@@ -268,7 +306,7 @@ const ProfilePage = () => {
           </Box>
         </Box>
 
-        {/* ✅ Right Section: Profile Statistics & Bio (Same Box) */}
+        {/* Right Section: Profile Statistics, Bio & Genre Preferences */}
         <Box
           sx={{
             display: "flex",
@@ -276,48 +314,22 @@ const ProfilePage = () => {
             justifyContent: "center",
             alignItems: "center",
             padding: "20px",
-            // backgroundColor: "rgba(0, 0, 0, 0.05)", // Light gray background
             borderRadius: "10px",
             maxWidth: "600px",
             minWidth: "400px",
           }}
         >
-          {/* ✅ Stats (Horizontally Stacked) */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 5,
-              fontSize: "1.2rem",
-              textAlign: "center",
-              mb: 5, // Adds spacing before the bio
-            }}
-          >
-            {[
-              { label: "Reviews", value: 0 },
-              { label: "Lists", value: 0 },
-              { label: "Media", value: 99 },
-              { label: "Followers", value: "9B" },
-              { label: "Following", value: "18B" },
-            ].map((stat, index) => (
-              <Box key={index} sx={{ textAlign: "center" }}>
-                <Typography sx={{ fontWeight: 500, fontSize: "1.5rem" }}>
-                  {stat.value}
-                </Typography>
-                <Typography sx={{ fontWeight: 300, fontSize: "1rem" }}>
-                  {stat.label}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
+          {/* Profile Statistics */}
+          <ProfileStats userData={userData} />
 
-          {/* ✅ Bio (Now Inside the Same Box) */}
+          {/* Bio */}
           <Typography
             sx={{
               color: "gray",
               fontSize: "1rem",
               textAlign: "center",
               maxWidth: "500px",
+              mt: 2,
             }}
           >
             {userData.bio}
@@ -325,6 +337,7 @@ const ProfilePage = () => {
         </Box>
       </Box>
 
+      {/* The rest of your ProfilePage content (Favorite Media, Movie Log, etc.) */}
       <Box sx={{ maxWidth: "900px", margin: "auto", mt: 5 }}>
         {/* Favorite Media Section */}
         <Typography
@@ -337,7 +350,33 @@ const ProfilePage = () => {
         >
           Favorite Media:
         </Typography>
-
+        {userData.genrePreferences && userData.genrePreferences.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 3,
+              width: "100%",
+              // pl: 2, // optional padding to align with the rest of the content
+            }}
+          >
+            {/* <Typography variant="body2" sx={{ color: "gray", mr: 1 }}>
+                Favorite Genres:
+              </Typography> */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                justifyContent: "flex-start",
+              }}
+            >
+              {userData.genrePreferences.map((genre, idx) => (
+                <Chip key={idx} label={genre} variant="outlined" />
+              ))}
+            </Box>
+          </Box>
+        )}
         <Box
           sx={{
             display: "flex",
@@ -386,7 +425,7 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/movie-log`)} // Redirect to Movie Log page
+          onClick={() => navigate(`/${username}/movie-log`)}
         >
           Movie Log:
         </Typography>
@@ -400,10 +439,10 @@ const ProfilePage = () => {
           }}
         >
           {movieLog.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; // Check if there's no poster
+            const isDefaultPoster = !entry.poster;
             return (
               <Link
-                to={`/movie/${entry.movieId}`} // Redirect to the movie details page
+                to={`/movie/${entry.movieId}`}
                 key={index}
                 style={{ textDecoration: "none" }}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -419,12 +458,12 @@ const ProfilePage = () => {
                     textAlign: "center",
                     borderRadius: "8px",
                     overflow: "hidden",
-                    position: "relative", // Required for hover effect
+                    position: "relative",
                     "&:hover .overlay": {
-                      display: "flex", // Show the overlay content on hover
+                      display: "flex",
                     },
                   }}
-                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <img
                     src={
@@ -434,9 +473,9 @@ const ProfilePage = () => {
                     }
                     alt={entry.title || "Movie Poster"}
                     style={{
-                      width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
-                      height: "auto", // Maintains aspect ratio
-                      maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
+                      width: isDefaultPoster ? "85%" : "100%",
+                      height: "auto",
+                      maxHeight: isDefaultPoster ? "85%" : "auto",
                       borderRadius: "5px",
                       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                       cursor: "pointer",
@@ -450,8 +489,6 @@ const ProfilePage = () => {
                       {entry.title || "Unknown Title"}
                     </Typography>
                   )}
-
-                  {/* Hover Overlay */}
                   <Box
                     className="overlay"
                     sx={{
@@ -460,11 +497,11 @@ const ProfilePage = () => {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      display: "none", // Initially hidden
+                      display: "none",
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
+                      backgroundColor: "rgba(0, 0, 0, 0.7)",
                       color: "white",
                       padding: 2,
                       borderRadius: "8px",
@@ -474,7 +511,6 @@ const ProfilePage = () => {
                       gap: 1,
                     }}
                   >
-                    {/* Display Rating */}
                     <Box
                       sx={{
                         display: "flex",
@@ -492,15 +528,11 @@ const ProfilePage = () => {
                         />
                       ))}
                     </Box>
-
-                    {/* Watch Date */}
                     <Typography>
                       {entry.watchDate
                         ? `Watched on: ${entry.watchDate}`
                         : "No Watch Date"}
                     </Typography>
-
-                    {/* Tags */}
                     {entry.tags && entry.tags.length > 0 && (
                       <Box sx={{ mt: 1 }}>
                         <Typography
@@ -534,8 +566,6 @@ const ProfilePage = () => {
                         </Box>
                       </Box>
                     )}
-
-                    {/* Remove Button */}
                     {ownProfile && (
                       <Button
                         variant="contained"
@@ -543,7 +573,6 @@ const ProfilePage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           handleRemove("movieLog", entry._id);
-                          console.log("Remove movie:", entry.movieId);
                         }}
                         sx={{ mt: 1 }}
                       >
@@ -568,7 +597,7 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/watch-later`)} // Redirect to Watch Later page
+          onClick={() => navigate(`/${username}/watch-later`)}
         >
           Watch Later:
         </Typography>
@@ -582,10 +611,10 @@ const ProfilePage = () => {
           }}
         >
           {watchLaterArray.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; // Check if there's no poster
+            const isDefaultPoster = !entry.poster;
             return (
               <Link
-                to={`/movie/${entry.movieId}`} // Redirect to the movie details page
+                to={`/movie/${entry.movieId}`}
                 key={index}
                 style={{ textDecoration: "none" }}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -601,12 +630,12 @@ const ProfilePage = () => {
                     textAlign: "center",
                     borderRadius: "8px",
                     overflow: "hidden",
-                    position: "relative", // Required for hover effect
+                    position: "relative",
                     "&:hover .overlay": {
-                      display: "flex", // Show the overlay content on hover
+                      display: "flex",
                     },
                   }}
-                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <Link
                     to={`/movie/${entry.movieId}`}
@@ -622,9 +651,9 @@ const ProfilePage = () => {
                       }
                       alt={entry.title || "Movie Poster"}
                       style={{
-                        width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
-                        height: "auto", // Maintains aspect ratio
-                        maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
+                        width: isDefaultPoster ? "85%" : "100%",
+                        height: "auto",
+                        maxHeight: isDefaultPoster ? "85%" : "auto",
                         borderRadius: "5px",
                         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                         cursor: "pointer",
@@ -639,8 +668,6 @@ const ProfilePage = () => {
                       {entry.title || "Unknown Title"}
                     </Typography>
                   )}
-
-                  {/* Hover Overlay */}
                   <Box
                     className="overlay"
                     sx={{
@@ -649,11 +676,11 @@ const ProfilePage = () => {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      display: "none", // Initially hidden
+                      display: "none",
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
+                      backgroundColor: "rgba(0, 0, 0, 0.7)",
                       color: "white",
                       padding: 2,
                       borderRadius: "8px",
@@ -663,12 +690,9 @@ const ProfilePage = () => {
                       gap: 1,
                     }}
                   >
-                    {/* Tags (Optional Section) */}
                     {entry.tags && entry.tags.length > 0 && (
                       <Typography>Tags: {entry.tags.join(", ")}</Typography>
                     )}
-
-                    {/* Remove Button */}
                     {ownProfile && (
                       <Button
                         variant="contained"
@@ -676,7 +700,6 @@ const ProfilePage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           handleRemove("watchLater", entry._id);
-                          console.log("Remove movie:", entry.movieId);
                         }}
                         sx={{ mt: 1 }}
                       >
@@ -1021,50 +1044,72 @@ const ProfilePage = () => {
             Read Later:
           </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
-            {readLaterArray.slice(0, 5).map((entry, index) => (
-              <Link
-                to={`/book/${entry.bookId}`}
-                key={index}
-                style={{ textDecoration: "none" }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        {/* Read Later Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => navigate(`/${username}/read-later`)}
+        >
+          Read Later:
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {readLaterArray.slice(0, 5).map((entry, index) => (
+            <Link
+              to={`/book/${entry.bookId}`}
+              key={index}
+              style={{ textDecoration: "none" }}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              <Box
+                sx={{
+                  width: "160px",
+                  height: "240px",
+                  display: "inline-block",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
               >
-                <Box
-                  sx={{
-                    width: "160px",
-                    height: "240px",
-                    display: "inline-block",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    overflow: "hidden",
+                <img
+                  src={
+                    entry.cover ||
+                    `${process.env.PUBLIC_URL}/default-book-cover.png`
+                  }
+                  alt={entry.title}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: "5px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                   }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
                 >
-                  <img
-                    src={entry.cover || `${process.env.PUBLIC_URL}/default-book-cover.png`}
-                    alt={entry.title}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      borderRadius: "5px",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
-                    {entry.title}
-                  </Typography>
-                </Box>
-              </Link>
-            ))}
-          </Box>
+                  {entry.title}
+                </Typography>
+              </Box>
+            </Link>
+          ))}
+        </Box>
       </Box>
     </Box>
   );

@@ -65,7 +65,12 @@ const Navbar = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (category === "users") {
+      navigate(`/discover/users?query=${encodeURIComponent(
+        searchQuery.trim()
+      )}&category=${category}`);
+    }
+    else if (searchQuery.trim()) {
       // Redirect to correct search results page with the query and category
       if (category === "books") {
         navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
@@ -196,6 +201,7 @@ const Navbar = () => {
                 <MenuItem value="movies">Movies</MenuItem>
                 <MenuItem value="tv">TV</MenuItem>
                 <MenuItem value="books">Books</MenuItem>
+                <MenuItem value="users">Users</MenuItem>
               </Select>
             </Box>
 
@@ -253,8 +259,23 @@ const Navbar = () => {
               alignItems: "center",
               gap: 1,
             }}
+            onClick={() => navigate("/discover")}
+          >
+            Discover
+          </Button>
+          <Button
+            sx={{
+              ml: "10px",
+              textTransform: "none",
+              fontSize: "1rem",
+              color: "black",
+              "&:hover": { color: "black" },
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
             onClick={handleListsClick}
-            // startIcon={<FormatListBulletedIcon />}
+          // startIcon={<FormatListBulletedIcon />}
           >
             My Lists
           </Button>

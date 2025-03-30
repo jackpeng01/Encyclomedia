@@ -46,7 +46,7 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
         {
           profilePicture: defaultProfilePicture,
           headers: {
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         }
