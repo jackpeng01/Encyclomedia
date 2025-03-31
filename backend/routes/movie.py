@@ -141,6 +141,50 @@ def get_posters():
 
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+def get_poster(title):
+    if not title:
+        return jsonify({'error': 'Query parameter is required'}), 400
+
+    # Set up the TMDB API parameters for initial search based on the title
+    params = {
+        "query": title,
+        "include_adult": False,
+        "language": "en-US",
+        "page": 1,  # Always fetch the first page
+    }
+
+    try:
+        # Search movies by query (title)
+        url = f"{TMDB_BASE_URL}/search/movie"
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        # Get the first movie result (if available)
+        first_movie = data.get("results", [None])[0]
+        if not first_movie:
+            return jsonify({"error": "No movies found"}), 404
+
+        # Extract relevant movie data
+        movie_details = {
+            "id": first_movie["id"],
+            "title": first_movie["title"],
+            "release_date": first_movie.get("release_date"),
+            "vote_average": first_movie.get("vote_average"),
+            "poster_path": f"{TMDB_IMAGE_BASE_URL}{first_movie['poster_path']}" if first_movie.get("poster_path") else None,
+            "genre_ids": first_movie.get("genre_ids", []),
+            "genres": [genre_id_to_name.get(genre_id, "Unknown") for genre_id in first_movie.get("genre_ids", [])],
+        }
+
+        # Return only the first movie's details
+        return jsonify({"movie": movie_details})
+
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 @movie_bp.route("/api/movie/<int:movie_id>", methods=["GET"])
