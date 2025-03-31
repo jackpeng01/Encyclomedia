@@ -274,6 +274,21 @@ const Navbar = () => {
               alignItems: "center",
               gap: 1,
             }}
+            onClick={() => navigate("/trending")}
+          >
+            Trending
+          </Button>
+          <Button
+            sx={{
+              ml: "10px",
+              textTransform: "none",
+              fontSize: "1rem",
+              color: "black",
+              "&:hover": { color: "black" },
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
             onClick={handleListsClick}
           // startIcon={<FormatListBulletedIcon />}
           >

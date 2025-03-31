@@ -393,3 +393,28 @@ def remove_movie():
         return jsonify({"error": "Movie not found in log or removal failed"}), 404
         
     return jsonify({"success": True, "message": f"Movie removed from {section}."}), 200
+
+@movie_bp.route('/api/trendingmovies', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def trending_movies():
+    try:
+        movie = []
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        params = {
+            "include_adult": False,
+            "language": "en-US",
+            "page": 1
+        }
+        response = requests.get("https://api.themoviedb.org/3/trending/movie/week", headers=headers, params=params)
+        response.raise_for_status() 
+        data = response.json()
+        
+        for item in data.get("results", []):
+            movie.append({
+                "id": item.get("id"),  
+                "title": item.get("title"),
+                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}",                })
+        return jsonify({"movie": movie})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500

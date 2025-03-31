@@ -31,6 +31,7 @@ import TrendingTvPage from "./scenes/TrendingTvPage";
 import TVSearch from "./scenes/TVSearch";
 import WatchLaterTV from "./scenes/WatchLaterTV";
 import TVLog from "./scenes/TVLog";
+import Trending from "./scenes/Trending";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -123,6 +124,7 @@ function App() {
             <Route path="/tv/:id" element={<TVDetails />} />
             <Route path="/:username/watch-later-tv" element={<WatchLaterTV />} />
             <Route path="/:username/tv-log" element={<TVLog />} />
+            <Route path="/trending" element={<Trending />} />
 
 
 

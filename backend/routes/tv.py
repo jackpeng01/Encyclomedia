@@ -14,6 +14,7 @@ tv_bp = Blueprint("tv", __name__)
 load_dotenv()
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 TV_SEARCH_URL = "https://api.themoviedb.org/3/search/tv"
+TRENDING_SEARCH_URL = "https://api.themoviedb.org/3/search/tv"
 tv_logs_schema = TVLogsSchema()
 
 @tv_bp.route("/api/tv/search", methods=['GET'])
@@ -51,28 +52,27 @@ def search_tv():
 @tv_bp.route('/api/trendingtv', methods=['GET'])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def trending_tv():
-    allResults = []
-    currentPage = 1
-    while True:
-      response = requests.get(
-            f'https://api.themoviedb.org/3/trending/tv/day?language=en-US',
-            headers={
-                'Authorization': f'Bearer {TMDB_API_KEY}'
-            }
-        )
-      if response.status_code != 200:
-            return jsonify({"error": "Failed to fetch data from TMDB"}), 500
-      
-      #Concatenate the results to the existing results
-      data = response.json()
-      allResults.extend(data['results'])
+    try:
+        tv = []
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        params = {
+            "include_adult": False,
+            "language": "en-US",
+            "page": 1
+        }
+        response = requests.get("https://api.themoviedb.org/3/trending/tv/week", headers=headers, params=params)
+        response.raise_for_status() 
+        data = response.json()
+        
+        for item in data.get("results", []):
+            tv.append({
+                "id": item.get("id"),  
+                "title": item.get("name"),
+                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}",                })
+        return jsonify({"tv": tv})
 
-      #f there's no more pages (or when a maximum number of pages is reached), break the loop
-      if currentPage >= 30 or 'results' not in data:
-        break
-      
-    allResults = sorted(allResults, key=attrgetter('popularity'))
-    return jsonify(allResults)
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 @tv_bp.route('/api/tv/<tv_id>', methods=['GET'])
 def get_tv_details(tv_id):
