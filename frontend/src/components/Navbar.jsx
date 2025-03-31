@@ -11,23 +11,26 @@ import {
   List,
   ListItem,
   ListItemText,
+  Menu,
 } from "@mui/material";
-
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
 import React, { useEffect, useState } from "react";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import DemoIcon from "@mui/icons-material/Code";
 import LoginModal from "./LoginModal";
 import axios from "axios";
+import { setDarkMode } from "../state/userSlice";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const token = useSelector((state) => state.auth.token);
+  const isDarkMode = useSelector((state) => state.user.isDarkMode);
   const [userData, setUserData] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -65,39 +68,53 @@ const Navbar = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (category === "users") {
-      navigate(`/discover/users?query=${encodeURIComponent(
-        searchQuery.trim()
-      )}&category=${category}`);
-    }
-    else if (searchQuery.trim()) {
-      // Redirect to correct search results page with the query and category
-      if (category === "books") {
-        navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
-        setSuggestions([]);
-      } else if (category === "movies") {
+    if (searchQuery.trim()) {
+      if (category === "users") {
         navigate(
-          `/search?query=${encodeURIComponent(
+          `/discover/users?query=${encodeURIComponent(
             searchQuery.trim()
           )}&category=${category}`
         );
-      } else {
-        // TV Shows will go here but for now just going to movies
-        navigate(
-          `/search?query=${encodeURIComponent(
-            searchQuery.trim()
-          )}&category=${category}`
-        );
+      } else if (searchQuery.trim()) {
+        // Redirect to correct search results page with the query and category
+        if (category === "books") {
+          navigate(
+            `/booksearch?query=${encodeURIComponent(searchQuery.trim())}`
+          );
+          setSuggestions([]);
+        } else {
+          navigate(
+            `/search?query=${encodeURIComponent(
+              searchQuery.trim()
+            )}&category=${category}`
+          );
+        }
       }
     }
   };
 
-  const handleListsClick = () => {
-    navigate("/myLists");
+  // Handle dropdown menu for profile button
+  const handleProfileButtonClick = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const handleLocalDemoClick = () => {
-    navigate("/local-lists");
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfile = () => {
+    navigate(`/${userData.username}`);
+    handleMenuClose();
+  };
+
+  const handleLists = () => {
+    navigate("/myLists");
+    handleMenuClose();
+  };
+
+  const handleToggleDarkMode = () => {
+    dispatch(setDarkMode(!isDarkMode));
+    handleMenuClose();
   };
 
   return (
@@ -111,7 +128,7 @@ const Navbar = () => {
         right: 0,
       }}
       style={{
-        zIndex: 1000,
+        zIndex: 10000,
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
@@ -127,15 +144,15 @@ const Navbar = () => {
               fontWeight: 100,
               ml: 1,
               color: "black",
-              color: "black",
             }}
           >
             <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
             <span style={{ fontSize: "1.3em" }}>A</span>
           </Typography>
         </Box>
+
         {/* Center Section - Search Bar */}
-        <Box sx={{ flexGrow: 1, mx: 5 }}>
+        <Box sx={{ flexGrow: 1, mx: 5, position: "relative" }}>
           <form
             onSubmit={handleSearchSubmit}
             style={{
@@ -148,11 +165,11 @@ const Navbar = () => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                width: "60%", // total width of the combined component
+                width: "60%",
                 backgroundColor: "white",
                 borderRadius: "20px",
-                overflow: "hidden", // ensure no radius leaks
-                border: "1px solid gray", // unified border
+                overflow: "hidden",
+                border: "1px solid gray",
                 "&:hover": {
                   borderColor: "black",
                 },
@@ -167,22 +184,20 @@ const Navbar = () => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { border: "none" },
-                    borderRadius: 0, // remove internal rounding
-                    paddingRight: 0, // no gap between inputs
+                    borderRadius: 0,
+                    paddingRight: 0,
                   },
                   "& .MuiInputBase-root": {
                     height: "15px",
                   },
                 }}
               />
-
               <Select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disableUnderline
                 sx={{
                   backgroundColor: "#f4f4f4",
-
                   minWidth: "100px",
                   height: "30px",
                   borderLeft: "1px solid gray",
@@ -204,11 +219,8 @@ const Navbar = () => {
                 <MenuItem value="users">Users</MenuItem>
               </Select>
             </Box>
-
-            {/* Hidden submit button */}
             <button type="submit" style={{ display: "none" }}></button>
           </form>
-          {/* Autocomplete Suggestions (Only for Books) */}
           {category === "books" && suggestions.length > 0 && (
             <List
               sx={{
@@ -227,7 +239,7 @@ const Navbar = () => {
               {suggestions.map((suggestion) => (
                 <ListItem
                   key={suggestion.id}
-                  button="true"
+                  button
                   onClick={() => {
                     navigate(`/book/${suggestion.id}`);
                     setSearchQuery("");
@@ -247,41 +259,10 @@ const Navbar = () => {
         </Box>
 
         {/* Right Section - Buttons */}
-        <Box sx={{ display: "flex", gap: 3 }}>
-          <Button
-            sx={{
-              ml: "10px",
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={() => navigate("/discover")}
-          >
-            Discover
-          </Button>
-          <Button
-            sx={{
-              ml: "10px",
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={handleListsClick}
-          // startIcon={<FormatListBulletedIcon />}
-          >
-            My Lists
-          </Button>
+        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
           {userData ? (
             <>
-              {/* Profile Button */}
+              {/* Profile Button that opens a dropdown menu */}
               <Button
                 sx={{
                   textTransform: "none",
@@ -293,9 +274,8 @@ const Navbar = () => {
                   gap: 1.5,
                   padding: "6px 10px",
                 }}
-                onClick={() => (window.location.href = `/${userData.username}`)}
+                onClick={handleProfileButtonClick}
               >
-                {/* Profile Picture Inside Button */}
                 <img
                   src={userData.profilePicture}
                   alt="Profile"
@@ -308,23 +288,49 @@ const Navbar = () => {
                 />
                 {userData.username}
               </Button>
+
+              {/* Dropdown Menu */}
+              <Menu
+                anchorEl={anchorEl}
+                open={openMenu}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    navigate("/home");
+                  }}
+                >
+                  Home
+                </MenuItem>
+                <MenuItem onClick={handleProfile}>Profile</MenuItem>
+                <MenuItem onClick={handleLists}>Lists</MenuItem>
+                <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
+              </Menu>
+
+              {/* Logout Button */}
               <Button
                 sx={{
                   textTransform: "none",
-                  //   mt: 2,
                   fontSize: "1rem",
-                  color: "black", // ✅ Ensures black text
-                  "&:hover": { color: "black" }, // ✅ Ensures hover text remains black
+                  color: "black",
+                  "&:hover": { color: "black" },
                 }}
                 onClick={() => {
-                  dispatch(setToken(null)); // ✅ Logout action
+                  dispatch(setToken(null));
                 }}
               >
                 Logout
               </Button>
             </>
           ) : (
-            // Show Login button if user is not logged in
             <Button
               sx={{
                 textTransform: "none",
@@ -332,7 +338,7 @@ const Navbar = () => {
                 color: "black",
                 "&:hover": { color: "black" },
               }}
-              onClick={() => setLoginOpen(true)} // Open LoginModal on click
+              onClick={() => setLoginOpen(true)}
             >
               Login
             </Button>
@@ -340,15 +346,13 @@ const Navbar = () => {
         </Box>
       </Toolbar>
 
-      {/* LoginModal - This will be displayed if isLoginOpen is true */}
       <LoginModal
         open={isLoginOpen}
-        onClose={() => setLoginOpen(false)} // Close the modal when the user clicks outside or presses the close button
+        onClose={() => setLoginOpen(false)}
         signUpMode={signUpMode}
-        setSignUpMode={setSignUpMode} // To toggle between Login and SignUp modes
+        setSignUpMode={setSignUpMode}
       />
     </AppBar>
   );
 };
-
 export default Navbar;
