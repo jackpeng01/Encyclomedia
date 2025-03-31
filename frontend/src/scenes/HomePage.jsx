@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
 import TrendingTvPage from "./TrendingTvPage";
+import RandomMovie from "../components/RandomMovie";
 
 const HomePage = () => {
   const token = useSelector((state) => state.auth.token);
@@ -50,6 +51,7 @@ const HomePage = () => {
           Your one-stop destination for all things media. Explore, learn, and
           enjoy!
         </Typography>
+        <RandomMovie/>
         <TrendingTvPage />
       </Box>
     </Box>
