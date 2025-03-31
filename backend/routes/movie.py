@@ -413,7 +413,12 @@ def trending_movies():
             movie.append({
                 "id": item.get("id"),  
                 "title": item.get("title"),
-                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}",                })
+                "overview": item.get("overview"),
+                "release_date": item.get("release_date"),
+                "vote_average": item.get("vote_average"),
+                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}", 
+                "popularity": item.get("popularity"),
+            })
         return jsonify({"movie": movie})
 
     except requests.exceptions.RequestException as e:

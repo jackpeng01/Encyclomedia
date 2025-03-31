@@ -68,7 +68,13 @@ def trending_tv():
             tv.append({
                 "id": item.get("id"),  
                 "title": item.get("name"),
-                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}",                })
+                "overview": item.get("overview"),
+                "release_date": item.get("first_air_date"),
+                "vote_average": item.get("vote_average"),
+                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}", 
+                "popularity": item.get("popularity"),
+                #"cast": cast,  # Add cast to the response
+            })
         return jsonify({"tv": tv})
 
     except requests.exceptions.RequestException as e:
@@ -307,7 +313,7 @@ def log_tv(tv_id):
     else:
         return {"error": "User not found or could not be updated."}, 400
 
-# Route to get all logged movies
+# Route to get all logged tv
 @tv_bp.route('/api/tv/log', methods=['GET'])
 def get_logged_tv():
     username = request.args.get('username')  # Get username from query parameters

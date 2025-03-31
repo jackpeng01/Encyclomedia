@@ -12,6 +12,7 @@ const Trending = () => {
     const [error, setError] = useState("");
     const token = useSelector((state) => state.auth.token);
     const [userData, setUserData] = useState(null);
+    const [sortOrder, setSortOrder] = useState('name');
 
     // Load user data when the component mounts
     useEffect(() => {
@@ -74,13 +75,72 @@ const Trending = () => {
         fetchTrendingBooks();
     }, []);
 
+    const handleSortTV = (sortBy, media) => {
+        setSortOrder(sortBy);
+        
+        let sortedResults = [...media];
+
+        console.log(sortedResults);
+    
+        if (sortBy === 'atoz') {
+          // Sort by name
+          sortedResults.sort((a, b) => a.title.localeCompare(b.title));
+        } 
+        else if (sortBy === 'ztoa') {
+            // Sort by name
+            sortedResults.sort((a, b) => b.title.localeCompare(a.title));
+        } 
+        else if (sortBy === 'newest') {
+          // Sort by release date (newest to oldest)
+          sortedResults.sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+        }
+        else if (sortBy === 'oldest') {
+            // Sort by release date (newest to oldest)
+        sortedResults.sort((a, b) => new Date(a.release_date) - new Date(b.release_date));
+          }
+        else if (sortBy === 'mostpopular') {
+        sortedResults.sort((a, b) => b.popularity - a.popularity);
+        }
+        else if (sortBy === 'leastpopular') {
+            sortedResults.sort((a, b) => a.popularity - b.popularity);
+            }
+        else if (sortBy === 'highestrated') {
+            sortedResults.sort((a, b) => b.vote_average - a.vote_average);
+        }
+        else if (sortBy === 'lowestrated') {
+            sortedResults.sort((a, b) => a.vote_average - b.vote_average);
+        }
+    
+        if (media === tv) {
+            setTV(sortedResults); 
+        }
+        else if (media === movie) {
+            setMovie(sortedResults);   
+        }
+        else if (media === book) {
+            setBook(sortedResults);   
+        }// Update the results state with the sorted array
+      };
+
     return (
         <div style={{ textAlign: "center", padding: "2rem" }}>
             <Navbar userData={userData} /> 
-            <h1>Trending Media</h1>
+            <h1>Trending This Week</h1>
             {error && <p style={{ color: "red" }}>{error}</p>}
             <h2>Television</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
+            <label for="sortTV" style={{ fontSize: "16px"}}>Sort TV: </label>
+            <select style={{ fontSize: "16px"}} onChange={(e) => handleSortTV(e.target.value, tv)}>
+                <option value="select">Select</option>
+                <option value="mostpopular">Most Popular</option>
+                <option value="leastpopular">Least Popular</option>
+                <option value="highestrated">Highest Rated</option>
+                <option value="lowestrated">Lowest Rated</option>
+                <option value="atoz">A to Z</option>
+                <option value="ztoa">Z to A</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+            </select>
+            <div style={{ paddingTop: "20px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
                 {tv.map((item) => (
                         <div key={item.id} style={{ textAlign: "center" }}>
                             <Link to={`/tv/${item.id}`}>
@@ -98,7 +158,19 @@ const Trending = () => {
                     ))}
             </div>
             <h2>Movies</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
+            <label for="sortMovies" style={{ fontSize: "16px"}}>Sort Movies: </label>
+            <select style={{ fontSize: "16px"}} onChange={(e) => handleSortTV(e.target.value, movie)}>
+                <option value="select">Select</option>
+                <option value="mostpopular">Most Popular</option>
+                <option value="leastpopular">Least Popular</option>
+                <option value="highestrated">Highest Rated</option>
+                <option value="lowestrated">Lowest Rated</option>
+                <option value="atoz">A to Z</option>
+                <option value="ztoa">Z to A</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+            </select>
+            <div style={{ paddingTop: "20px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
                 {movie.map((item) => (
                         <div key={item.id} style={{ textAlign: "center" }}>
                             <Link to={`/movie/${item.id}`}>
@@ -116,7 +188,15 @@ const Trending = () => {
                     ))}
             </div>
             <h2>Books</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
+            <label for="sortBooks" style={{ fontSize: "16px"}}>Sort Books: </label>
+            <select style={{ fontSize: "16px"}} onChange={(e) => handleSortTV(e.target.value, book)}>
+                <option value="select">Select</option>
+                <option value="atoz">A to Z</option>
+                <option value="ztoa">Z to A</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+            </select>
+            <div style={{ paddingTop: "20px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
                 {book.map((item) => (
                         <div key={item.id} style={{ textAlign: "center" }}>
                             <Link to={`/book/${item.id}`}>

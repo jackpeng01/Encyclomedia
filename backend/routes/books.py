@@ -420,6 +420,7 @@ def trending_books():
                 "title": item.get("title", "Unknown Title"),
                 "id": item.get("key", "").replace("/works/", ""),  # Extract book ID for linking
                 "author": item.get("author_name", ["Unknown Author"])[0],
+                "release_date": item.get("first_publish_year"),
                 "cover_url": f"https://covers.openlibrary.org/b/id/{item.get("cover_i")}-L.jpg" if "cover_i" in item else None         })
         return jsonify({"book": book})
 
