@@ -25,6 +25,7 @@ import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
 import Discover from "./scenes/Discover";
 import UserSearch from "./scenes/UserSearch";
+import PlotSearchResults from "./scenes/PlotSearchResults";
 
 import TrendingTvPage from "./scenes/TrendingTvPage";
 
@@ -114,6 +115,8 @@ function App() {
             <Route path="/discover" element={<Discover />} />
 
             <Route path="/discover/users" element={<UserSearch />} />
+
+            <Route path="/plot-search" element={<PlotSearchResults />} />
 
 
 
