@@ -380,6 +380,7 @@ const Navbar = () => {
                   style={{
                     borderRadius: "50%",
                     objectFit: "cover",
+                    filter: isDarkMode ? "invert(1)" : "invert(0)"
                   }}
                 />
                 {userData.username}

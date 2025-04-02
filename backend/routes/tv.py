@@ -71,7 +71,7 @@ def search_tv():
                 tv.append({
                     "id": item.get("id"),  
                     "title": item.get("name"),
-                    "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}" if item.get("poster_path") else None, 
+                    "poster_path": f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}" if item.get("poster_path") else None, 
                     "first_air_date": item.get("first_air_date"),
                     "vote_average": item.get("vote_average"),
                     "genre_ids": item.get("genre_ids", []),  # Genre IDs from TMDB
