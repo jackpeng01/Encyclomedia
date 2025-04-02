@@ -82,7 +82,7 @@ const BookDetails = () => {
     }
     return cleaned;
   };
-/*
+
   const handleLogBook = async () => {
     if (!userData) {
       alert("Please Login!");
@@ -90,8 +90,6 @@ const BookDetails = () => {
     }
     try {
       const payload = {
-        read_date: readDate,
-        tags: tags,
         username: userData.username,
         title: book.title,
         cover: book.cover_url,
@@ -99,14 +97,15 @@ const BookDetails = () => {
 
       const response = await axios.post(`http://127.0.0.1:5000/api/book/log/${id}`, payload);
       alert("Book logged successfully!");
-      setTags("");
-      setReadDate("");
+      //setTags("");
+      //setReadDate("");
+      console.log("Log response:", response.data);
+
     } catch (error) {
       console.error("Error logging book:", error);
       alert("Failed to log the book. Please try again.");
     }
-};
-*/
+  };
 
 
   const handleReadLater = async () => {
@@ -208,7 +207,7 @@ const BookDetails = () => {
                   />
                 </label>
               </Box>
-              <button style={buttonStyle}>Log Book</button>
+              <button style={buttonStyle} onClick={handleLogBook}>Log Book</button>
               <br />
 
               {/* Read Later */}
