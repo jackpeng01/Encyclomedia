@@ -3,6 +3,8 @@ from flask_cors import cross_origin
 from bson.objectid import ObjectId
 from schemas.book_logs_schema import BookLogsSchema  # Import the new schema
 import requests
+from datetime import datetime
+
 
 genres_and_subjects = [
     "Arts",
@@ -230,50 +232,6 @@ def book_suggestions():
         return jsonify({"error": str(e)}), 500
 
 
-#@books_bp.route("/api/book/read_later/<book_id>", methods=["POST"])
-# def handle_read_later(book_id):
-#     data = request.get_json()
-#     username = data.get("username")
-#     title = data.get("title")
-#     cover = data.get("cover")
-
-#     users_col = current_app.config["collections"].get("users")
-#     if users_col is None:
-#         return jsonify({"error": "Database not connected"}), 500
-
-#     user = users_col.find_one({"username": username})
-#     if user is None:
-#         return jsonify({"error": "User not logged in!"}), 500
-
-#     book_logs_col = current_app.config["collections"].get("bookLogs")
-#     user_book_log = book_logs_col.find_one({"username": username})
-
-#     if user_book_log is None:
-#         info = {
-#             "username": username,
-#             "bookLog": [],
-#             "readLater": [],
-#         }
-#         insert = book_logs_schema.load(info)  # Use schema to validate data
-#         book_logs_col.insert_one(insert)
-
-#     new_entry = {
-#         "_id": str(ObjectId()),  # Convert ObjectId to string
-#         "bookId": book_id,
-#         "title": title,
-#         "cover": cover,
-#     }
-
-#     result = book_logs_col.update_one(
-#         {"username": username},  # Find the document by username
-#         {"$push": {"readLater": new_entry}},  # Append to readLater list
-#     )
-
-#     if result.matched_count > 0:
-#         return jsonify(new_entry), 200
-#     else:
-#         return jsonify({"error": "User not found or could not be updated."}), 400
-
 @books_bp.route("/api/book/read_later/<book_id>", methods=["POST"])
 def handle_read_later(book_id):
     data = request.get_json()
@@ -372,6 +330,137 @@ def get_read_later():
 
 @books_bp.route('/api/book/remove_read_later', methods=['POST'])
 def remove_book():
+    data = request.get_json()
+    username = data.get('username')
+    entry = data.get('entry')  # This is the _id of the book to remove
+    section = data.get('section')
+
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+
+    book_logs_col = current_app.config["collections"].get("bookLogs")
+    user_book_log_item = book_logs_col.find_one({"username": username})
+
+    if user_book_log_item is None:
+        return jsonify({"error": "User book log not found!"}), 404
+
+    print(f"Attempting to remove from section: {section}, entry: {entry}, for user: {username}")
+    print(f"User book log found: {user_book_log_item}")
+
+    # ✅ Convert `entry` to a string before removing
+    result = book_logs_col.update_one(
+        {"username": username},
+        {"$pull": {section: {"_id": str(entry)}}}  # Ensure `_id` is treated as a string
+    )
+
+    if result.modified_count == 0:
+        return jsonify({"error": "Book not found in log or removal failed"}), 404
+
+    return jsonify({"success": True, "message": f"Book removed from {section}."}), 200
+
+
+@books_bp.route("/api/book/log/<book_id>", methods=["POST"])
+def handle_log_book(book_id):
+    data = request.get_json()
+    username = data.get("username")
+    title = data.get("title")
+    cover = data.get("cover")
+    read_date = data.get('read_date')
+    rating = data.get('rating')
+
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+
+    book_logs_col = current_app.config["collections"].get("bookLogs")
+    user_book_log = book_logs_col.find_one({"username": username})
+
+    # If the user doesn't have a book log, create one
+    if user_book_log is None:
+        info = {
+            "username": username,
+            "bookLog": [],
+            "readLater": [],
+        }
+        insert = book_logs_schema.load(info)
+        book_logs_col.insert_one(insert)
+        user_book_log = book_logs_col.find_one({"username": username})  # Fetch again
+
+    # Validate date format
+    if read_date:
+        try:
+            datetime.strptime(read_date, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
+        
+    # Check if the book already exists in `bookLog`
+    for book in user_book_log.get("bookLog", []):
+        if book["bookId"] == book_id:
+            return jsonify({"error": "Book is already in Book Log list."}), 400  #  Reject duplicate
+
+    #  If not, add the book to Book Log
+    new_entry = {
+        "_id": str(ObjectId()),  # Convert ObjectId to string
+        "bookId": book_id,
+        "title": title,
+        "cover": cover,
+        "readDate": read_date,
+        "rating": rating
+    }
+
+    result = book_logs_col.update_one(
+        {"username": username},  # Find the document by username
+        {"$push": {"bookLog": new_entry}},  # Append to readLater list
+    )
+    print(user_book_log)
+    if result.matched_count > 0:
+        return jsonify(new_entry), 200
+    else:
+        return jsonify({"error": "User not found or could not be updated."}), 400
+
+
+# Route to get all logged books
+@books_bp.route('/api/book/log', methods=['GET'])
+def get_logged_books():
+    username = request.args.get('username')  # Get username from query parameters
+    users_col = current_app.config["collections"].get("users")
+    if users_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+    
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+    
+    book_logs_col = current_app.config["collections"].get("bookLogs")
+    user_book_log_item = book_logs_col.find_one({"username": username})
+    
+    if user_book_log_item is None:
+        info = {
+            "username": username,
+            "bookLog": [],
+            "readLater": [],
+        }
+        insert = book_logs_schema.load(info)
+        book_logs_col.insert_one(insert)
+        
+    book_log = user_book_log_item["bookLog"]
+    for entry in book_log:
+        entry["_id"] = str(entry["_id"])  # Serialize ObjectId to string
+
+    return jsonify(book_log)
+    
+
+@books_bp.route('/api/book/remove_log', methods=['POST'])
+def remove_book_log():
     data = request.get_json()
     username = data.get('username')
     entry = data.get('entry')  # This is the _id of the book to remove

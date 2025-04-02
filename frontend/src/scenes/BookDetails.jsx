@@ -5,18 +5,26 @@ import axios from "axios";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
 import { Box } from "@mui/material";
+import { FaStar } from "react-icons/fa";
+
 
 const BookDetails = () => {
   const { id } = useParams(); 
   const [book, setBook] = useState(null);
   const [error, setError] = useState("");
   const [readDate, setReadDate] = useState("");
-  const [tags, setTags] = useState("");
   const [savedForLater, setSavedForLater] = useState(false);
+  const [savedForLog, setSavedForLog] = useState(false);
   const token = useSelector((state) => state.auth.token);
   const [userData, setUserData] = useState(null);
   const [currentBook, setCurrentBook] = useState(null);
   const [readLaterList, setReadLaterList] = useState([]);
+  const [bookLogList, setBookLogList] = useState([]);
+  const [rating, setRating] = useState(0); 
+  const [hover, setHover] = useState(0); 
+  
+    
+  
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -67,6 +75,28 @@ const BookDetails = () => {
     fetchReadLaterList();
   }, [userData, id]);
 
+  useEffect(() => {
+    const fetchBookLog = async () => {
+      if (!userData) return;
+
+      try {
+        const response = await axios.get(`http://127.0.0.1:5000/api/book/log?username=${userData.username}`);
+        setBookLogList(response.data);
+
+        // Check if the book is already in book log
+        const foundBook = response.data.find((item) => item.bookId === id);
+        if (foundBook) {
+          setSavedForLog(true);
+          setCurrentBook(foundBook);
+        }
+      } catch (error) {
+        console.error("Error fetching book log list:", error);
+      }
+    };
+
+    fetchBookLog();
+  }, [userData, id]);
+
   const formatPublishDate = (dateString) => {
     if (!dateString || dateString === "Unknown Date") return "Unknown";
     const dateObj = new Date(dateString);
@@ -82,7 +112,7 @@ const BookDetails = () => {
     }
     return cleaned;
   };
-/*
+
   const handleLogBook = async () => {
     if (!userData) {
       alert("Please Login!");
@@ -91,7 +121,7 @@ const BookDetails = () => {
     try {
       const payload = {
         read_date: readDate,
-        tags: tags,
+        rating: rating,
         username: userData.username,
         title: book.title,
         cover: book.cover_url,
@@ -99,14 +129,16 @@ const BookDetails = () => {
 
       const response = await axios.post(`http://127.0.0.1:5000/api/book/log/${id}`, payload);
       alert("Book logged successfully!");
-      setTags("");
+      setSavedForLog(true);
+      setCurrentBook(response.data);
       setReadDate("");
+      setRating(0);
+      console.log("Log response:", response.data);
     } catch (error) {
       console.error("Error logging book:", error);
       alert("Failed to log the book. Please try again.");
     }
-};
-*/
+  };
 
 
   const handleReadLater = async () => {
@@ -208,7 +240,29 @@ const BookDetails = () => {
                   />
                 </label>
               </Box>
-              <button style={buttonStyle}>Log Book</button>
+              {/* Rating Section */}
+              <Box
+                sx={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
+                onMouseLeave={() => setHover(0)} // Reset hover when the mouse leaves the star container
+              >
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FaStar
+                    key={star}
+                    size={30}
+                    color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
+                    style={{
+                      cursor: "pointer",
+                      transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
+                      transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
+                    }}
+                    onMouseEnter={() => setHover(star)} // Set hover when entering a star
+                    onClick={() => setRating(star)} // Update rating on click
+                  />
+                ))}
+              </Box>
+              <button onClick={savedForLog ? handleRemove : handleLogBook} style={buttonStyle} disabled={savedForLog}>
+                {savedForLog ? "Already logged" : "Log Book"}
+              </button>
               <br />
 
               {/* Read Later */}
