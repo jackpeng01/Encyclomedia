@@ -82,6 +82,8 @@ const Navbar = () => {
             `/booksearch?query=${encodeURIComponent(searchQuery.trim())}`
           );
           setSuggestions([]);
+        } else if (category === "plot") {
+          navigate(`/plot-search?query=${searchQuery.trim()}`);
         } else {
           navigate(
             `/search?query=${encodeURIComponent(
@@ -217,6 +219,7 @@ const Navbar = () => {
                 <MenuItem value="tv">TV</MenuItem>
                 <MenuItem value="books">Books</MenuItem>
                 <MenuItem value="users">Users</MenuItem>
+                <MenuItem value="plot">Plot</MenuItem>
               </Select>
             </Box>
             <button type="submit" style={{ display: "none" }}></button>
@@ -313,6 +316,7 @@ const Navbar = () => {
                 <MenuItem onClick={handleProfile}>Profile</MenuItem>
                 <MenuItem onClick={handleLists}>Lists</MenuItem>
                 <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
+                <MenuItem onClick={() => { navigate("/discover") }}>Discover</MenuItem>
               </Menu>
 
               {/* Logout Button */}
