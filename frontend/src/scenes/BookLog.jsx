@@ -5,6 +5,8 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import { Box, Button, Typography } from "@mui/material";
 import { getUserByUsername, getUserByToken } from "../api/users";
+import { FaArrowUp, FaArrowDown, FaEquals, FaStar, FaUndo } from "react-icons/fa";
+
 
 const BookLog = () => {
     const { username } = useParams();
@@ -74,6 +76,10 @@ const BookLog = () => {
 
                 {error ? (
                     <Typography color="error">{error}</Typography>
+                ) :  bookLog.length === 0 ? (
+                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
+                        No books logged yet.
+                    </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
                         {bookLog.map((entry, index) => (
@@ -93,8 +99,24 @@ const BookLog = () => {
                                 <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
                                     {entry.title}
                                 </Typography>
+                                 
+                                <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
+                                    Date Read: {entry.readDate}
+                                </Typography>
+                                
+                                {/* Display Rating */}
+                                <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <FaStar
+                                            key={star}
+                                            size={20}
+                                            color={star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"}
+                                        />
+                                    ))}
+                                </Box>
 
                                 {ownProfile && (
+                                    
                                     <Button
                                         variant="contained"
                                         color="error"

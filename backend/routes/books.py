@@ -3,6 +3,8 @@ from flask_cors import cross_origin
 from bson.objectid import ObjectId
 from schemas.book_logs_schema import BookLogsSchema  # Import the new schema
 import requests
+from datetime import datetime
+
 
 genres_and_subjects = [
     "Arts",
@@ -368,6 +370,8 @@ def handle_log_book(book_id):
     username = data.get("username")
     title = data.get("title")
     cover = data.get("cover")
+    read_date = data.get('read_date')
+    rating = data.get('rating')
 
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -391,17 +395,26 @@ def handle_log_book(book_id):
         book_logs_col.insert_one(insert)
         user_book_log = book_logs_col.find_one({"username": username})  # Fetch again
 
-    # ✅ Check if the book already exists in `bookLog`
+    # Validate date format
+    if read_date:
+        try:
+            datetime.strptime(read_date, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
+        
+    # Check if the book already exists in `bookLog`
     for book in user_book_log.get("bookLog", []):
         if book["bookId"] == book_id:
-            return jsonify({"error": "Book is already in Book Log list."}), 400  # ❌ Reject duplicate
+            return jsonify({"error": "Book is already in Book Log list."}), 400  #  Reject duplicate
 
-    # ✅ If not, add the book to Book Log
+    #  If not, add the book to Book Log
     new_entry = {
         "_id": str(ObjectId()),  # Convert ObjectId to string
         "bookId": book_id,
         "title": title,
         "cover": cover,
+        "readDate": read_date,
+        "rating": rating
     }
 
     result = book_logs_col.update_one(
