@@ -64,6 +64,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
   const [listModified, setListModified] = useState(false);
   const [isPublic, setIsPublic] = useState(list?.isPublic || false);
   const [isCollaborative, setIsCollaborative] = useState(list?.isCollaborative || false);
+  const [isCollaborator, setIsCollaborator] = useState(false);
   const [collaborators, setCollaborators] = useState(list?.collaborators || []);
   const [newCollaborator, setNewCollaborator] = useState("");
   const [showCollaborators, setShowCollaborators] = useState(false);
@@ -80,7 +81,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
   useEffect(() => {
     if (list && userData) {
       setIsOwner(list.user_id === userData.username);
-
+      setIsCollaborator(list.collaborators?.includes(userData.username));
       const followedLists = userData.followed_lists || [];
       setIsFollowing(followedLists.includes(list._id));
     }
@@ -172,9 +173,11 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
       ...list,
       description: editedDescription,
       items: items,
-      isPublic: isPublic,
-      isCollaborative: isCollaborative,
-      collaborators: collaborators,
+      ...(isOwner && {
+        isPublic: isPublic,
+        isCollaborative: isCollaborative,
+        collaborators: collaborators,
+      }),
       updatedAt: new Date().toISOString()
     };
 
@@ -186,8 +189,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
   };
 
   const handleRemoveItem = (index) => {
-    // Only allow owners and collaborators to remove items
-    if (!isOwner && !(list.isCollaborative && list.collaborators?.includes(userData?._id))) {
+    if (!isOwner && !isCollaborator) {
       setError("You don't have permission to modify this list");
       return;
     }
@@ -411,17 +413,39 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
                   </IconButton>
                 </>
               )
-            ) : (
-              // For collaborators and non-owners
-              <>
-                {/* Show edit icon for collaborators */}
-                {list?.isCollaborative && list?.collaborators?.includes(userData?.username) && (
+            ) : isCollaborator ? (
+              // For collaborators
+              isEditMode ? (
+                <>
+                  <Button startIcon={<SaveIcon />} variant="contained" color="primary" onClick={handleSaveChanges} sx={{ mr: 1 }}>
+                    Save
+                  </Button>
+                  <IconButton onClick={handleEditMode}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              ) : (
+                <>
                   <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
                     <EditIcon />
                   </IconButton>
-                )}
-
-                {/* Show follow button for everyone except the owner */}
+                  <Button
+                    startIcon={isFollowing ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                    variant={isFollowing ? "contained" : "outlined"}
+                    color="primary"
+                    onClick={handleFollowToggle}
+                    sx={{ mr: 1 }}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                  <IconButton onClick={handleClosePopup}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              )
+            ) : (
+              // For regular viewers (not owner, not collaborator)
+              <>
                 <Button
                   startIcon={isFollowing ? <BookmarkIcon /> : <BookmarkBorderIcon />}
                   variant={isFollowing ? "contained" : "outlined"}
@@ -431,7 +455,6 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
                 >
                   {isFollowing ? "Following" : "Follow"}
                 </Button>
-
                 <IconButton onClick={handleClosePopup}>
                   <CloseIcon />
                 </IconButton>
@@ -532,7 +555,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
       {/* Content area */}
 
       {/* List Settings in Edit Mode */}
-      {isEditMode && (
+      {isEditMode && isOwner && (
         <Box sx={{
           mt: 2,
           display: 'flex',
@@ -730,7 +753,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
             {!searchOpen && (
               <>
                 {/* Only show Add button for owners and collaborators */}
-                {(isOwner || (list?.isCollaborative && list?.collaborators?.includes(userData?._id))) ? (
+                {(isOwner || isCollaborator) ? (
                   <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                       variant="contained"
@@ -834,7 +857,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
                         sx={{ ml: 1 }}
                       />
 
-                      {isEditMode && (isOwner || (list.isCollaborative && list.collaborators?.includes(userData?._id))) && (
+                      {isEditMode && (isOwner || isCollaborator) && (
                         <IconButton
                           onClick={() => handleRemoveItem(index)}
                           color="error"
