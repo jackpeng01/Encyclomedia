@@ -15,7 +15,7 @@ import {
   MenuItem,
   IconButton
 } from "@mui/material";
-import { Add as AddIcon, Sort as SortIcon } from "@mui/icons-material";
+import { Add as AddIcon, Sort as SortIcon, Public as PublicIcon, Bookmark as BookmarkIcon } from "@mui/icons-material";
 import { getLists, createList, updateList, deleteList } from "../api/listsService.js";
 import ListDetailsPopup from "./ListDetailsPopup";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +33,7 @@ const ListsPage = () => {
   const [sortMethod, setSortMethod] = useState(() => {
     return localStorage.getItem('listsSortMethod') || "default";
   });
-  
+
   // Track sort direction (ascending or descending)
   const [sortDirection, setSortDirection] = useState(() => {
     return localStorage.getItem('listsSortDirection') || "desc";
@@ -179,9 +179,9 @@ const ListsPage = () => {
       }
       setSortMethod(method);
     }
-    
+
     handleCloseSortMenu();
-    
+
     // If switching to manual sort, initialize the manual order with current display order
     if (method === 'manual') {
       saveManualOrder(displayedLists.map(list => list._id));
@@ -264,7 +264,7 @@ const ListsPage = () => {
 
       const updatedLists = await getLists(token);
       setLists(updatedLists);
-      
+
       if (sortMethod === 'manual') {
         const currentManualOrder = JSON.parse(localStorage.getItem('listsManualOrder') || '[]');
         const updatedManualOrder = currentManualOrder.filter(id => id !== deleteListId);
@@ -376,6 +376,22 @@ const ListsPage = () => {
                 Manual Order
               </MenuItem>
             </Menu>
+            <Button
+              variant="outlined"
+              startIcon={<BookmarkIcon />} // Import this icon
+              onClick={() => navigate("/followed-lists")}
+              sx={{ mr: 2 }}
+            >
+              Followed Lists
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<PublicIcon />}
+              onClick={() => navigate("/public-lists")}
+              sx={{ mr: 2 }}
+            >
+              Discover Lists
+            </Button>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -565,6 +581,7 @@ const ListsPage = () => {
           <ListDetailsPopup
             open={listDetailsOpen}
             list={selectedList}
+            userData={userData}
             onClose={() => {
               setListDetailsOpen(false);
               const reloadLists = async () => {

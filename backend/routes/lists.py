@@ -255,3 +255,133 @@ def list_id_options_preflight(id):
     response.headers["Access-Control-Allow-Methods"] = "GET, PUT, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
+
+@lists_bp.route("/api/public-lists", methods=["GET", "OPTIONS"])
+def get_public_lists():
+    print("\n📤 GET /api/public-lists requested")
+    if request.method == "OPTIONS":
+        response = jsonify({"message": "CORS preflight successful"})
+        response.status_code = 204  # No Content
+        return response
+    
+    try:
+        lists_col = current_app.config["collections"].get("lists")
+        
+        # Find all lists where isPublic is true
+        public_lists = []
+        for list_item in lists_col.find({"isPublic": True}):
+            # Convert ObjectId to string for JSON serialization
+            list_item["_id"] = str(list_item["_id"])
+            public_lists.append(list_item)
+            
+        print(f"✅ Successfully retrieved {len(public_lists)} public lists\n")
+        
+        response = make_response(jsonify(public_lists), 200)
+        return response
+    except Exception as e:
+        print(f"❌ Error getting public lists: {e}\n")
+        return jsonify({"error": str(e)}), 500
+
+@lists_bp.route("/api/lists/<id>/follow", methods=["POST"])
+def follow_list(id):
+    print(f"\n🔔 POST /api/lists/{id}/follow requested")
+    verify_jwt_in_request()
+    current_user = get_jwt_identity()
+    
+    lists_col = current_app.config["collections"].get("lists")
+    users_col = current_app.config["collections"].get("users")
+    
+    try:
+        # Check if the list exists and is public
+        list_item = lists_col.find_one({"_id": ObjectId(id)})
+        
+        if not list_item:
+            print(f"❌ List with ID {id} not found.\n")
+            return jsonify({"error": "List not found"}), 404
+            
+        # Verify list is public
+        is_public = list_item.get("isPublic", False)
+        
+        if not is_public:
+            print(f"❌ User {current_user} not authorized to follow private list {id}.\n")
+            return jsonify({"error": "Cannot follow private list"}), 403
+        
+        # Add list to user's followed lists if not already followed
+        result = users_col.update_one(
+            {"username": current_user},
+            {"$addToSet": {"followed_lists": id}}
+        )
+        
+        lists_col.update_one(
+            {"_id": ObjectId(id)},
+            {"$inc": {"follower_count": 1}}
+        )
+        
+        print(f"✅ User {current_user} successfully followed list {id}.\n")
+        return jsonify({"message": "Successfully followed list"}), 200
+        
+    except Exception as e:
+        print(f"❌ Error following list: {e}\n")
+        return jsonify({"error": str(e)}), 500
+
+@lists_bp.route("/api/lists/<id>/unfollow", methods=["POST"])
+def unfollow_list(id):
+    print(f"\n🔔 POST /api/lists/{id}/unfollow requested")
+    verify_jwt_in_request()
+    current_user = get_jwt_identity()
+    
+    users_col = current_app.config["collections"].get("users")
+    lists_col = current_app.config["collections"].get("lists")
+    
+    try:
+        # Remove list from user's followed lists
+        result = users_col.update_one(
+            {"username": current_user},
+            {"$pull": {"followed_lists": id}}
+        )
+        
+        lists_col.update_one(
+            {"_id": ObjectId(id), "follower_count": {"$gt": 0}},
+            {"$inc": {"follower_count": -1}}
+        )
+        
+        print(f"✅ User {current_user} successfully unfollowed list {id}.\n")
+        return jsonify({"message": "Successfully unfollowed list"}), 200
+        
+    except Exception as e:
+        print(f"❌ Error unfollowing list: {e}\n")
+        return jsonify({"error": str(e)}), 500
+
+@lists_bp.route("/api/users/followed-lists", methods=["GET"])
+def get_followed_lists():
+    print(f"\n📤 GET /api/users/followed-lists requested")
+    verify_jwt_in_request()
+    current_user = get_jwt_identity()
+    
+    users_col = current_app.config["collections"].get("users")
+    lists_col = current_app.config["collections"].get("lists")
+    
+    try:
+        user = users_col.find_one({"username": current_user})
+        if not user:
+            print(f"❌ User {current_user} not found.\n")
+            return jsonify({"error": "User not found"}), 404
+            
+        followed_list_ids = user.get("followed_lists", [])
+        
+        followed_lists = []
+        for list_id in followed_list_ids:
+            try:
+                list_item = lists_col.find_one({"_id": ObjectId(list_id)})
+                if list_item:
+                    list_item["_id"] = str(list_item["_id"])
+                    followed_lists.append(list_item)
+            except Exception as e:
+                print(f"Error retrieving list {list_id}: {e}")
+                
+        print(f"✅ Successfully retrieved {len(followed_lists)} followed lists for user {current_user}\n")
+        return jsonify(followed_lists), 200
+        
+    except Exception as e:
+        print(f"❌ Error getting followed lists: {e}\n")
+        return jsonify({"error": str(e)}), 500

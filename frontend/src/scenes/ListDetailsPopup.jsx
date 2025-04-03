@@ -40,12 +40,16 @@ import {
   Search as SearchIcon
 } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { followList, unfollowList } from "../api/listsService";
+import { Bookmark as BookmarkIcon, BookmarkBorder as BookmarkBorderIcon } from "@mui/icons-material";
+import { useSelector } from "react-redux";
 
 const TMDB_API_KEY = 'a9302b42220aa7e2d0d7ce9d9e988203';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w500';
 
-const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
+const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
+  const [followerCount, setFollowerCount] = useState(list?.follower_count || 0);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
   const [showAddDescription, setShowAddDescription] = useState(false);
@@ -63,12 +67,43 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   const [collaborators, setCollaborators] = useState(list?.collaborators || []);
   const [newCollaborator, setNewCollaborator] = useState("");
   const [showCollaborators, setShowCollaborators] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const token = useSelector((state) => state.auth.token);
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     title: "",
     message: "",
     onConfirm: null
   });
+
+  useEffect(() => {
+    if (list && userData) {
+      setIsOwner(list.user_id === userData.username);
+
+      const followedLists = userData.followed_lists || [];
+      setIsFollowing(followedLists.includes(list._id));
+    }
+  }, [list, userData]);
+
+  const handleFollowToggle = async () => {
+    if (!userData) return;
+
+    try {
+      if (isFollowing) {
+        await unfollowList(list._id, token);
+        setIsFollowing(false);
+        setFollowerCount(prev => Math.max(0, prev - 1));
+      } else {
+        await followList(list._id, token);
+        setIsFollowing(true);
+        setFollowerCount(prev => prev + 1);
+      }
+    } catch (error) {
+      setError(isFollowing ? "Failed to unfollow list" : "Failed to follow list");
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     if (list) {
@@ -99,6 +134,12 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
+
+    // Only allow owners and collaborators to reorder items
+    if (!isOwner && !(list.isCollaborative && list.collaborators?.includes(userData?._id))) {
+      setError("You don't have permission to modify this list");
+      return;
+    }
 
     const reorderedItems = Array.from(items);
     const [movedItem] = reorderedItems.splice(result.source.index, 1);
@@ -145,6 +186,12 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   };
 
   const handleRemoveItem = (index) => {
+    // Only allow owners and collaborators to remove items
+    if (!isOwner && !(list.isCollaborative && list.collaborators?.includes(userData?._id))) {
+      setError("You don't have permission to modify this list");
+      return;
+    }
+
     const newItems = [...items];
     newItems.splice(index, 1);
     setItems(newItems);
@@ -326,6 +373,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   };
 
   return (
+
     <Dialog
       open={open}
       onClose={isEditMode && listModified ? null : handleClosePopup}
@@ -342,26 +390,48 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
             {list?.name}
           </Typography>
           <Box>
-            {isEditMode ? (
+            {isOwner ? (
+              // Show edit controls for owner
+              isEditMode ? (
+                <>
+                  <Button startIcon={<SaveIcon />} variant="contained" color="primary" onClick={handleSaveChanges} sx={{ mr: 1 }}>
+                    Save
+                  </Button>
+                  <IconButton onClick={handleEditMode}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={handleClosePopup}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              )
+            ) : (
+              // For collaborators and non-owners
               <>
+                {/* Show edit icon for collaborators */}
+                {list?.isCollaborative && list?.collaborators?.includes(userData?.username) && (
+                  <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
+                    <EditIcon />
+                  </IconButton>
+                )}
+
+                {/* Show follow button for everyone except the owner */}
                 <Button
-                  startIcon={<SaveIcon />}
-                  variant="contained"
+                  startIcon={isFollowing ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                  variant={isFollowing ? "contained" : "outlined"}
                   color="primary"
-                  onClick={handleSaveChanges}
+                  onClick={handleFollowToggle}
                   sx={{ mr: 1 }}
                 >
-                  Save
+                  {isFollowing ? "Following" : "Follow"}
                 </Button>
-                <IconButton onClick={handleEditMode}>
-                  <CloseIcon />
-                </IconButton>
-              </>
-            ) : (
-              <>
-                <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
-                  <EditIcon />
-                </IconButton>
+
                 <IconButton onClick={handleClosePopup}>
                   <CloseIcon />
                 </IconButton>
@@ -369,6 +439,11 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
             )}
           </Box>
         </Box>
+
+        {/* List creator info */}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Created by: {list?.user_id}
+        </Typography>
 
         {/* Description section */}
         {!isEditMode && list?.description && (
@@ -400,6 +475,17 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
               />
             )}
 
+            {/* Follower count chip */}
+            {list?.isPublic && (
+              <Chip
+                icon={<BookmarkIcon />}
+                label={`${followerCount} ${followerCount === 1 ? "Follower" : "Followers"}`}
+                size="small"
+                color="default"
+                variant="outlined"
+                sx={{ mr: 1 }}
+              />
+            )}
             {list?.isCollaborative && (
               <Chip
                 icon={<GroupIcon />}
@@ -641,32 +727,44 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
         {!searchOpen && (
           <>
             {/* Add button */}
-            {!isEditMode && (
-              <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddClick}
-                  color="primary"
-                >
-                  Add
-                </Button>
-                <Menu
-                  anchorEl={mediaTypeMenu}
-                  open={Boolean(mediaTypeMenu)}
-                  onClose={handleCloseMediaMenu}
-                >
-                  <MenuItem onClick={() => handleMediaTypeSelect('movie')}>
-                    Movie
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMediaTypeSelect('tv')}>
-                    TV Show
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMediaTypeSelect('book')}>
-                    Book
-                  </MenuItem>
-                </Menu>
-              </Box>
+            {!searchOpen && (
+              <>
+                {/* Only show Add button for owners and collaborators */}
+                {(isOwner || (list?.isCollaborative && list?.collaborators?.includes(userData?._id))) ? (
+                  <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddClick}
+                      color="primary"
+                    >
+                      Add
+                    </Button>
+                    <Menu
+                      anchorEl={mediaTypeMenu}
+                      open={Boolean(mediaTypeMenu)}
+                      onClose={handleCloseMediaMenu}
+                    >
+                      <MenuItem onClick={() => handleMediaTypeSelect('movie')}>
+                        Movie
+                      </MenuItem>
+                      <MenuItem onClick={() => handleMediaTypeSelect('tv')}>
+                        TV Show
+                      </MenuItem>
+                      <MenuItem onClick={() => handleMediaTypeSelect('book')}>
+                        Book
+                      </MenuItem>
+                    </Menu>
+                  </Box>
+                ) : (
+                  /* Show a message for non-owners */
+                  <Box sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      You are viewing this list in read-only mode
+                    </Typography>
+                  </Box>
+                )}
+              </>
             )}
 
             {/* Items list */}
@@ -736,7 +834,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                         sx={{ ml: 1 }}
                       />
 
-                      {isEditMode && (
+                      {isEditMode && (isOwner || (list.isCollaborative && list.collaborators?.includes(userData?._id))) && (
                         <IconButton
                           onClick={() => handleRemoveItem(index)}
                           color="error"

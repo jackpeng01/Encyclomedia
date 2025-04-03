@@ -5,6 +5,8 @@ import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
 import ListsPage from "./scenes/ListsPage";
+import PublicListsPage from './scenes/PublicListsPage';
+import FollowedListsPage from './scenes/FollowedListsPage';
 import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
@@ -84,6 +86,12 @@ function App() {
 
               {/* List Management Page */}
               <Route path="/mylists" element={<ListsPage />} />
+              
+              {/* Followed List Management Page */}
+              <Route path="/followed-lists" element={<FollowedListsPage />} />
+
+              {/* List Browsing Page */}
+              <Route path="/public-lists" element={<PublicListsPage />} />
 
               {/* 404 Not Found Page */}
               <Route path="*" element={<NotFound />} />
