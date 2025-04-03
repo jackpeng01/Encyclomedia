@@ -86,44 +86,52 @@ const ReviewModal = ({ open, onClose, media, mediaType, onReviewSubmitted }) => 
 
     const handleSubmit = async () => {
         if (!title.trim() || !content.trim() || rating === 0) {
-          setError("Please fill all fields and provide a rating");
-          return;
+            setError("Please fill all fields and provide a rating");
+            return;
         }
-        
+
         setIsSubmitting(true);
         setError(null);
-        
+
+        // Create the payload based on media type
+        const payload = {
+            media_id: media.id || media.bookId,  // Handle different ID formats
+            media_type: mediaType,
+            media_title: media.title,
+            title,
+            content,
+            rating
+        };
+
+        console.log("Submitting review payload:", payload);
+
         try {
-          const response = await axios.post(
-            "http://127.0.0.1:5000/api/reviews",
-            {
-              media_id: media.id,
-              media_type: mediaType,
-              media_title: media.title,
-              title,
-              content,
-              rating
-            },
-            {
-              headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-              }
+            const response = await axios.post(
+                "http://127.0.0.1:5000/api/reviews",
+                payload,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            if (onReviewSubmitted) {
+                onReviewSubmitted(response.data);
             }
-          );
-          
-          if (onReviewSubmitted) {
-            onReviewSubmitted(response.data);
-          }
-          
-          handleClose();
+
+            handleClose();
         } catch (err) {
-          console.error("Error submitting review:", err);
-          setError(err.response?.data?.error || "Failed to submit review");
+            console.error("Error submitting review:", err);
+            // More detailed error display
+            const errorMessage = err.response?.data?.error || "Failed to submit review";
+            const errorDetails = err.response?.data?.details || {};
+            setError(`${errorMessage} - Missing fields: ${JSON.stringify(errorDetails)}`);
         } finally {
-          setIsSubmitting(false);
+            setIsSubmitting(false);
         }
-      };
+    };
 
     const handleClose = () => {
         setTitle("");
