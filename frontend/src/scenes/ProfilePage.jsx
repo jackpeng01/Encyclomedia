@@ -1048,23 +1048,7 @@ const ProfilePage = () => {
           })}
         </Box>
 
-          {/* Read Later Section */}
-          <Typography
-            variant="h5"
-            sx={{
-              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-              fontWeight: 400,
-              mb: 2,
-              mt: 5,
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-            onClick={() => navigate(`/${username}/read-later`)} // Redirect to Read Later page
-          >
-            Read Later:
-          </Typography>
-
-        {/* Read Later Section */}
+        {/* Book Log Section */}
         <Typography
           variant="h5"
           sx={{
@@ -1075,9 +1059,9 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/read-later`)}
+          onClick={() => navigate(`/${username}/book-log`)}
         >
-          Read Later:
+          Book Log:
         </Typography>
 
         <Box
@@ -1088,7 +1072,7 @@ const ProfilePage = () => {
             justifyContent: "center",
           }}
         >
-          {readLaterArray.slice(0, 5).map((entry, index) => (
+          {loggedBooks.slice(0, 5).map((entry, index) => (
             <Link
               to={`/book/${entry.bookId}`}
               key={index}
@@ -1131,7 +1115,7 @@ const ProfilePage = () => {
           ))}
         </Box>
 
-        {/* Book Log Section */}
+        {/* Read Later Section */}
         <Typography
           variant="h5"
           sx={{
@@ -1142,9 +1126,9 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/book-log`)}
+          onClick={() => navigate(`/${username}/read-later`)}
         >
-          Book Log:
+          Read Later:
         </Typography>
 
         <Box
@@ -1155,7 +1139,7 @@ const ProfilePage = () => {
             justifyContent: "center",
           }}
         >
-          {loggedBooks.slice(0, 5).map((entry, index) => (
+          {readLaterArray.slice(0, 5).map((entry, index) => (
             <Link
               to={`/book/${entry.bookId}`}
               key={index}
