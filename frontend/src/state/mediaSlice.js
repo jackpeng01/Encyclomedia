@@ -24,11 +24,17 @@ const mediaSlice = createSlice({
         setBooks: (state, action) => {
             state.books = action.payload;
         },
+
+        clearMedia: (state) => {
+            state.movies = [];
+            state.shows = [];
+            state.books = [];
+          },
     },
 });
 
 // Export the actions
-export const { setMovies, setShows, setBooks } = mediaSlice.actions;
+export const { setMovies, setShows, setBooks, clearMedia } = mediaSlice.actions;
 
 // Export the reducer
 export default mediaSlice.reducer;

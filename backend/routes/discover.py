@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from services.config import Config
 from bson import ObjectId
 from .movie import get_poster
+from .tv import search_single_tv
 from .books import search_book
 from google import genai
 from google.genai import types
@@ -166,13 +167,14 @@ def discover_plot():
 
 
 
-def get_recommended(interests, previous_movies, previous_books):
+def get_recommended(interests, previous_movies, previous_tv, previous_books):
     try:
         client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
         model = "gemini-2.0-flash"
 
         # Prepare the previous movies list for prompt inclusion
         previous_movies_str = ", ".join([f'"{title}"' for title in previous_movies])
+        previous_tv_str = ", ".join([f'"{title}"' for title in previous_tv])
         previous_books_str = ", ".join([f'"{title}"' for title in previous_books])
 
         contents = [
@@ -187,25 +189,35 @@ def get_recommended(interests, previous_movies, previous_books):
             response_mime_type="text/plain",
             system_instruction=[types.Part.from_text(
                 text=f"""
-                    When given a user's interests, return 5 random movies and 5 random books as a JSON array.
-                    If there are no interests, return 5 random movies and 5 random books.
+                    When given a user's interests, return **exactly** 5 random movies, 5 random TV shows, and 5 random books as a structured JSON object.
+                    If no interests are provided, still return 5 random movies, 5 random TV shows, and 5 random books.
                     
-                    Return the movies before the books.
-
-                    Each movie must be formatted as:
-                    {{ "title": "Movie Title", "year": 2005 }}
+                    Return the movies, then the shows, then the books.
                     
-                    Each books must be formatted as:
-                    {{ "title": "Harry Potter" }}
+                    ### **Response Format:**
+                    The response **must be a JSON object** with three keys: `"movies"`, `"shows"`, and `"books"`.  
+                    Each key maps to an **array** of up to 5 items.
 
-                    Ensure the response is strictly a valid JSON array containing up to 5 movie objects and 5 book objects. 
-                    Example response:
-                    [{{"title": "Inception", "year": 2010}}, {{"title": "Interstellar", "year": 2014}}, {{"title": "Harry Potter"}}]
+                    - **Movies Format:**  
+                    "movies": [  
+                        {{ "title": "Movie Title", "year": 2005 }},  
+                        {{ "title": "Inception", "year": 2010 }}  
+                    ]  
 
-                    Do NOT include any extra text including JSON, explanations, or formatting, ONLY the array. 
-                    If no matches exist, return an empty JSON array: []
+                    - **TV Shows Format:**  
+                    "shows": [  
+                        {{ "title": "Show Title", "year": 2005 }},  
+                        {{ "title": "Breaking Bad", "year": 2008 }}  
+                    ]  
+
+                    - **Books Format:**  
+                    "books": [  
+                        {{ "title": "Book Title" }},  
+                        {{ "title": "Dune" }}  
+                    ]  
 
                     IMPORTANT: Do not recommend movies that have already been suggested. The following movies have already been recommended and should be excluded from the new list: {previous_movies_str}
+                    IMPORTANT: Do not recommend tv shows that have already been suggested. The following tv shows have already been recommended and should be excluded from the new list: {previous_tv_str}
                     IMPORTANT: Do not recommend books that have already been suggested. The following books have already been recommended and should be excluded from the new list: {previous_books_str}
 
                 """
@@ -223,13 +235,16 @@ def get_recommended(interests, previous_movies, previous_books):
 
         # Clean up response text to remove unwanted characters
         response_text = response_text.strip().replace("\n", "").replace("```json", "").replace("```", "").strip()
-        # print(response_text)
 
         # Convert response text to JSON
         movie_data = json.loads(response_text)
 
         # Return the movies
-        return movie_data if isinstance(movie_data, list) else []
+        return {
+            "movies": movie_data.get("movies", []) if isinstance(movie_data.get("movies"), list) else [],
+            "shows": movie_data.get("shows", []) if isinstance(movie_data.get("shows"), list) else [],
+            "books": movie_data.get("books", []) if isinstance(movie_data.get("books"), list) else [],
+        }
 
     except Exception as e:
         print(f"Error generating movie titles: {e}")
@@ -241,6 +256,7 @@ def recommended_media():
         # Extract plot description from query parameters
         interests = request.args.get("query", "")
         previous_movies = request.args.get("previousMovies", "[]")
+        previous_tv = request.args.get("previousTv", "[]")
         previous_books = request.args.get("previousBooks", "[]")
         
         try:
@@ -249,23 +265,33 @@ def recommended_media():
             previous_movies = []
             
         try:
+            previous_tv = json.loads(previous_tv)  # Convert from JSON string to list
+        except json.JSONDecodeError:
+            previous_tv = []
+            
+        try:
             previous_books = json.loads(previous_books)  # Convert from JSON string to list
         except json.JSONDecodeError:
             previous_books = []
             
-        print(previous_books)
-            
+        print(previous_tv)
+                        
         # Get movie titles from Gemini instead of IDs
-        recommended_media = get_recommended(interests, previous_movies, previous_books)  # Assuming this now returns titles
-        if not recommended_media or not isinstance(recommended_media, list):
-            return jsonify({"movies": [], "error": "No valid response from Gemini"}), 200
+        recommended_media = get_recommended(interests, previous_movies, previous_tv, previous_books)  # Assuming this now returns titles
+        # print(recommended_media)
+        # Ensure recommended_media is a dictionary and contains valid lists
+        if not recommended_media or not isinstance(recommended_media, dict):
+            return jsonify({"movies": [], "shows": [], "books": [], "error": "No valid response from Gemini"}), 200
+
 
         # print(f"prev: {recommended_media}")
         
-        # Split the results into movies and books
-        recommended_movies = [item for item in recommended_media if isinstance(item, dict) and "title" in item and "year" in item]
-        recommended_books = [item for item in recommended_media if isinstance(item, dict) and "title" in item and "year" not in item]
-        print(recommended_books)
+        # Split the results into movies and books        
+        recommended_movies = recommended_media.get("movies", [])
+        recommended_shows = recommended_media.get("shows", [])
+        recommended_books = recommended_media.get("books", [])
+        # print(recommended_books)
+        
         # Fetch movie details using the titles and years
         movie_details_list = []
         for movie in recommended_movies:
@@ -295,6 +321,25 @@ def recommended_media():
                 print(f"Error fetching details for movie '{title} ({year})': {fetch_error}")
                 movie_details_list.append({"title": title, "year": year, "error": "Error fetching details"})
                 
+        show_details_list = []
+        for show in recommended_shows:
+            try:
+                if isinstance(show, dict) and "title" in show and "year" in show:
+                    title, year = show["title"], show["year"]
+                    show_response = search_single_tv(title, year)
+                else:
+                    title = show
+                    show_response = search_single_tv(title, None)
+
+                if show_response and show_response.status_code == 200:
+                    show_data = show_response.get_json()
+                    show_details_list.append(show_data.get("tv_show", {"title": title, "year": year, "error": "TV show not found"}))
+                else:
+                    show_details_list.append({"title": title, "year": year, "error": "Failed to fetch TV show details"})
+            except Exception as e:
+                print(f"Error fetching TV show details: {e}")
+                show_details_list.append({"title": show.get("title", "Unknown"), "year": show.get("year", "Unknown"), "error": "Error fetching details"})
+                
         # Fetch book details using search_book function for each recommended book title
         book_details_list = []
         for book in recommended_books:
@@ -317,8 +362,11 @@ def recommended_media():
                 print(f"Error fetching details for book '{title}': {fetch_error}")
                 book_details_list.append({"title": title, "error": "Error fetching details"})
 
-        # Respond with both movie and book details
-        return jsonify({"movies": movie_details_list, "books": book_details_list}), 200
+        return jsonify({
+            "movies": movie_details_list,
+            "shows": show_details_list,
+            "books": book_details_list
+        }), 200
 
     except Exception as e:
         print(f"Unexpected error in discover_plot: {e}")

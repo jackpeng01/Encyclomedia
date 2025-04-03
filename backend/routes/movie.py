@@ -426,6 +426,8 @@ def get_watch_later():
         }
         insert = movie_logs_schema.load(info)
         movie_logs_col.insert_one(insert)
+        
+        user_movie_log_item = movie_logs_col.find_one({"username": username})
 
     watch_log = user_movie_log_item["watchLater"]
     for entry in watch_log:
@@ -465,6 +467,36 @@ def remove_movie():
         return jsonify({"error": "Movie not found in log or removal failed"}), 404
 
     return jsonify({"success": True, "message": f"Movie removed from {section}."}), 200
+
+@movie_bp.route('/api/trendingmovies', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def trending_movies():
+    try:
+        movie = []
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        params = {
+            "include_adult": False,
+            "language": "en-US",
+            "page": 1
+        }
+        response = requests.get("https://api.themoviedb.org/3/trending/movie/week", headers=headers, params=params)
+        response.raise_for_status() 
+        data = response.json()
+        
+        for item in data.get("results", []):
+            movie.append({
+                "id": item.get("id"),  
+                "title": item.get("title"),
+                "overview": item.get("overview"),
+                "release_date": item.get("release_date"),
+                "vote_average": item.get("vote_average"),
+                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}", 
+                "popularity": item.get("popularity"),
+            })
+        return jsonify({"movie": movie})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @movie_bp.route("/api/movie/random", methods=["GET"])

@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import { getUserByToken } from "../api/users";
 import AdvancedSearchModal from "../components/modals/AdvancedSearchModal";
 import axios from "axios";
-import { setMovies, clearMovies, setBooks } from "../state/mediaSlice"; // Import the action
+import { setMovies, setBooks, setShows, clearMedia } from "../state/mediaSlice"; // Import the action
 
 
 const Discover = () => {
@@ -28,6 +28,7 @@ const Discover = () => {
     const state = useSelector((state) => state);
     const hasFetchedMedia = useRef(false); // ✅ Track API call status
     const movies = state.media?.movies; // Safely access movies
+    const shows = state.media?.shows;
     const books = state.media?.books;
 
     const navigate = useNavigate();
@@ -37,11 +38,12 @@ const Discover = () => {
         const loadUserData = async () => {
             const fetchedUserData = await getUserByToken(token);
             setUserData(fetchedUserData);
+            clearMedia();
             console.log(movies)
             console.log(books)
+            console.log(state)
 
-
-            if (!hasFetchedMedia.current && (movies.length === 0 || books.length === 0)) {
+            if (!hasFetchedMedia.current && (movies.length === 0 || shows.length === 0 || books.length === 0)) {
                 hasFetchedMedia.current = true; // Mark API as called
 
                 try {
@@ -54,7 +56,10 @@ const Discover = () => {
                         params: { query: interestsQuery },
                     });
 
+                    console.log(response.data);
+
                     dispatch(setMovies(response.data.movies));
+                    dispatch(setShows(response.data.shows));
                     dispatch(setBooks(response.data.books))
                 } catch (error) {
                     console.error("Error fetching recommended movies:", error);
@@ -75,17 +80,20 @@ const Discover = () => {
 
             // Extract previously recommended movie titles and years
             const previousMovies = movies.map(movie => movie.title);
+            const previousTv = shows.map(show => show.title);
             const previousBooks = books.map(book => book.title);
 
             const response = await axios.get("http://127.0.0.1:5000/api/discover/recommended", {
                 params: {
                     query: interestsQuery,
                     previousMovies: JSON.stringify(previousMovies), // Send as JSON string
+                    previousTv: JSON.stringify(previousTv), // Send as JSON string
                     previousBooks: JSON.stringify(previousBooks) // Send as JSON string
                 },
             });
 
             dispatch(setMovies(response.data.movies));
+            dispatch(setShows(response.data.shows));
             dispatch(setBooks(response.data.books));
         } catch (error) {
             console.error("Error fetching recommended movies:", error);
@@ -269,6 +277,40 @@ const Discover = () => {
                     })
                 ) : (
                     <p>No movies to display.</p>
+                )}
+            </div>
+
+            {/* Tv Show Posters */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0px", marginBottom: "30px", maxWidth: "87%" }}>
+                {shows.length > 0 ? (
+                    shows.map((show) => {
+                        const isDefaultPoster = !show.poster_path;
+                        return (
+                            <div key={show.id} style={{ textAlign: "center" }}>
+                                <Link to={`/tv/${show.id}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                                    <img
+                                        src={isDefaultPoster ? `${process.env.PUBLIC_URL}/default-poster-icon.png` : show.poster_path}
+                                        alt={show.title}
+                                        style={{
+                                            width: isDefaultPoster ? "50%" : "60%",
+                                            height: "auto",
+                                            maxHeight: isDefaultPoster ? "90%" : "auto",
+                                            borderRadius: "5px",
+                                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                                            cursor: "pointer",
+                                        }}
+                                    />
+                                </Link>
+                                {isDefaultPoster && (
+                                    <p style={{ marginTop: "5px", fontSize: "14px", fontWeight: "bold", color: "#333" }}>
+                                        {show.title}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })
+                ) : (
+                    <p>No shows to display.</p>
                 )}
             </div>
 

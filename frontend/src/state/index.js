@@ -1,7 +1,6 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import userReducer from "./userSlice";
-import movieReducer from "./moviesSlice";
 import mediaReducer from "./mediaSlice";
 import {
   persistStore,
@@ -27,7 +26,7 @@ const persistConfig = {
   key: "root",
   storage,
   version: 1,
-  whitelist: ["auth", "media"] // Add 'movie' if you want it persisted as well
+  whitelist: ["auth", "media"]
 };
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

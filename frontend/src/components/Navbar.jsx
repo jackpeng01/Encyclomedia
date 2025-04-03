@@ -77,7 +77,14 @@ const Navbar = () => {
         );
       } else if (searchQuery.trim()) {
         // Redirect to correct search results page with the query and category
-        if (category === "books") {
+        if (category === "movies") {
+          navigate(
+            `/search?query=${encodeURIComponent(
+              searchQuery.trim()
+            )}&category=${category}`
+          );
+        }
+        else if (category === "books") {
           navigate(
             `/booksearch?query=${encodeURIComponent(searchQuery.trim())}`
           );
@@ -86,7 +93,7 @@ const Navbar = () => {
           navigate(`/plot-search?query=${searchQuery.trim()}`);
         } else {
           navigate(
-            `/search?query=${encodeURIComponent(
+            `/tvsearch?query=${encodeURIComponent(
               searchQuery.trim()
             )}&category=${category}`
           );
