@@ -220,11 +220,16 @@ def book_suggestions():
 
         suggestions = []
         for book in data.get("docs", []):
+            cover_id = book.get("cover_i")
+            poster_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else None
+
             suggestions.append({
                 "title": book.get("title", "Unknown Title"),
-                "id": book.get("key", "").replace("/works/", ""),  # Extract book ID for linking
-                "author": book.get("author_name", ["Unknown Author"])[0]
+                "id": book.get("key", "").replace("/works/", ""),  # Extract book ID
+                "author": book.get("author_name", ["Unknown Author"])[0],
+                "poster": poster_url  # 👈 Add this line
             })
+
 
         return jsonify({"suggestions": suggestions})
 
