@@ -11,23 +11,26 @@ import {
   List,
   ListItem,
   ListItemText,
+  Menu,
 } from "@mui/material";
-
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
 import React, { useEffect, useState } from "react";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import DemoIcon from "@mui/icons-material/Code";
 import LoginModal from "./LoginModal";
 import axios from "axios";
+import { setDarkMode } from "../state/userSlice";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const token = useSelector((state) => state.auth.token);
+  const isDarkMode = useSelector((state) => state.user.isDarkMode);
   const [userData, setUserData] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -45,59 +48,91 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchSuggestions = async () => {
+      // Clear suggestions if search query is too short
       if (searchQuery.length < 2) {
         setSuggestions([]);
         return;
       }
-
+  
       try {
-        const response = await axios.get(
-          `http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`
-        );
-        setSuggestions(response.data.suggestions || []);
+        if (category === "books") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`
+          );
+          setSuggestions(response.data.suggestions || []);
+        } else if (category === "movies") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/movie/suggestions?query=${searchQuery}`
+          );
+          setSuggestions(response.data.suggestions || []);
+        } else {
+          // For other categories
+          setSuggestions([]);
+        }
       } catch (error) {
-        console.error("Error fetching book suggestions:", error);
+        console.error(`Error fetching ${category} suggestions:`, error);
       }
     };
-
+  
     fetchSuggestions();
-  }, [searchQuery]);
+  }, [searchQuery, category]);
+  
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (category === "users") {
-      navigate(`/discover/users?query=${encodeURIComponent(
-        searchQuery.trim()
-      )}&category=${category}`);
-    }
-    else if (searchQuery.trim()) {
-      // Redirect to correct search results page with the query and category
-      if (category === "books") {
-        navigate(`/booksearch?query=${encodeURIComponent(searchQuery.trim())}`);
-        setSuggestions([]);
-      } else if (category === "movies") {
+    if (searchQuery.trim()) {
+      if (category === "users") {
         navigate(
-          `/search?query=${encodeURIComponent(
+          `/discover/users?query=${encodeURIComponent(
             searchQuery.trim()
           )}&category=${category}`
         );
-      } else {
-        // TV Shows will go here but for now just going to movies
-        navigate(
-          `/tvsearch?query=${encodeURIComponent(
+      } else if (searchQuery.trim()) {
+        // Redirect to correct search results page with the query and category
+        if (category === "books") {
+          navigate(
+            `/booksearch?query=${encodeURIComponent(searchQuery.trim())}`
+          );
+          setSuggestions([]);
+        } else if (category === "plot") {
+          navigate(`/plot-search?query=${searchQuery.trim()}`);
+        } else if (category === "movies") {
+          navigate(`/search?query=${encodeURIComponent(
             searchQuery.trim()
-          )}&category=${category}`
-        );
+          )}&category=${category}`);
+        } else {
+          navigate(
+            `/tvsearch?query=${encodeURIComponent(
+              searchQuery.trim()
+            )}&category=${category}`
+          );
+        }
       }
     }
   };
 
-  const handleListsClick = () => {
-    navigate("/myLists");
+  // Handle dropdown menu for profile button
+  const handleProfileButtonClick = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const handleLocalDemoClick = () => {
-    navigate("/local-lists");
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfile = () => {
+    navigate(`/${userData.username}`);
+    handleMenuClose();
+  };
+
+  const handleLists = () => {
+    navigate("/myLists");
+    handleMenuClose();
+  };
+
+  const handleToggleDarkMode = () => {
+    dispatch(setDarkMode(!isDarkMode));
+    handleMenuClose();
   };
 
   return (
@@ -111,7 +146,7 @@ const Navbar = () => {
         right: 0,
       }}
       style={{
-        zIndex: 1000,
+        zIndex: 10000,
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between", width: "100%", px: 10 }}>
@@ -127,15 +162,15 @@ const Navbar = () => {
               fontWeight: 100,
               ml: 1,
               color: "black",
-              color: "black",
             }}
           >
             <span style={{ fontSize: "1.3em" }}>E</span>NCYCLOMEDI
             <span style={{ fontSize: "1.3em" }}>A</span>
           </Typography>
         </Box>
+
         {/* Center Section - Search Bar */}
-        <Box sx={{ flexGrow: 1, mx: 5 }}>
+        <Box sx={{ flexGrow: 1, mx: 5, position: "relative" }}>
           <form
             onSubmit={handleSearchSubmit}
             style={{
@@ -148,11 +183,11 @@ const Navbar = () => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                width: "60%", // total width of the combined component
+                width: "60%",
                 backgroundColor: "white",
                 borderRadius: "20px",
-                overflow: "hidden", // ensure no radius leaks
-                border: "1px solid gray", // unified border
+                overflow: "hidden",
+                border: "1px solid gray",
                 "&:hover": {
                   borderColor: "black",
                 },
@@ -167,22 +202,20 @@ const Navbar = () => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { border: "none" },
-                    borderRadius: 0, // remove internal rounding
-                    paddingRight: 0, // no gap between inputs
+                    borderRadius: 0,
+                    paddingRight: 0,
                   },
                   "& .MuiInputBase-root": {
                     height: "15px",
                   },
                 }}
               />
-
               <Select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disableUnderline
                 sx={{
                   backgroundColor: "#f4f4f4",
-
                   minWidth: "100px",
                   height: "30px",
                   borderLeft: "1px solid gray",
@@ -202,101 +235,81 @@ const Navbar = () => {
                 <MenuItem value="tv">TV</MenuItem>
                 <MenuItem value="books">Books</MenuItem>
                 <MenuItem value="users">Users</MenuItem>
+                <MenuItem value="plot">Plot</MenuItem>
               </Select>
             </Box>
-
-            {/* Hidden submit button */}
             <button type="submit" style={{ display: "none" }}></button>
           </form>
-          {/* Autocomplete Suggestions (Only for Books) */}
-          {category === "books" && suggestions.length > 0 && (
-            <List
-              sx={{
-                position: "absolute",
-                top: "100%",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "50%",
-                backgroundColor: "white",
-                boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                borderRadius: "5px",
-                maxHeight: "200px",
-                overflowY: "auto",
+          {["books", "movies"].includes(category) && suggestions.length > 0 && (
+          <List
+            sx={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              width: "60%", 
+              backgroundColor: "white",
+              boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+              borderRadius: "5px",
+              maxHeight: "300px",
+              overflowY: "auto",
+              zIndex: 10, 
+            }}
+          >
+            {suggestions.map((suggestion) => (
+              <ListItem
+              key={suggestion.id}
+              button
+              onClick={() => {
+                navigate(
+                  category === "books"
+                    ? `/book/${suggestion.id}`
+                    : `/movie/${suggestion.id}`
+                );
+                setSearchQuery("");
+                setSuggestions([]);
               }}
+              sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
             >
-              {suggestions.map((suggestion) => (
-                <ListItem
-                  key={suggestion.id}
-                  button="true"
-                  onClick={() => {
-                    navigate(`/book/${suggestion.id}`);
-                    setSearchQuery("");
-                    setSuggestions([]);
-                  }}
-                  sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
-                >
-                  <ListItemText
-                    primary={suggestion.title}
-                    secondary={suggestion.author}
-                    sx={{ color: "black" }}
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                {/* Left side: title + author/year */}
+                <ListItemText
+                  primary={suggestion.title}
+                  secondary={
+                    category === "books"
+                      ? suggestion.author
+                      : suggestion.release_date
+                      ? new Date(suggestion.release_date).getFullYear()
+                      : ""
+                  }
+                  sx={{ color: "black" }}
+                />
+            
+                {/* Right side: poster/cover */}
+                {suggestion.poster && (
+                  <img
+                    src={suggestion.poster}
+                    alt={suggestion.title}
+                    style={{
+                      width: "40px",
+                      height: "60px",
+                      objectFit: "cover",
+                      borderRadius: "4px",
+                      marginLeft: "10px",
+                    }}
                   />
-                </ListItem>
-              ))}
-            </List>
-          )}
+                )}
+              </Box>
+            </ListItem>           
+            ))}
+          </List>
+        )}
         </Box>
 
         {/* Right Section - Buttons */}
-        <Box sx={{ display: "flex", gap: 3 }}>
-          <Button
-            sx={{
-              ml: "10px",
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={() => navigate("/discover")}
-          >
-            Discover
-          </Button>
-          <Button
-            sx={{
-              ml: "10px",
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={() => navigate("/trending")}
-          >
-            Trending
-          </Button>
-          <Button
-            sx={{
-              ml: "10px",
-              textTransform: "none",
-              fontSize: "1rem",
-              color: "black",
-              "&:hover": { color: "black" },
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={handleListsClick}
-          // startIcon={<FormatListBulletedIcon />}
-          >
-            My Lists
-          </Button>
+        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
           {userData ? (
             <>
-              {/* Profile Button */}
+              {/* Profile Button that opens a dropdown menu */}
               <Button
                 sx={{
                   textTransform: "none",
@@ -308,9 +321,8 @@ const Navbar = () => {
                   gap: 1.5,
                   padding: "6px 10px",
                 }}
-                onClick={() => (window.location.href = `/${userData.username}`)}
+                onClick={handleProfileButtonClick}
               >
-                {/* Profile Picture Inside Button */}
                 <img
                   src={userData.profilePicture}
                   alt="Profile"
@@ -323,23 +335,51 @@ const Navbar = () => {
                 />
                 {userData.username}
               </Button>
+
+              {/* Dropdown Menu */}
+              <Menu
+                anchorEl={anchorEl}
+                open={openMenu}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    navigate("/home");
+                  }}
+                >
+                  Home
+                </MenuItem>
+                <MenuItem onClick={handleProfile}>Profile</MenuItem>
+                <MenuItem onClick={handleLists}>Lists</MenuItem>
+                <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
+                <MenuItem onClick={() => { navigate("/discover") }}>Discover</MenuItem>
+                <MenuItem onClick={() => { navigate("/trending") }}>Trending</MenuItem>
+              </Menu>
+
+              {/* Logout Button */}
               <Button
                 sx={{
                   textTransform: "none",
-                  //   mt: 2,
                   fontSize: "1rem",
-                  color: "black", // ✅ Ensures black text
-                  "&:hover": { color: "black" }, // ✅ Ensures hover text remains black
+                  color: "black",
+                  "&:hover": { color: "black" },
                 }}
                 onClick={() => {
-                  dispatch(setToken(null)); // ✅ Logout action
+                  dispatch(setToken(null));
                 }}
               >
                 Logout
               </Button>
             </>
           ) : (
-            // Show Login button if user is not logged in
             <Button
               sx={{
                 textTransform: "none",
@@ -347,7 +387,7 @@ const Navbar = () => {
                 color: "black",
                 "&:hover": { color: "black" },
               }}
-              onClick={() => setLoginOpen(true)} // Open LoginModal on click
+              onClick={() => setLoginOpen(true)}
             >
               Login
             </Button>
@@ -355,15 +395,13 @@ const Navbar = () => {
         </Box>
       </Toolbar>
 
-      {/* LoginModal - This will be displayed if isLoginOpen is true */}
       <LoginModal
         open={isLoginOpen}
-        onClose={() => setLoginOpen(false)} // Close the modal when the user clicks outside or presses the close button
+        onClose={() => setLoginOpen(false)}
         signUpMode={signUpMode}
-        setSignUpMode={setSignUpMode} // To toggle between Login and SignUp modes
+        setSignUpMode={setSignUpMode}
       />
     </AppBar>
   );
 };
-
 export default Navbar;

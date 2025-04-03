@@ -20,11 +20,14 @@ import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
 import BookSearch from "./scenes/BookSearch";
 import BookDetails from "./scenes/BookDetails";
+import ReadLater from "./scenes/ReadLater";
+import BookLog from "./scenes/BookLog";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
 import Discover from "./scenes/Discover";
 import UserSearch from "./scenes/UserSearch";
+import PlotSearchResults from "./scenes/PlotSearchResults";
 import TVDetails from "./scenes/TVDetails";
 
 import TrendingTvPage from "./scenes/TrendingTvPage";
@@ -116,9 +119,15 @@ function App() {
 
             <Route path="/book/:id" element={<BookDetails />} />
 
+            <Route path="/:username/read-later" element={<ReadLater />} />
+
+            <Route path="/:username/book-log" element={<BookLog />} />
+
             <Route path="/discover" element={<Discover />} />
 
             <Route path="/discover/users" element={<UserSearch />} />
+
+            <Route path="/plot-search" element={<PlotSearchResults />} />
 
             <Route path="/tvsearch" element={<TVSearch />} />
             <Route path="/tv/:id" element={<TVDetails />} />

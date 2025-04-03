@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
+import TrendingTvPage from "./TrendingTvPage";
+import RandomMovie from "../components/RandomMovie";
 
 const HomePage = () => {
   const token = useSelector((state) => state.auth.token);
@@ -45,10 +47,12 @@ const HomePage = () => {
         <Typography variant="h4" gutterBottom>
           Welcome {userData.username}
         </Typography>
-        <Typography variant="body1">
+        <Typography variant="body1" sx={{mb: 10}}>
           Your one-stop destination for all things media. Explore, learn, and
           enjoy!
         </Typography>
+        <RandomMovie/>
+        <TrendingTvPage />
       </Box>
     </Box>
   );

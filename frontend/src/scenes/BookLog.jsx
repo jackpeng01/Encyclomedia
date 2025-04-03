@@ -5,19 +5,20 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import { Box, Button, Typography, TextField } from "@mui/material";
 import { getUserByUsername, getUserByToken } from "../api/users";
+import { FaStar } from "react-icons/fa";
 
-const ReadLater = () => {
+const BookLog = () => {
     const { username } = useParams();
-    const [readLater, setReadLater] = useState([]);
+    const [bookLog, setBookLog] = useState([]);
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState("");
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(""); 
 
     useEffect(() => {
-        const fetchReadLater = async () => {
+        const fetchBookLog = async () => {
             const fetchedProfile = await getUserByUsername(username);
             setUserData(fetchedProfile);
 
@@ -30,41 +31,41 @@ const ReadLater = () => {
             }
 
             try {
-                const response = await axios.get("http://127.0.0.1:5000/api/book/read_later", {
+                const response = await axios.get("http://127.0.0.1:5000/api/book/log", {
                     params: { username },
                 });
 
-                setReadLater(response.data);
+                setBookLog(response.data);
             } catch (error) {
-                console.error("Error fetching read later list:", error);
+                console.error("Error fetching Book Log:", error);
             }
         };
 
-        fetchReadLater();
+        fetchBookLog();
     }, [username, token]);
 
-    const handleRemoveFromReadLater = async (entryId) => {
+    const handleRemoveFromBookLog = async (entryId) => {
         try {
             const response = await axios.post(
-                "http://127.0.0.1:5000/api/book/remove_read_later",
+                "http://127.0.0.1:5000/api/book/remove_log",
                 {
                     username: username,
                     entry: entryId,
-                    section: "readLater"
+                    section: "bookLog"
                 }
             );
-    
+
             if (response.status === 200) {
-                setReadLater((prev) => prev.filter((entry) => entry._id !== entryId));
+                setBookLog((prev) => prev.filter((entry) => entry._id !== entryId));
             }
         } catch (error) {
             console.error("Error removing book:", error);
             alert("An error occurred while trying to remove the book.");
         }
     };
-    
+
     // Filter books by search query
-    const filteredBooks = readLater.filter((entry) =>
+    const filteredBooks = bookLog.filter((entry) =>
         entry.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -73,8 +74,8 @@ const ReadLater = () => {
             <Navbar userData={currentUser} />
 
             <Box sx={{ maxWidth: "900px", margin: "auto", mt: 10 }}>
-                <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
-                    {username}'s Read Later List
+                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                    {username}'s Book Log
                 </Typography>
 
                 {/* Search bar */}
@@ -88,6 +89,7 @@ const ReadLater = () => {
                         InputLabelProps={{ shrink: true }}
                     />
                 </Box>
+
 
                 {error ? (
                     <Typography color="error">{error}</Typography>
@@ -115,11 +117,26 @@ const ReadLater = () => {
                                     {entry.title}
                                 </Typography>
 
+                                <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
+                                    Date Read: {entry.readDate}
+                                </Typography>
+
+                                {/* Display Rating */}
+                                <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <FaStar
+                                            key={star}
+                                            size={20}
+                                            color={star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"}
+                                        />
+                                    ))}
+                                </Box>
+
                                 {ownProfile && (
                                     <Button
                                         variant="contained"
                                         color="error"
-                                        onClick={() => handleRemoveFromReadLater(entry._id)}
+                                        onClick={() => handleRemoveFromBookLog(entry._id)}
                                         sx={{ mt: 1 }}
                                     >
                                         Remove
@@ -134,4 +151,4 @@ const ReadLater = () => {
     );
 };
 
-export default ReadLater;
+export default BookLog;
