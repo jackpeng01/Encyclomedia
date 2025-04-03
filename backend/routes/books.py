@@ -226,9 +226,9 @@ def book_suggestions():
 
             suggestions.append({
                 "title": book.get("title", "Unknown Title"),
-                "id": book.get("key", "").replace("/works/", ""),  # Extract book ID
+                "id": book.get("key", "").replace("/works/", ""), 
                 "author": book.get("author_name", ["Unknown Author"])[0],
-                "poster": poster_url  # 👈 Add this line
+                "poster": poster_url 
             })
 
 
@@ -265,14 +265,14 @@ def handle_read_later(book_id):
         }
         insert = book_logs_schema.load(info)
         book_logs_col.insert_one(insert)
-        user_book_log = book_logs_col.find_one({"username": username})  # Fetch again
+        user_book_log = book_logs_col.find_one({"username": username})  
 
-    # ✅ Check if the book already exists in `readLater`
+    # Check if the book already exists in `readLater`
     for book in user_book_log.get("readLater", []):
         if book["bookId"] == book_id:
-            return jsonify({"error": "Book is already in Read Later list."}), 400  # ❌ Reject duplicate
+            return jsonify({"error": "Book is already in Read Later list."}), 400  
 
-    # ✅ If not, add the book to Read Later
+    # If not, add the book to Read Later
     new_entry = {
         "_id": str(ObjectId()),  # Convert ObjectId to string
         "bookId": book_id,
@@ -310,7 +310,7 @@ def get_read_later():
     
     user_book_log_item = book_logs_col.find_one({"username": username})
 
-    # ✅ If no book log found, initialize a new one
+    # If no book log found, initialize a new one
     if user_book_log_item is None:
         info = {
             "username": username,
@@ -320,7 +320,7 @@ def get_read_later():
         book_logs_col.insert_one(info)
         return jsonify([])  # Return empty list since no books exist yet
 
-    # ✅ Ensure "readLater" key exists
+    # Ensure "readLater" key exists
     read_later_log = user_book_log_item.get("readLater", [])
     if read_later_log is None:
         read_later_log = []
@@ -515,7 +515,8 @@ def trending_books():
                 "id": item.get("key", "").replace("/works/", ""),  # Extract book ID for linking
                 "author": item.get("author_name", ["Unknown Author"])[0],
                 "release_date": item.get("first_publish_year"),
-                "cover_url": f"https://covers.openlibrary.org/b/id/{item.get("cover_i")}-L.jpg" if "cover_i" in item else None         })
+                "cover_url": f"https://covers.openlibrary.org/b/id/{item.get('cover_i')}-L.jpg" if "cover_i" in item else None
+             })
         return jsonify({"book": book})
 
     except requests.exceptions.RequestException as e:
