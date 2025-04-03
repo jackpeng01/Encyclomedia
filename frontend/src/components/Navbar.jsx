@@ -315,6 +315,7 @@ const Navbar = () => {
                 </MenuItem>
                 <MenuItem onClick={handleProfile}>Profile</MenuItem>
                 <MenuItem onClick={handleLists}>Lists</MenuItem>
+                <MenuItem onClick={() => { navigate("/my-reviews"); handleMenuClose(); }}>Reviews</MenuItem>
                 <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
                 <MenuItem onClick={() => { navigate("/discover") }}>Discover</MenuItem>
               </Menu>

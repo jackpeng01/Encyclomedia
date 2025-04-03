@@ -275,7 +275,7 @@ const FollowedListsPage = () => {
           list={selectedList}
           userData={userData}
           onClose={() => setListDetailsOpen(false)}
-          onUpdateList={() => {
+          onUpdateList={() => { 
             const fetchFollowedLists = async () => {
               try {
                 const response = await axios.get("http://127.0.0.1:5000/api/users/followed-lists", {

@@ -11,6 +11,7 @@ from services.config import Config
 from services.database import connect_db
 from routes.lists import lists_bp
 from routes.discover import discover_bp
+from routes.reviews import reviews_bp
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py
@@ -49,7 +50,7 @@ app.register_blueprint(movie_bp)
 app.register_blueprint(books_bp)
 
 app.register_blueprint(lists_bp) 
-# app.register_blueprint(reviews_bp)
+app.register_blueprint(reviews_bp)
 app.register_blueprint(discover_bp)
 
 @app.route("/api/test")

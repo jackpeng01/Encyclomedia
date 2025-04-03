@@ -5,7 +5,9 @@ import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
 import ListsPage from "./scenes/ListsPage";
+import MyReviewsPage from "./scenes/MyReviewsPage";
 import PublicListsPage from './scenes/PublicListsPage';
+import LatestReviewsPage from "./scenes/LatestReviewsPage";
 import FollowedListsPage from './scenes/FollowedListsPage';
 import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
@@ -87,11 +89,17 @@ function App() {
               {/* List Management Page */}
               <Route path="/mylists" element={<ListsPage />} />
               
+              {/* Review Management Page */}
+              <Route path="/my-reviews" element={<MyReviewsPage />} />
+
               {/* Followed List Management Page */}
               <Route path="/followed-lists" element={<FollowedListsPage />} />
 
               {/* List Browsing Page */}
               <Route path="/public-lists" element={<PublicListsPage />} />
+
+              {/* Review Browsing Page */}
+              <Route path="/recent-reviews" element={<LatestReviewsPage />} />
 
               {/* 404 Not Found Page */}
               <Route path="*" element={<NotFound />} />
