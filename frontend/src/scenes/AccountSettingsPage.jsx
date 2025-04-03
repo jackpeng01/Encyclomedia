@@ -228,7 +228,7 @@ const AccountSettingsPage = () => {
             variant="caption"
             sx={{ color: "gray", display: "block", textAlign: "right" }}
           >
-            {formData.bio.length}/{MAX_BIO_LENGTH} characters used
+            {(formData.bio ? formData.bio.length : 0)}/{MAX_BIO_LENGTH} characters used
           </Typography>
         </Box>
         {/* New Genre Preferences Field */}
