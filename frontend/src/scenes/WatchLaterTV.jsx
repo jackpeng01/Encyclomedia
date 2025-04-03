@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, TextField } from "@mui/material";
 import { FaStar } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
 import { getUserByToken } from "../api/users";
@@ -16,6 +16,7 @@ const WatchLaterTV = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");             
 
     useEffect(() => {
         const fetchWatchLater = async () => {
@@ -71,6 +72,11 @@ const WatchLaterTV = () => {
         }
     };
 
+    // Filter tv by search query
+    const searchTvShows = watchLater.filter((entry) =>
+        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             {/* Navbar */}
@@ -81,12 +87,26 @@ const WatchLaterTV = () => {
                 <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
                     {username}'s Watch Later List (Television)
                 </Typography>
-
+                {/* Search bar */}
+                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
+                    <TextField
+                        label="Search TV shows"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ width: "100%", maxWidth: 400 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
                 {error ? (
                     <Typography color="error">{error}</Typography>
+                ) : searchTvShows.length === 0 ? (
+                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
+                        No shows found.
+                    </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {watchLater.map((entry, index) => {
+                        {searchTvShows.map((entry, index) => {
                             const isDefaultPoster = !entry.poster; // Check if there's no poster
                             return (
                                 <Link
