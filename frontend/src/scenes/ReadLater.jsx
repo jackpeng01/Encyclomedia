@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, TextField } from "@mui/material";
 import { getUserByUsername, getUserByToken } from "../api/users";
 
 const ReadLater = () => {
@@ -14,6 +14,7 @@ const ReadLater = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         const fetchReadLater = async () => {
@@ -62,6 +63,10 @@ const ReadLater = () => {
         }
     };
     
+    // Filter books by search query
+    const filteredBooks = readLater.filter((entry) =>
+        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -72,11 +77,27 @@ const ReadLater = () => {
                     {username}'s Read Later List
                 </Typography>
 
+                {/* Search bar */}
+                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
+                    <TextField
+                        label="Search books"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ width: "100%", maxWidth: 400 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+
                 {error ? (
                     <Typography color="error">{error}</Typography>
+                ) : filteredBooks.length === 0 ? (
+                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
+                        No books found.
+                    </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {readLater.map((entry, index) => (
+                        {filteredBooks.map((entry, index) => (
                             <Box key={index} sx={{ textAlign: "center", maxWidth: "160px" }}>
                                 <Link to={`/book/${entry.bookId}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                                     <img
