@@ -15,7 +15,7 @@ const BookLog = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [searchQuery, setSearchQuery] = useState(""); // <-- added
+    const [searchQuery, setSearchQuery] = useState(""); 
 
     useEffect(() => {
         const fetchBookLog = async () => {

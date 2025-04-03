@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography, IconButton, Slider } from "@mui/material";
+import { Box, Button, Typography, IconButton, Slider, TextField } from "@mui/material";
 import { FaArrowUp, FaArrowDown, FaEquals, FaStar, FaUndo } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
 import { getUserByToken } from "../api/users";
@@ -20,6 +20,7 @@ const MovieLog = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");         
 
     useEffect(() => {
         // Fetch all movie logs on component mount
@@ -125,6 +126,11 @@ const MovieLog = () => {
         }
     };
 
+    // Filter movies by search query
+    const searchMovies = sortedMovieLog.filter((entry) =>
+        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             {/* Navbar */}
@@ -135,7 +141,17 @@ const MovieLog = () => {
                 <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
                     {username}'s Movie Log
                 </Typography>
-
+                {/* Search bar */}
+                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
+                    <TextField
+                        label="Search movies"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ width: "100%", maxWidth: 400 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
                 {/* Sort, Filter, and Reset Buttons */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: 4, alignItems: "center" }}>
                     {/* Sort Button */}
@@ -189,9 +205,13 @@ const MovieLog = () => {
                     <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
                         No movies found in your movie log.
                     </Typography>
+                ) : searchMovies.length === 0 ? (
+                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
+                        No movies found.
+                    </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {sortedMovieLog.map((entry, index) => {
+                        {searchMovies.map((entry, index) => {
                             const isDefaultPoster = !entry.poster; // Check if there's no poster
                             return (
                                 <Link

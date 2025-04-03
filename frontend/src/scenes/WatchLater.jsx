@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, TextField } from "@mui/material";
 import { FaStar } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
 import { getUserByToken } from "../api/users";
@@ -16,6 +16,7 @@ const WatchLater = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");             
 
     useEffect(() => {
         // Fetch all movie logs on component mount
@@ -74,6 +75,11 @@ const WatchLater = () => {
         }
     };
 
+    // Filter movies by search query
+    const searchMovies = watchLater.filter((entry) =>
+        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             {/* Navbar */}
@@ -85,13 +91,29 @@ const WatchLater = () => {
                     {username}'s Watch Later List
                 </Typography>
 
+                {/* Search bar */}
+                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
+                    <TextField
+                        label="Search movies"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ width: "100%", maxWidth: 400 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+
                 {watchLater.length === 0 ? (
                     <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
                         No movies found in your watch later.
                     </Typography>
+                ) : searchMovies.length === 0 ? (
+                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
+                        No movies found.
+                    </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {watchLater.map((entry, index) => {
+                        {searchMovies.map((entry, index) => {
                             const isDefaultPoster = !entry.poster; // Check if there's no poster
                             return (
                                 <Link
