@@ -106,6 +106,7 @@ books_bp = Blueprint("books", __name__)
 
 OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 OPEN_LIBRARY_DETAILS_URL = "https://openlibrary.org/works"
+TRENDING_BOOKS_URL = "https://openlibrary.org/trending/weekly.json"
 
 @books_bp.route("/api/book/search", methods=["GET"])
 def search_books():
@@ -220,11 +221,16 @@ def book_suggestions():
 
         suggestions = []
         for book in data.get("docs", []):
+            cover_id = book.get("cover_i")
+            poster_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else None
+
             suggestions.append({
                 "title": book.get("title", "Unknown Title"),
-                "id": book.get("key", "").replace("/works/", ""),  # Extract book ID for linking
-                "author": book.get("author_name", ["Unknown Author"])[0]
+                "id": book.get("key", "").replace("/works/", ""),  # Extract book ID
+                "author": book.get("author_name", ["Unknown Author"])[0],
+                "poster": poster_url  # 👈 Add this line
             })
+
 
         return jsonify({"suggestions": suggestions})
 
@@ -493,3 +499,24 @@ def remove_book_log():
         return jsonify({"error": "Book not found in log or removal failed"}), 404
 
     return jsonify({"success": True, "message": f"Book removed from {section}."}), 200
+
+@books_bp.route('/api/trendingbooks', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def trending_books():
+    try:
+        book = []
+        response = requests.get(TRENDING_BOOKS_URL, params={"sort": "readinglog", "limit": 20})
+        response.raise_for_status() 
+        data = response.json()
+        
+        for item in data.get("works", []):
+            book.append({
+                "title": item.get("title", "Unknown Title"),
+                "id": item.get("key", "").replace("/works/", ""),  # Extract book ID for linking
+                "author": item.get("author_name", ["Unknown Author"])[0],
+                "release_date": item.get("first_publish_year"),
+                "cover_url": f"https://covers.openlibrary.org/b/id/{item.get("cover_i")}-L.jpg" if "cover_i" in item else None         })
+        return jsonify({"book": book})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500

@@ -3,10 +3,9 @@ import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, TextField } from "@mui/material";
 import { getUserByUsername, getUserByToken } from "../api/users";
-import { FaArrowUp, FaArrowDown, FaEquals, FaStar, FaUndo } from "react-icons/fa";
-
+import { FaStar } from "react-icons/fa";
 
 const BookLog = () => {
     const { username } = useParams();
@@ -16,6 +15,7 @@ const BookLog = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState(""); 
 
     useEffect(() => {
         const fetchBookLog = async () => {
@@ -54,7 +54,7 @@ const BookLog = () => {
                     section: "bookLog"
                 }
             );
-    
+
             if (response.status === 200) {
                 setBookLog((prev) => prev.filter((entry) => entry._id !== entryId));
             }
@@ -63,26 +63,43 @@ const BookLog = () => {
             alert("An error occurred while trying to remove the book.");
         }
     };
-    
+
+    // Filter books by search query
+    const filteredBooks = bookLog.filter((entry) =>
+        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <Navbar userData={currentUser} />
 
             <Box sx={{ maxWidth: "900px", margin: "auto", mt: 10 }}>
-                <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
+                <Typography variant="h4" sx={{ textAlign: "center" }}>
                     {username}'s Book Log
                 </Typography>
 
+                {/* Search bar */}
+                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
+                    <TextField
+                        label="Search books"
+                        variant="outlined"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ width: "100%", maxWidth: 400 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                </Box>
+
+
                 {error ? (
                     <Typography color="error">{error}</Typography>
-                ) :  bookLog.length === 0 ? (
+                ) : filteredBooks.length === 0 ? (
                     <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
-                        No books logged yet.
+                        No books found.
                     </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {bookLog.map((entry, index) => (
+                        {filteredBooks.map((entry, index) => (
                             <Box key={index} sx={{ textAlign: "center", maxWidth: "160px" }}>
                                 <Link to={`/book/${entry.bookId}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                                     <img
@@ -99,11 +116,11 @@ const BookLog = () => {
                                 <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
                                     {entry.title}
                                 </Typography>
-                                 
+
                                 <Typography variant="h6" sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}>
                                     Date Read: {entry.readDate}
                                 </Typography>
-                                
+
                                 {/* Display Rating */}
                                 <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
                                     {[1, 2, 3, 4, 5].map((star) => (
@@ -116,7 +133,6 @@ const BookLog = () => {
                                 </Box>
 
                                 {ownProfile && (
-                                    
                                     <Button
                                         variant="contained"
                                         color="error"

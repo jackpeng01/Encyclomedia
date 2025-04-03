@@ -3,16 +3,16 @@ import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography, IconButton, Slider, TextField } from "@mui/material";
+import { Box, Button, Typography, IconButton, Slider } from "@mui/material";
 import { FaArrowUp, FaArrowDown, FaEquals, FaStar, FaUndo } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
 import { getUserByToken } from "../api/users";
 
-const MovieLog = () => {
-    const { username } = useParams(); // Get the username from the route
-    const [movieLog, setMovieLog] = useState([]); // Store the movie logs
-    const [sortedMovieLog, setSortedMovieLog] = useState([]); // Sorted movie log
-    const [filteredMovieLog, setFilteredMovieLog] = useState([]); // Filtered movie log
+const TVLog = () => {
+    const { username } = useParams(); // Get the username
+    const [tvLog, setTvLog] = useState([]); // Store the logs
+    const [sortedTvLog, setSortedTvLog] = useState([]); // Sorted log
+    const [filteredTvLog, setFilteredTvLog] = useState([]); // Filtered log
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState("");
     const [sortOrder, setSortOrder] = useState("default"); // Sorting order
@@ -20,10 +20,8 @@ const MovieLog = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");         
 
     useEffect(() => {
-        // Fetch all movie logs on component mount
         const fetchLogs = async () => {
             const fetchedProfile = await getUserByUsername(username);
             setUserData(fetchedProfile);
@@ -37,16 +35,16 @@ const MovieLog = () => {
             }
 
             try {
-                const response = await axios.get("http://127.0.0.1:5000/api/movie/log", {
+                const response = await axios.get("http://127.0.0.1:5000/api/tv/log", {
                     params: { username },
                 });
 
-                setMovieLog(response.data); // Store the fetched movie logs
-                setSortedMovieLog(response.data); // Initialize the sorted log
-                setFilteredMovieLog(response.data); // Initialize the filtered log
+                setTvLog(response.data); 
+                setSortedTvLog(response.data); 
+                setFilteredTvLog(response.data); 
                 console.log(response.data);
             } catch (error) {
-                console.error("Error fetching movie logs:", error);
+                console.error("Error fetching TV logs:", error);
             }
         };
 
@@ -67,36 +65,36 @@ const MovieLog = () => {
         setSortOrder(nextSortOrder);
 
         if (nextSortOrder === "highToLow") {
-            setSortedMovieLog([...filteredMovieLog].sort((a, b) => b.rating - a.rating));
+            setSortedTvLog([...filteredTvLog].sort((a, b) => b.rating - a.rating));
         } else if (nextSortOrder === "lowToHigh") {
-            setSortedMovieLog([...filteredMovieLog].sort((a, b) => a.rating - b.rating));
+            setSortedTvLog([...filteredTvLog].sort((a, b) => a.rating - b.rating));
         } else {
-            setSortedMovieLog(filteredMovieLog); // Reset to the filtered list
+            setSortedTvLog(filteredTvLog); // Reset to the filtered list
         }
     };
 
     // Handle filtering by rating range
     const handleRatingRangeChange = (event, newRange) => {
         setRatingRange(newRange);
-        const filtered = movieLog.filter(
+        const filtered = tvLog.filter(
             (entry) => entry.rating >= newRange[0] && entry.rating <= newRange[1]
         );
-        setFilteredMovieLog(filtered);
-        setSortedMovieLog(filtered);
+        setFilteredTvLog(filtered);
+        setSortedTvLog(filtered);
     };
 
     // Handle reset filter and sort
     const handleReset = () => {
         setSortOrder("default");
         setRatingRange([0, 5]);
-        setFilteredMovieLog(movieLog); // Reset filtered movies to all movies
-        setSortedMovieLog(movieLog); // Reset sorted movies to all movies
+        setFilteredTvLog(tvLog); // Reset filtered movies to all movies
+        setSortedTvLog(tvLog); // Reset sorted movies to all movies
     };
 
     const handleRemove = async (section, entryId) => {
         try {
             const response = await axios.post(
-                "http://127.0.0.1:5000/api/movie/remove",
+                "http://127.0.0.1:5000/api/tv/remove",
                 {
                     username: username,
                     entry: entryId,
@@ -111,10 +109,10 @@ const MovieLog = () => {
 
             if (response.status === 200) {
                 // Update the state to remove the entry locally
-                const updatedMovieLog = movieLog.filter((entry) => entry._id !== entryId);
-                setMovieLog(updatedMovieLog);
-                setFilteredMovieLog(updatedMovieLog);
-                setSortedMovieLog(updatedMovieLog);
+                const updatedMovieLog = tvLog.filter((entry) => entry._id !== entryId);
+                setTvLog(updatedMovieLog);
+                setFilteredTvLog(updatedMovieLog);
+                setSortedTvLog(updatedMovieLog);
 
                 // alert("Successfully removed!");
             } else {
@@ -126,11 +124,6 @@ const MovieLog = () => {
         }
     };
 
-    // Filter movies by search query
-    const searchMovies = sortedMovieLog.filter((entry) =>
-        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             {/* Navbar */}
@@ -141,17 +134,7 @@ const MovieLog = () => {
                 <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
                     {username}'s Movie Log
                 </Typography>
-                {/* Search bar */}
-                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
-                    <TextField
-                        label="Search movies"
-                        variant="outlined"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        sx={{ width: "100%", maxWidth: 400 }}
-                        InputLabelProps={{ shrink: true }}
-                    />
-                </Box>
+
                 {/* Sort, Filter, and Reset Buttons */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mb: 4, alignItems: "center" }}>
                     {/* Sort Button */}
@@ -186,7 +169,7 @@ const MovieLog = () => {
                             sx={{ mt: 2 }}
                         />
                         <Typography variant="body2">
-                            Showing movies with ratings from {ratingRange[0]} to {ratingRange[1]}
+                            Showing TV shows with ratings from {ratingRange[0]} to {ratingRange[1]}
                         </Typography>
                     </Box>
 
@@ -201,21 +184,17 @@ const MovieLog = () => {
                     </Button>
                 </Box>
 
-                {sortedMovieLog.length === 0 ? (
+                {sortedTvLog.length === 0 ? (
                     <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
-                        No movies found in your movie log.
-                    </Typography>
-                ) : searchMovies.length === 0 ? (
-                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
-                        No movies found.
+                        No shows found in your TV log.
                     </Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {searchMovies.map((entry, index) => {
+                        {sortedTvLog.map((entry, index) => {
                             const isDefaultPoster = !entry.poster; // Check if there's no poster
                             return (
                                 <Link
-                                    to={`/movie/${entry.movieId}`} // Redirect to the movie details page
+                                    to={`/tv/${entry.tvId}`} 
                                     key={index}
                                     style={{ textDecoration: "none" }}
                                     onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -334,8 +313,8 @@ const MovieLog = () => {
                                                     color="error"
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        handleRemove("movieLog", entry._id);
-                                                        console.log("Remove movie:", entry.movieId);
+                                                        handleRemove("tvLog", entry._id);
+                                                        console.log("Remove TV:", entry.tvId);
                                                     }}
                                                     sx={{ mt: 1 }}
                                                 >
@@ -355,4 +334,4 @@ const MovieLog = () => {
     );
 };
 
-export default MovieLog;
+export default TVLog;

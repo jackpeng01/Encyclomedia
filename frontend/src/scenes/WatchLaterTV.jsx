@@ -3,12 +3,12 @@ import { useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography, TextField } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { FaStar } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
 import { getUserByToken } from "../api/users";
 
-const WatchLater = () => {
+const WatchLaterTV = () => {
     const { username } = useParams(); // Get the username from the route
     const [watchLater, setWatchLater] = useState([]); // Store the movie logs
     const [userData, setUserData] = useState(null);
@@ -16,10 +16,8 @@ const WatchLater = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");             
 
     useEffect(() => {
-        // Fetch all movie logs on component mount
         const fetchWatchLater = async () => {
             const fetchedProfile = await getUserByUsername(username);
             setUserData(fetchedProfile);
@@ -33,14 +31,14 @@ const WatchLater = () => {
             }
 
             try {
-                const response = await axios.get("http://127.0.0.1:5000/api/movie/watch_later", {
+                const response = await axios.get("http://127.0.0.1:5000/api/tv/watch_later", {
                     params: { username },
                 });
 
-                setWatchLater(response.data); // Store the fetched movie logs
+                setWatchLater(response.data); 
                 console.log(response.data);
             } catch (error) {
-                console.error("Error fetching movie logs:", error);
+                console.error("Error fetching TV logs:", error);
             }
         };
 
@@ -49,7 +47,7 @@ const WatchLater = () => {
 
     const handleRemove = async (section, entryId) => {
         try {
-            const response = await axios.post('http://127.0.0.1:5000/api/movie/remove',
+            const response = await axios.post('http://127.0.0.1:5000/api/tv/remove',
                 {
                     username: username,
                     entry: entryId,
@@ -63,9 +61,7 @@ const WatchLater = () => {
             );
 
             if (response.status === 200) {
-                // Update the state to remove the entry locally
                 setWatchLater((prev) => prev.filter((entry) => entry._id !== entryId));
-                // alert("Successfully removed!");
             } else {
                 throw new Error("Failed to remove the entry.");
             }
@@ -75,11 +71,6 @@ const WatchLater = () => {
         }
     };
 
-    // Filter movies by search query
-    const searchMovies = watchLater.filter((entry) =>
-        entry.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
     return (
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             {/* Navbar */}
@@ -88,36 +79,18 @@ const WatchLater = () => {
             {/* Main Content */}
             <Box sx={{ maxWidth: "900px", margin: "auto", mt: 10 }}>
                 <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
-                    {username}'s Watch Later List
+                    {username}'s Watch Later List (Television)
                 </Typography>
 
-                {/* Search bar */}
-                <Box sx={{ display: "flex", justifyContent: "center", my: 3, minWidth: "400px" }}>
-                    <TextField
-                        label="Search movies"
-                        variant="outlined"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        sx={{ width: "100%", maxWidth: 400 }}
-                        InputLabelProps={{ shrink: true }}
-                    />
-                </Box>
-
-                {watchLater.length === 0 ? (
-                    <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
-                        No movies found in your watch later.
-                    </Typography>
-                ) : searchMovies.length === 0 ? (
-                    <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
-                        No movies found.
-                    </Typography>
+                {error ? (
+                    <Typography color="error">{error}</Typography>
                 ) : (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
-                        {searchMovies.map((entry, index) => {
+                        {watchLater.map((entry, index) => {
                             const isDefaultPoster = !entry.poster; // Check if there's no poster
                             return (
                                 <Link
-                                    to={`/movie/${entry.movieId}`} // Redirect to the movie details page
+                                    to={`/tv/${entry.tvId}`} 
                                     key={index}
                                     style={{ textDecoration: "none" }}
                                     onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -142,7 +115,7 @@ const WatchLater = () => {
                                     >
                                         <img
                                             src={isDefaultPoster ? `${process.env.PUBLIC_URL}/default-poster-icon.png` : entry.poster}
-                                            alt={entry.title || "Movie Poster"}
+                                            alt={entry.title || "TV Poster"}
                                             style={{
                                                 width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
                                                 height: "auto", // Maintains aspect ratio
@@ -189,7 +162,7 @@ const WatchLater = () => {
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         handleRemove("watchLater", entry._id);
-                                                        console.log("Remove movie:", entry.movieId);
+                                                        console.log("Remove TV:", entry.tvId);
                                                     }}
                                                     sx={{ mt: 1 }}
                                                 >
@@ -208,4 +181,4 @@ const WatchLater = () => {
     );
 };
 
-export default WatchLater;
+export default WatchLaterTV;

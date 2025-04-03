@@ -50,6 +50,8 @@ const ProfilePage = () => {
 
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
+  const [tvLog, setTvLog] = useState([]);
+  const [watchLaterShows, setWatchLaterShows] = useState([]);
   const [readLaterArray, setReadLaterArray] = useState([]);
   const [loggedBooks, setLoggedBooks] = useState([]);
   const [error, setError] = useState("");
@@ -101,6 +103,46 @@ const ProfilePage = () => {
             }
           );
           setWatchLaterArray(response.data);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to load watch later.");
+        }
+
+        try {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/tv/log`,
+            {
+              params: {
+                username: username,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+          setTvLog(response.data);
+          console.log(response.data);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to load TV log.");
+        }
+
+        // Gets user's watch later shows
+        try {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/tv/watch_later`,
+            {
+              params: {
+                username: username,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+          setWatchLaterShows(response.data);
         } catch (err) {
           console.log(err);
           setError("Failed to load watch later.");
@@ -170,10 +212,48 @@ const ProfilePage = () => {
             prev.filter((entry) => entry._id !== entryId)
           );
         } else if (section === "readLater") {
-          setReadLaterArray((prev) =>
+          setReadLaterArray((prev) => prev.filter((entry) => entry._id !== entryId));
+        }
+        
+
+        // alert("Successfully removed!");
+      } else {
+        throw new Error("Failed to remove the entry.");
+      }
+    } catch (error) {
+      console.error("Error removing the entry:", error);
+      alert("An error occurred while trying to remove the entry.");
+    }
+  };
+
+  const handleRemoveTV = async (section, entryId) => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:5000/api/tv/remove",
+        {
+          username: username,
+          entry: entryId,
+          section: section,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Update the state to remove the entry locally
+        if (section === "tvLog") {
+          setTvLog((prev) => prev.filter((entry) => entry._id !== entryId));
+        } else if (section === "watchLater") {
+          setWatchLaterShows((prev) =>
             prev.filter((entry) => entry._id !== entryId)
           );
-        }
+        } 
+        
+
+        // alert("Successfully removed!");
       } else {
         throw new Error("Failed to remove the entry.");
       }
@@ -652,6 +732,337 @@ const ProfilePage = () => {
             );
           })}
         </Box>
+
+        {/* TV Log Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => navigate(`/${username}/tv-log`)} 
+        >
+          TV Log:
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {tvLog.slice(0, 5).map((entry, index) => {
+            const isDefaultPoster = !entry.poster; 
+            return (
+              <Link
+                to={`/tv/${entry.tvId}`} 
+                key={index}
+                style={{ textDecoration: "none" }}
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                <Box
+                  key={index}
+                  sx={{
+                    width: "160px",
+                    height: "240px",
+                    display: "inline-block",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    position: "relative", // Required for hover effect
+                    "&:hover .overlay": {
+                      display: "flex", // Show the overlay content on hover
+                    },
+                  }}
+                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
+                >
+                  <img
+                    src={
+                      isDefaultPoster
+                        ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                        : entry.poster
+                    }
+                    alt={entry.title || "TV Poster"}
+                    style={{
+                      width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
+                      height: "auto", // Maintains aspect ratio
+                      maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
+                      borderRadius: "5px",
+                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      cursor: "pointer",
+                    }}
+                  />
+                  {isDefaultPoster && (
+                    <Typography
+                      variant="h6"
+                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                    >
+                      {entry.title || "Unknown Title"}
+                    </Typography>
+                  )}
+
+                  {/* Hover Overlay */}
+                  <Box
+                    className="overlay"
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      display: "none", // Initially hidden
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
+                      color: "white",
+                      padding: 2,
+                      borderRadius: "8px",
+                      textAlign: "center",
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      gap: 1,
+                    }}
+                  >
+                    {/* Display Rating */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: "0.2rem",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          size={20}
+                          color={
+                            star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
+                          }
+                        />
+                      ))}
+                    </Box>
+
+                    {/* Watch Date */}
+                    <Typography>
+                      {entry.watchDate
+                        ? `Watched on: ${entry.watchDate}`
+                        : "No Watch Date"}
+                    </Typography>
+
+                    {/* Tags */}
+                    {entry.tags && entry.tags.length > 0 && (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontSize: "0.8rem", fontWeight: 600 }}
+                        >
+                          Tags:
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            justifyContent: "center",
+                          }}
+                        >
+                          {entry.tags.map((tag, idx) => (
+                            <Typography
+                              key={idx}
+                              sx={{
+                                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                                padding: "2px 6px",
+                                borderRadius: "12px",
+                                fontSize: "0.75rem",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {tag}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* Remove Button */}
+                    {ownProfile && (
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleRemoveTV("tvLog", entry._id);
+                          console.log("Remove TV:", entry.tvId);
+                        }}
+                        sx={{ mt: 1 }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              </Link>
+            );
+          })}
+        </Box>
+
+          {/* Watch Later Shows Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => navigate(`/${username}/watch-later-tv`)} // Redirect to Watch Later page
+        >
+          Watch Later (TV):
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {watchLaterShows.slice(0, 5).map((entry, index) => {
+            const isDefaultPoster = !entry.poster; // Check if there's no poster
+            return (
+              <Link
+                to={`/tv/${entry.tvId}`} // Redirect to the movie details page
+                key={index}
+                style={{ textDecoration: "none" }}
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                <Box
+                  key={index}
+                  sx={{
+                    width: "160px",
+                    height: "240px",
+                    display: "inline-block",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    position: "relative", // Required for hover effect
+                    "&:hover .overlay": {
+                      display: "flex", // Show the overlay content on hover
+                    },
+                  }}
+                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
+                >
+                  <Link
+                    to={`/tv/${entry.tvId}`}
+                    onClick={() =>
+                      window.scrollTo({ top: 0, behavior: "smooth" })
+                    }
+                  >
+                    <img
+                      src={
+                        isDefaultPoster
+                          ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                          : entry.poster
+                      }
+                      alt={entry.title || "TV Poster"}
+                      style={{
+                        width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
+                        height: "auto", // Maintains aspect ratio
+                        maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
+                        borderRadius: "5px",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        cursor: "pointer",
+                      }}
+                    />
+                  </Link>
+                  {isDefaultPoster && (
+                    <Typography
+                      variant="h6"
+                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                    >
+                      {entry.title || "Unknown Title"}
+                    </Typography>
+                  )}
+
+                  {/* Hover Overlay */}
+                  <Box
+                    className="overlay"
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      display: "none", // Initially hidden
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
+                      color: "white",
+                      padding: 2,
+                      borderRadius: "8px",
+                      textAlign: "center",
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      gap: 1,
+                    }}
+                  >
+                    {/* Tags (Optional Section) */}
+                    {entry.tags && entry.tags.length > 0 && (
+                      <Typography>Tags: {entry.tags.join(", ")}</Typography>
+                    )}
+
+                    {/* Remove Button */}
+                    {ownProfile && (
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleRemoveTV("watchLater", entry._id);
+                          console.log("Remove TV:", entry.tvId);
+                        }}
+                        sx={{ mt: 1 }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              </Link>
+            );
+          })}
+        </Box>
+
+          {/* Read Later Section */}
+          <Typography
+            variant="h5"
+            sx={{
+              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+              fontWeight: 400,
+              mb: 2,
+              mt: 5,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+            onClick={() => navigate(`/${username}/read-later`)} // Redirect to Read Later page
+          >
+            Read Later:
+          </Typography>
 
         {/* Read Later Section */}
         <Typography
