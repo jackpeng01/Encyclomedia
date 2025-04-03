@@ -65,10 +65,12 @@ const Navbar = () => {
             `http://127.0.0.1:5000/api/movie/suggestions?query=${searchQuery}`
           );
           setSuggestions(response.data.suggestions || []);
-        } else {
-          // For other categories
-          setSuggestions([]);
-        }
+        } else if (category === "tv") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/tv/suggestions?query=${searchQuery}`
+          );
+          setSuggestions(response.data.suggestions || []);
+        }        
       } catch (error) {
         console.error(`Error fetching ${category} suggestions:`, error);
       }
@@ -240,7 +242,7 @@ const Navbar = () => {
             </Box>
             <button type="submit" style={{ display: "none" }}></button>
           </form>
-          {["books", "movies"].includes(category) && suggestions.length > 0 && (
+          {["books", "movies", "tv"].includes(category) && suggestions.length > 0 && (
           <List
             sx={{
               position: "absolute",
@@ -263,8 +265,10 @@ const Navbar = () => {
                 navigate(
                   category === "books"
                     ? `/book/${suggestion.id}`
-                    : `/movie/${suggestion.id}`
-                );
+                    : category === "movies"
+                    ? `/movie/${suggestion.id}`
+                    : `/tv/${suggestion.id}`
+                );                
                 setSearchQuery("");
                 setSuggestions([]);
               }}
