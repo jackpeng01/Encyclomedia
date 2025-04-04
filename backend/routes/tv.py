@@ -90,7 +90,6 @@ def search_tv():
                     show_year = (
                         int(show["first_air_date"][:4]) if show["first_air_date"] else None
                     )
-                    print(show["title"], show_year)
                     if not show_year:
                         continue
                     if show_year and show_year < year_start:

@@ -160,6 +160,7 @@ const Discover = () => {
     };
 
     useEffect(() => {
+        setSuggestions([]);
         if (searchQuery.length > 1) {
             if (category !== "users" && category !== "plot") {
                 handleSearchChange({ target: { value: searchQuery } });
@@ -168,7 +169,7 @@ const Discover = () => {
                 setSuggestions([]);
             }
         }
-    }, [category]); // Only run when category changes
+    }, [category], [searchQuery]); // Only run when category changes
     
     const handleKeyDown = (event) => {
         if (event.key === "Enter") {
