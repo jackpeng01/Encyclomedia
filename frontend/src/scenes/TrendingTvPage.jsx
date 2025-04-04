@@ -38,10 +38,11 @@ const TrendingTvPage = () => {
     }
 
     const pages = await Promise.all(promises);
-    const allResults = pages.flatMap((pageData) => pageData.results);
+    const allResults = pages.flatMap((pageData) => pageData.results || []);
+    const validResults = allResults.filter(item => item && item.id);
 
     // Eliminate duplicate entries based on the unique "id"
-    const uniqueResults = allResults.filter(
+    const uniqueResults = validResults.filter(
       (item, index, self) =>
         index === self.findIndex((t) => t.id === item.id)
     );

@@ -162,6 +162,26 @@ const ProfilePage = () => {
           console.error(err);
           setError("Failed to load Read Later list.");
         }
+
+        try {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/book/log`,
+            {
+              params: {
+                username: username,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+          setLoggedBooks(response.data);
+          console.log(response.data);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to load book log.");
+        }
       }
     };
     fetchProfile();
@@ -1028,21 +1048,72 @@ const ProfilePage = () => {
           })}
         </Box>
 
-          {/* Read Later Section */}
-          <Typography
-            variant="h5"
-            sx={{
-              fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-              fontWeight: 400,
-              mb: 2,
-              mt: 5,
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-            onClick={() => navigate(`/${username}/read-later`)} // Redirect to Read Later page
-          >
-            Read Later:
-          </Typography>
+        {/* Book Log Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => navigate(`/${username}/book-log`)}
+        >
+          Book Log:
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {loggedBooks.slice(0, 5).map((entry, index) => (
+            <Link
+              to={`/book/${entry.bookId}`}
+              key={index}
+              style={{ textDecoration: "none" }}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              <Box
+                sx={{
+                  width: "160px",
+                  height: "240px",
+                  display: "inline-block",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src={
+                    entry.cover ||
+                    `${process.env.PUBLIC_URL}/default-book-cover.png`
+                  }
+                  alt={entry.title}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: "5px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                >
+                  {entry.title}
+                </Typography>
+              </Box>
+            </Link>
+          ))}
+        </Box>
 
         {/* Read Later Section */}
         <Typography

@@ -17,9 +17,21 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
-  Divider
+  Divider,
+  Switch,
+  FormControlLabel,
+  Chip,
+  Dialog as ConfirmDialog,
+  DialogActions,
+  DialogContent as ConfirmDialogContent,
+  DialogContentText,
+  DialogTitle as ConfirmDialogTitle
 } from "@mui/material";
 import {
+  Public as PublicIcon,
+  Lock as LockIcon,
+  PersonAdd as PersonAddIcon,
+  Group as GroupIcon,
   Add as AddIcon,
   Close as CloseIcon,
   Edit as EditIcon,
@@ -28,12 +40,16 @@ import {
   Search as SearchIcon
 } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { followList, unfollowList } from "../api/listsService";
+import { Bookmark as BookmarkIcon, BookmarkBorder as BookmarkBorderIcon } from "@mui/icons-material";
+import { useSelector } from "react-redux";
 
 const TMDB_API_KEY = 'a9302b42220aa7e2d0d7ce9d9e988203';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w500';
 
-const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
+const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
+  const [followerCount, setFollowerCount] = useState(list?.follower_count || 0);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
   const [showAddDescription, setShowAddDescription] = useState(false);
@@ -46,11 +62,57 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
   const [mediaTypeMenu, setMediaTypeMenu] = useState(null);
   const [items, setItems] = useState([]);
   const [listModified, setListModified] = useState(false);
+  const [isPublic, setIsPublic] = useState(list?.isPublic || false);
+  const [isCollaborative, setIsCollaborative] = useState(list?.isCollaborative || false);
+  const [isCollaborator, setIsCollaborator] = useState(false);
+  const [collaborators, setCollaborators] = useState(list?.collaborators || []);
+  const [newCollaborator, setNewCollaborator] = useState("");
+  const [showCollaborators, setShowCollaborators] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const token = useSelector((state) => state.auth.token);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null
+  });
+
+  useEffect(() => {
+    if (list && userData) {
+      setIsOwner(list.user_id === userData.username);
+      setIsCollaborator(list.collaborators?.includes(userData.username));
+      const followedLists = userData.followed_lists || [];
+      setIsFollowing(followedLists.includes(list._id));
+    }
+  }, [list, userData]);
+
+  const handleFollowToggle = async () => {
+    if (!userData) return;
+
+    try {
+      if (isFollowing) {
+        await unfollowList(list._id, token);
+        setIsFollowing(false);
+        setFollowerCount(prev => Math.max(0, prev - 1));
+      } else {
+        await followList(list._id, token);
+        setIsFollowing(true);
+        setFollowerCount(prev => prev + 1);
+      }
+    } catch (error) {
+      setError(isFollowing ? "Failed to unfollow list" : "Failed to follow list");
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     if (list) {
       setItems(list.items || []);
       setEditedDescription(list.description || "");
+      setIsPublic(list.isPublic || false);
+      setIsCollaborative(list.isCollaborative || false);
+      setCollaborators(list.collaborators || []);
       setListModified(false);
     }
   }, [list]);
@@ -73,6 +135,12 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
+
+    // Only allow owners and collaborators to reorder items
+    if (!isOwner && !(list.isCollaborative && list.collaborators?.includes(userData?._id))) {
+      setError("You don't have permission to modify this list");
+      return;
+    }
 
     const reorderedItems = Array.from(items);
     const [movedItem] = reorderedItems.splice(result.source.index, 1);
@@ -105,16 +173,27 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       ...list,
       description: editedDescription,
       items: items,
+      ...(isOwner && {
+        isPublic: isPublic,
+        isCollaborative: isCollaborative,
+        collaborators: collaborators,
+      }),
       updatedAt: new Date().toISOString()
     };
 
     onUpdateList(updatedList);
     setIsEditMode(false);
     setShowAddDescription(false);
+    setShowCollaborators(false);
     setListModified(false);
   };
 
   const handleRemoveItem = (index) => {
+    if (!isOwner && !isCollaborator) {
+      setError("You don't have permission to modify this list");
+      return;
+    }
+
     const newItems = [...items];
     newItems.splice(index, 1);
     setItems(newItems);
@@ -208,7 +287,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       setSearchQuery('');
       setSearchResults([]);
       setListModified(true);
-      
+
       if (!isEditMode) {
         const updatedList = {
           ...list,
@@ -222,7 +301,81 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
     }
   };
 
+  const handleVisibilityChange = () => {
+    setConfirmDialog({
+      open: true,
+      title: isPublic ? "Make List Private?" : "Make List Public?",
+      message: isPublic
+        ? "Making this list private will hide it from other users. Continue?"
+        : "Making this list public will allow other users to view it. Continue?",
+      onConfirm: () => {
+        setIsPublic(!isPublic);
+        setListModified(true);
+        setConfirmDialog({ open: false, title: "", message: "", onConfirm: null });
+      }
+    });
+  };
+
+  const handleCollaborationChange = () => {
+    setConfirmDialog({
+      open: true,
+      title: isCollaborative ? "Disable Collaboration?" : "Enable Collaboration?",
+      message: isCollaborative
+        ? "Disabling collaboration will prevent others from contributing to this list. Continue?"
+        : "Enabling collaboration will allow other users to contribute to this list if you add them as collaborators. Continue?",
+      onConfirm: () => {
+        setIsCollaborative(!isCollaborative);
+        setListModified(true);
+        setConfirmDialog({ open: false, title: "", message: "", onConfirm: null });
+      }
+    });
+  };
+
+  const handleAddCollaborator = async () => {
+    if (!newCollaborator.trim()) return;
+    setIsLoading(true);
+    try {
+      // Check if user exists in database
+      const response = await fetch(`/api/users/${newCollaborator}`);
+
+      if (response.ok) {
+        if (!collaborators.includes(newCollaborator)) {
+          setCollaborators([...collaborators, newCollaborator]);
+          setListModified(true);
+        } else {
+          setError("This user is already a collaborator");
+        }
+      } else {
+        setError("User not found. Please check the username.");
+      }
+    } catch (err) {
+      setError(`Failed to verify user: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+      setNewCollaborator("");
+    }
+  };
+
+  const handleRemoveCollaborator = (username) => {
+    setConfirmDialog({
+      open: true,
+      title: "Remove Collaborator",
+      message: `Are you sure you want to remove ${username} as a collaborator?`,
+      onConfirm: () => {
+        const updatedCollaborators = collaborators.filter(c => c !== username);
+        setCollaborators(updatedCollaborators);
+        setListModified(true);
+        setConfirmDialog({ open: false, title: "", message: "", onConfirm: null });
+      }
+    });
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog({ open: false, title: "", message: "", onConfirm: null });
+  };
+
   return (
+
     <Dialog
       open={open}
       onClose={isEditMode && listModified ? null : handleClosePopup}
@@ -239,26 +392,69 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
             {list?.name}
           </Typography>
           <Box>
-            {isEditMode ? (
+            {isOwner ? (
+              // Show edit controls for owner
+              isEditMode ? (
+                <>
+                  <Button startIcon={<SaveIcon />} variant="contained" color="primary" onClick={handleSaveChanges} sx={{ mr: 1 }}>
+                    Save
+                  </Button>
+                  <IconButton onClick={handleEditMode}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={handleClosePopup}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              )
+            ) : isCollaborator ? (
+              // For collaborators
+              isEditMode ? (
+                <>
+                  <Button startIcon={<SaveIcon />} variant="contained" color="primary" onClick={handleSaveChanges} sx={{ mr: 1 }}>
+                    Save
+                  </Button>
+                  <IconButton onClick={handleEditMode}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
+                    <EditIcon />
+                  </IconButton>
+                  <Button
+                    startIcon={isFollowing ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                    variant={isFollowing ? "contained" : "outlined"}
+                    color="primary"
+                    onClick={handleFollowToggle}
+                    sx={{ mr: 1 }}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                  <IconButton onClick={handleClosePopup}>
+                    <CloseIcon />
+                  </IconButton>
+                </>
+              )
+            ) : (
+              // For regular viewers (not owner, not collaborator)
               <>
                 <Button
-                  startIcon={<SaveIcon />}
-                  variant="contained"
+                  startIcon={isFollowing ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                  variant={isFollowing ? "contained" : "outlined"}
                   color="primary"
-                  onClick={handleSaveChanges}
+                  onClick={handleFollowToggle}
                   sx={{ mr: 1 }}
                 >
-                  Save
+                  {isFollowing ? "Following" : "Follow"}
                 </Button>
-                <IconButton onClick={handleEditMode}>
-                  <CloseIcon />
-                </IconButton>
-              </>
-            ) : (
-              <>
-                <IconButton onClick={handleEditMode} sx={{ mr: 1 }}>
-                  <EditIcon />
-                </IconButton>
                 <IconButton onClick={handleClosePopup}>
                   <CloseIcon />
                 </IconButton>
@@ -267,11 +463,64 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
           </Box>
         </Box>
 
+        {/* List creator info */}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Created by: {list?.user_id}
+        </Typography>
+
         {/* Description section */}
         {!isEditMode && list?.description && (
           <Typography variant="body1" sx={{ mt: 1, color: 'text.secondary' }}>
             {list.description}
           </Typography>
+        )}
+
+        {/* List visibility indicator (when not in edit mode) */}
+        {!isEditMode && (
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            {list?.isPublic ? (
+              <Chip
+                icon={<PublicIcon />}
+                label="Public"
+                size="small"
+                color="primary"
+                variant="outlined"
+                sx={{ mr: 1 }}
+              />
+            ) : (
+              <Chip
+                icon={<LockIcon />}
+                label="Private"
+                size="small"
+                color="default"
+                variant="outlined"
+                sx={{ mr: 1 }}
+              />
+            )}
+
+            {/* Follower count chip */}
+            {list?.isPublic && (
+              <Chip
+                icon={<BookmarkIcon />}
+                label={`${followerCount} ${followerCount === 1 ? "Follower" : "Followers"}`}
+                size="small"
+                color="default"
+                variant="outlined"
+                sx={{ mr: 1 }}
+              />
+            )}
+            {list?.isCollaborative && (
+              <Chip
+                icon={<GroupIcon />}
+                label={list.collaborators?.length > 0
+                  ? `Collaborative (${list.collaborators.length} collaborators)`
+                  : "Collaborative"}
+                size="small"
+                color="secondary"
+                variant="outlined"
+              />
+            )}
+          </Box>
         )}
 
         {/* Edit mode description */}
@@ -304,6 +553,106 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
       </DialogTitle>
 
       {/* Content area */}
+
+      {/* List Settings in Edit Mode */}
+      {isEditMode && isOwner && (
+        <Box sx={{
+          mt: 2,
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          px: 1
+        }}>
+          {/* Visibility Setting */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isPublic}
+                onChange={handleVisibilityChange}
+                color="primary"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {isPublic ? <PublicIcon sx={{ mr: 1 }} /> : <LockIcon sx={{ mr: 1 }} />}
+                <Typography>{isPublic ? "Public List" : "Private List"}</Typography>
+              </Box>
+            }
+          />
+
+          {/* Collaboration Setting */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isCollaborative}
+                onChange={handleCollaborationChange}
+                color="primary"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <GroupIcon sx={{ mr: 1 }} />
+                <Typography>Allow collaboration</Typography>
+              </Box>
+            }
+          />
+
+          {/* Collaborators Section (only show if collaboration is enabled) */}
+          {isCollaborative && (
+            <Box sx={{ mt: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<PersonAddIcon />}
+                onClick={() => setShowCollaborators(!showCollaborators)}
+                size="small"
+                sx={{ mb: 1 }}
+              >
+                {showCollaborators ? "Hide Collaborators" : "Manage Collaborators"}
+              </Button>
+
+              {showCollaborators && (
+                <Box sx={{ p: 1, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                  <Box sx={{ display: 'flex', mb: 1 }}>
+                    <TextField
+                      size="small"
+                      placeholder="Add collaborator by username"
+                      value={newCollaborator}
+                      onChange={(e) => setNewCollaborator(e.target.value)}
+                      sx={{ flexGrow: 1, mr: 1 }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleAddCollaborator}
+                      size="small"
+                    >
+                      Add
+                    </Button>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {collaborators.length > 0 ? (
+                      collaborators.map((username) => (
+                        <Chip
+                          key={username}
+                          label={username}
+                          onDelete={() => handleRemoveCollaborator(username)}
+                          sx={{ m: 0.5 }}
+                        />
+                      ))
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No collaborators added yet
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          )}
+        </Box>
+      )}
+
       <DialogContent
         dividers
         sx={{
@@ -401,32 +750,44 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
         {!searchOpen && (
           <>
             {/* Add button */}
-            {!isEditMode && (
-              <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddClick}
-                  color="primary"
-                >
-                  Add
-                </Button>
-                <Menu
-                  anchorEl={mediaTypeMenu}
-                  open={Boolean(mediaTypeMenu)}
-                  onClose={handleCloseMediaMenu}
-                >
-                  <MenuItem onClick={() => handleMediaTypeSelect('movie')}>
-                    Movie
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMediaTypeSelect('tv')}>
-                    TV Show
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMediaTypeSelect('book')}>
-                    Book
-                  </MenuItem>
-                </Menu>
-              </Box>
+            {!searchOpen && (
+              <>
+                {/* Only show Add button for owners and collaborators */}
+                {(isOwner || isCollaborator) ? (
+                  <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddClick}
+                      color="primary"
+                    >
+                      Add
+                    </Button>
+                    <Menu
+                      anchorEl={mediaTypeMenu}
+                      open={Boolean(mediaTypeMenu)}
+                      onClose={handleCloseMediaMenu}
+                    >
+                      <MenuItem onClick={() => handleMediaTypeSelect('movie')}>
+                        Movie
+                      </MenuItem>
+                      <MenuItem onClick={() => handleMediaTypeSelect('tv')}>
+                        TV Show
+                      </MenuItem>
+                      <MenuItem onClick={() => handleMediaTypeSelect('book')}>
+                        Book
+                      </MenuItem>
+                    </Menu>
+                  </Box>
+                ) : (
+                  /* Show a message for non-owners */
+                  <Box sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      You are viewing this list in read-only mode
+                    </Typography>
+                  </Box>
+                )}
+              </>
             )}
 
             {/* Items list */}
@@ -496,7 +857,7 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
                         sx={{ ml: 1 }}
                       />
 
-                      {isEditMode && (
+                      {isEditMode && (isOwner || isCollaborator) && (
                         <IconButton
                           onClick={() => handleRemoveItem(index)}
                           color="error"
@@ -518,9 +879,28 @@ const ListDetailsPopup = ({ open, list, onClose, onUpdateList }) => {
               )}
             </List>
           </>
+
         )}
+        {/* Confirmation Dialog */}
+        <ConfirmDialog
+          open={confirmDialog.open}
+          onClose={handleCloseConfirmDialog}
+        >
+          <ConfirmDialogTitle>{confirmDialog.title}</ConfirmDialogTitle>
+          <ConfirmDialogContent>
+            <DialogContentText>{confirmDialog.message}</DialogContentText>
+          </ConfirmDialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseConfirmDialog}>Cancel</Button>
+            <Button onClick={confirmDialog.onConfirm} color="primary" autoFocus>
+              Confirm
+            </Button>
+          </DialogActions>
+        </ConfirmDialog>
+
       </DialogContent>
     </Dialog>
+
   );
 };
 

@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { Box, TextField, Button, Typography } from "@mui/material";
-import CircularProgress from "@mui/material/CircularProgress"; // Import MUI spinner
+import { Box, TextField, Button, Typography, List, ListItem, Paper, ListItemText } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import Navbar from "../components/Navbar";
 import { getUserByToken } from "../api/users";
 import AdvancedSearchModal from "../components/modals/AdvancedSearchModal";
 import axios from "axios";
-import { setMovies, setBooks, setShows, clearMedia } from "../state/mediaSlice"; // Import the action
+import { setMovies, setBooks, setShows, clearMedia } from "../state/mediaSlice";
 
 
 const Discover = () => {
@@ -23,6 +23,7 @@ const Discover = () => {
     const [userData, setUserData] = useState("");
     const [plotError, setPlotError] = useState("");
     const [loading, setLoading] = useState(false); // Add loading state
+    const [suggestions, setSuggestions] = useState([]);
     const MIN_PLOT_LENGTH = 10;  // Minimum number of characters
     const MAX_PLOT_LENGTH = 300; // Maximum number of characters
     // const [movies, setMovies] = useState([]);
@@ -158,6 +159,17 @@ const Discover = () => {
         setIsAdvancedSearchOpen(false);
     };
 
+    useEffect(() => {
+        if (searchQuery.length > 1) {
+            if (category !== "users" && category !== "plot") {
+                handleSearchChange({ target: { value: searchQuery } });
+            }
+            else {
+                setSuggestions([]);
+            }
+        }
+    }, [category]); // Only run when category changes
+    
     const handleKeyDown = (event) => {
         if (event.key === "Enter") {
             handleSearchSubmit();
@@ -167,6 +179,36 @@ const Discover = () => {
     const handleCategoryClick = (cat) => {
         setCategory(cat);
         searchInputRef.current.focus();
+    };
+
+    const handleSearchChange = async (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+        if (searchQuery.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+        
+        try {
+            if (category === "books") {
+                const response = await axios.get(
+                    `http://127.0.0.1:5000/api/book/suggestions?query=${value}`
+                );
+                setSuggestions(response.data.suggestions || []);
+            } else if (category === "movies") {
+                const response = await axios.get(
+                    `http://127.0.0.1:5000/api/movie/suggestions?query=${value}`
+                );
+                setSuggestions(response.data.suggestions || []);
+            } else if (category === "tv") {
+                const response = await axios.get(
+                    `http://127.0.0.1:5000/api/tv/suggestions?query=${value}`
+                );
+                setSuggestions(response.data.suggestions || []);
+            }
+        } catch (error) {
+            console.error(`Error fetching ${category} suggestions:`, error);
+        }
     };
 
     return (
@@ -191,48 +233,80 @@ const Discover = () => {
                 ))}
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: "center", width: "60%", gap: 2 }}>
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        flexGrow: 1,
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        borderRadius: "25px",
-                        border: "1px solid #ccc",
-                        padding: "8px 16px",
-                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-                    }}
-                >
-                    <TextField
-                        variant="standard"
-                        placeholder="I am looking for ..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        fullWidth
-                        inputRef={searchInputRef}
-                        onKeyDown={(event) => event.key === "Enter" && handleSearchSubmit()}
-                        InputProps={{ disableUnderline: true, style: { fontSize: "18px", color: "#333" } }}
-                        sx={{ "& .MuiInputBase-root": { height: "40px", backgroundColor: "transparent" } }}
-                    />
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "60%", gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", width: "100%", gap: 2 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, backgroundColor: "rgba(255, 255, 255, 0.9)", borderRadius: "25px", border: "1px solid #ccc", padding: "8px 16px", boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)" }}>
+                        <TextField
+                            variant="standard"
+                            placeholder="I am looking for ..."
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            fullWidth
+                            inputRef={searchInputRef}
+                            onKeyDown={(event) => event.key === "Enter" && handleSearchSubmit()}
+                            InputProps={{ disableUnderline: true, style: { fontSize: "18px", color: "#333" } }}
+                            sx={{ "& .MuiInputBase-root": { height: "40px", backgroundColor: "transparent" } }}
+                        />
+                    </Box>
+                    {category !== "users" && category !== "plot" && (
+                        <Button onClick={() => setIsAdvancedSearchOpen(true)} sx={{ backgroundColor: "#f4f4f4", color: "black", padding: "8px 4px", fontSize: "16px", borderRadius: "8px", height: "50px", minWidth: "50px", "&:hover": { backgroundColor: "#6b46c1", color: "white" } }}>+</Button>
+                    )}
                 </Box>
+                {suggestions.length > 0 && (
+                    <Paper elevation={3} sx={{ width: "100%", borderRadius: 2, maxHeight: 200, overflowY: "auto" }}>
+                        <List>
+                            {suggestions.map((suggestion, index) => (
 
-                {category !== "users" && category !== "plot" && (
-                    <Button
-                        onClick={() => setIsAdvancedSearchOpen(true)}
-                        sx={{
-                            backgroundColor: "#f4f4f4",
-                            color: "black",
-                            padding: "8px 4px",
-                            fontSize: "16px",
-                            borderRadius: "8px",
-                            height: "50px",
-                            minWidth: "50px",
-                            "&:hover": { backgroundColor: "#6b46c1", color: "white" },
-                        }}
-                    >
-                        +
-                    </Button>
+                                <ListItem
+                                    key={suggestion.id}
+                                    button
+                                    onClick={() => {
+                                        navigate(
+                                            category === "books"
+                                                ? `/book/${suggestion.id}`
+                                                : category === "movies"
+                                                    ? `/movie/${suggestion.id}`
+                                                    : `/tv/${suggestion.id}`
+                                        );
+                                        setSearchQuery("");
+                                        setSuggestions([]);
+                                    }}
+                                    sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
+                                >
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                                        {/* Left side: title + author/year */}
+                                        <ListItemText
+                                            primary={suggestion.title}
+                                            secondary={
+                                                category === "books"
+                                                    ? suggestion.author
+                                                    : suggestion.release_date
+                                                        ? new Date(suggestion.release_date).getFullYear()
+                                                        : ""
+                                            }
+                                            sx={{ color: "black" }}
+                                        />
+
+                                        {/* Right side: poster/cover */}
+                                        {suggestion.poster && (
+                                            <img
+                                                src={suggestion.poster}
+                                                alt={suggestion.title}
+                                                style={{
+                                                    width: "40px",
+                                                    height: "60px",
+                                                    objectFit: "cover",
+                                                    borderRadius: "4px",
+                                                    marginLeft: "10px",
+                                                }}
+                                            />
+                                        )}
+                                    </Box>
+                                </ListItem>
+                            ))}
+                        </List>
+
+                    </Paper>
                 )}
             </Box>
 

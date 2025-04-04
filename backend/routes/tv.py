@@ -177,7 +177,7 @@ def trending_tv():
                 "overview": item.get("overview"),
                 "release_date": item.get("first_air_date"),
                 "vote_average": item.get("vote_average"),
-                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}", 
+                "poster_path": f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}", 
                 "popularity": item.get("popularity"),
                 #"cast": cast,  # Add cast to the response
             })
@@ -228,7 +228,7 @@ def get_tv_details(tv_id):
             "overview": item.get("overview"),
             "release_date": item.get("first_air_date"),
             "vote_average": item.get("vote_average"),
-            "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}",
+            "poster_path": f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}",
             "genres": [genre["name"] for genre in item.get("genres", [])],
             "number_of_seasons": item.get("number_of_seasons"),
             "status": item.get("status"),
@@ -452,3 +452,39 @@ def get_logged_tv():
     return jsonify(tv_log)
     
     # return jsonify(user_movie_log_item["movieLog"])
+
+@tv_bp.route("/api/tv/suggestions", methods=["GET"])
+def tv_suggestions():    
+    query = request.args.get("query", "").strip()
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    params = {
+        "query": query,
+        "include_adult": False,
+        "language": "en-US",
+        "page": 1,
+    }
+
+    try:
+        url = f"https://api.themoviedb.org/3/search/tv"
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        # Only grab top 5 TV suggestions
+        suggestions = [
+            {
+                "id": show["id"],
+                "title": show["name"], 
+                "release_date": show.get("first_air_date"), 
+                "poster": f"https://image.tmdb.org/t/p/w500{show['poster_path']}" if show.get("poster_path") else None
+            }
+            for show in data.get("results", [])[:5]
+        ]
+
+        return jsonify({"suggestions": suggestions})
+
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500

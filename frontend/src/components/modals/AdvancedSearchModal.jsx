@@ -67,7 +67,7 @@ const AdvancedSearchModal = ({
             ? movieGenres
             : category === "tv"
                 ? tvGenres
-                : [];  
+                : [];
 
     // Handle form submission
     const handleFormSubmit = (event) => {
@@ -78,7 +78,7 @@ const AdvancedSearchModal = ({
     return (
         <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Advanced Search</DialogTitle>
-            <form onSubmit={handleFormSubmit}> 
+            <form onSubmit={handleFormSubmit}>
                 <DialogContent>
                     {/* Search Input */}
                     <FormControl fullWidth sx={{ marginTop: 1, marginBottom: 2 }}>
@@ -140,7 +140,7 @@ const AdvancedSearchModal = ({
                                     type="number"
                                     value={minRating}
                                     onChange={(e) => setMinRating(e.target.value)}
-                                    inputProps={{ min: 0, max: 10 }}
+                                    inputProps={{ min: 0, max: 10, step: 0.1 }} // Allow float input
                                 />
                             </FormControl>
 
@@ -150,7 +150,7 @@ const AdvancedSearchModal = ({
                                     type="number"
                                     value={maxRating}
                                     onChange={(e) => setMaxRating(e.target.value)}
-                                    inputProps={{ min: 0, max: 10 }}
+                                    inputProps={{ min: 0, max: 10, step: 0.1 }} // Allow float input
                                 />
                             </FormControl>
                         </Box>

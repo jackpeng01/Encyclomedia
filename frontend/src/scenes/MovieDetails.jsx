@@ -4,8 +4,32 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
-import { Box } from "@mui/material";
-import { FaStar } from "react-icons/fa";
+import {
+  Box,
+  Button,
+  Rating,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Avatar,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Menu,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Typography,
+  TextField
+} from "@mui/material";
+import ReviewModal from '../components/modals/ReviewModal.jsx';
+import { FaStar, FaRegEdit } from "react-icons/fa";
 
 const MovieDetails = () => {
   const { id } = useParams(); // Get the movie ID from the URL
@@ -22,6 +46,84 @@ const MovieDetails = () => {
   const [hover, setHover] = useState(0); // Hover value for stars
   const [currentMovie, setCurrentMovie] = useState(null);
   const [buttonHover, setButtonHover] = useState(false); // Separate state for button hover
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewSortBy, setReviewSortBy] = useState("recent");
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedReviewId, setSelectedReviewId] = useState(null);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
+
+  const handleContextMenu = (event, reviewId) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4
+    });
+    setSelectedReviewId(reviewId);
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleOpenCommentDialog = () => {
+    setCommentModalOpen(true);
+    handleCloseContextMenu();
+  };
+
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${selectedReviewId}/comment`,
+        { content: commentText },
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      fetchReviews();
+      setCommentText('');
+      setCommentModalOpen(false);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const reviewUrl = `http://127.0.0.1:5000/api/reviews/movie/${id}?sort=${reviewSortBy}`;
+      console.log("Fetching reviews with URL:", reviewUrl);
+      console.log("Looking for movie ID:", id, "with type:", "movie");
+
+      const response = await axios.get(
+        reviewUrl,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      console.log("Reviews API response:", response.data);
+      setReviews(response.data);
+    } catch (err) {
+      console.error("Error loading reviews:", err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, [id, reviewSortBy]);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -367,7 +469,21 @@ const MovieDetails = () => {
                 >
                   {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
                 </button>
-
+                <button
+                  onClick={() => setReviewModalOpen(true)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '5px',
+                    backgroundColor: '#6200ea',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    marginBottom: '1rem',
+                    marginTop: '1rem',
+                  }}
+                >
+                  Write Review
+                </button>
 
 
 
@@ -466,8 +582,161 @@ const MovieDetails = () => {
               )}
             </Box>
           </Box>
+          {/* Reviews Section */}
+          <Box sx={{ marginTop: '2rem' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Reviews</h2>
+              <select
+                value={reviewSortBy}
+                onChange={(e) => setReviewSortBy(e.target.value)}
+                style={{
+                  padding: '0.5rem',
+                  borderRadius: '5px',
+                  border: '1px solid #ccc',
+                }}
+              >
+                <option value="recent">Most Recent</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+              </select>
+            </Box>
+
+            {loadingReviews ? (
+              <p>Loading reviews...</p>
+            ) : reviews.length > 0 ? (
+              <Box>
+                {reviews.map((review) => (
+                  <Box
+                    key={review._id}
+                    onContextMenu={(e) => handleContextMenu(e, review._id)}
+                    sx={{
+                      marginBottom: '1rem',
+                      padding: '1rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '10px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Box>
+                        <h3 style={{ margin: 0 }}>{review.title}</h3>
+                        <p style={{ margin: '0.25rem 0', color: '#666' }}>
+                          By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
+                        </p>
+                      </Box>
+                      <Box sx={{ display: 'flex' }}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FaStar
+                            key={star}
+                            size={16}
+                            color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        marginTop: '1rem',
+                        '& strong': { fontWeight: 'bold' },
+                        '& em': { fontStyle: 'italic' },
+                        '& u': { textDecoration: 'underline' },
+                        '& ul': { paddingLeft: '1.5rem' },
+                        '& li': { marginBottom: '0.25rem' }
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: review.content
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                          .replace(/__(.*?)__/g, '<u>$1</u>')
+                          .replace(/• (.*?)(?=\n|$)/g, '<li>$1</li>')
+                          .replace(/<li>/g, '<ul><li>')
+                          .replace(/<\/li>/g, '</li></ul>')
+                          .replace(/<\/ul><ul>/g, '')
+                      }}
+                    />
+
+                    {review.comments && review.comments.length > 0 && (
+                      <Box sx={{ marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
+                        <h4 style={{ margin: '0 0 0.5rem' }}>Comments ({review.comments.length})</h4>
+                        {review.comments.map((comment, index) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              padding: '0.5rem',
+                              backgroundColor: '#f9f9f9',
+                              borderRadius: '5px',
+                              marginBottom: '0.5rem'
+                            }}
+                          >
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>{comment.user_id}</p>
+                            <p style={{ margin: '0.25rem 0' }}>{comment.content}</p>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
+                              {new Date(comment.created_at).toLocaleDateString()}
+                            </p>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: 'center', padding: '2rem 0', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
+                <p style={{ margin: 0, color: '#666' }}>No reviews yet. Be the first to write a review!</p>
+              </Box>
+            )}
+          </Box>
         </Box>
       </Box>
+      <ReviewModal
+        open={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        media={movie}
+        mediaType="movie"
+        onReviewSubmitted={(newReview) => {
+          console.log("Review submitted:", newReview);
+          fetchReviews();
+        }}
+      />
+      {/* Context Menu */}
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleCloseContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={contextMenu !== null ?
+          { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+      >
+        <MenuItem onClick={handleOpenCommentDialog}>Add Comment</MenuItem>
+      </Menu>
+
+      {/* Comment Dialog */}
+      <Dialog open={commentModalOpen} onClose={() => setCommentModalOpen(false)}>
+        <DialogTitle>Add Comment</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Your Comment"
+            fullWidth
+            multiline
+            rows={4}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCommentModalOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleAddComment}
+            color="primary"
+            variant="contained"
+            disabled={!commentText.trim()}
+          >
+            Post Comment
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

@@ -34,6 +34,11 @@ const Navbar = () => {
   const searchInputRef = useRef(null);
   const selectRef = useRef(null);
 
+  const MIN_PLOT_LENGTH = 10;  // Minimum number of characters
+  const MAX_PLOT_LENGTH = 300; // Maximum number of characters
+  const [plotError, setPlotError] = useState("");
+
+
   useEffect(() => {
     const loadUserData = async () => {
       const fetchedUserData = await getUserByToken(token);
@@ -50,23 +55,37 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchSuggestions = async () => {
+      // Clear suggestions if search query is too short
       if (searchQuery.length < 2) {
         setSuggestions([]);
         return;
       }
 
       try {
-        const response = await axios.get(
-          `http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`
-        );
-        setSuggestions(response.data.suggestions || []);
+        if (category === "books") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/book/suggestions?query=${searchQuery}`
+          );
+          setSuggestions(response.data.suggestions || []);
+        } else if (category === "movies") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/movie/suggestions?query=${searchQuery}`
+          );
+          setSuggestions(response.data.suggestions || []);
+        } else if (category === "tv") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/tv/suggestions?query=${searchQuery}`
+          );
+          setSuggestions(response.data.suggestions || []);
+        }
       } catch (error) {
-        console.error("Error fetching book suggestions:", error);
+        console.error(`Error fetching ${category} suggestions:`, error);
       }
     };
 
     fetchSuggestions();
-  }, [searchQuery]);
+  }, [searchQuery, category]);
+
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -92,7 +111,20 @@ const Navbar = () => {
           );
           setSuggestions([]);
         } else if (category === "plot") {
-          navigate(`/plot-search?query=${searchQuery.trim()}`);
+          if (searchQuery.length < MIN_PLOT_LENGTH) {
+            alert(`Plot must be at least ${MIN_PLOT_LENGTH} characters.`);
+            return;
+          } else if (searchQuery.length > MAX_PLOT_LENGTH) {
+            alert(`Plot must be no more than ${MAX_PLOT_LENGTH} characters.`);
+            return;
+          } else {
+            setPlotError(""); // Clear any previous error
+            navigate(`/plot-search?query=${searchQuery.trim()}`);
+          }
+        } else if (category === "movies") {
+          navigate(`/search?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`);
         } else {
           navigate(
             `/tvsearch?query=${encodeURIComponent(
@@ -130,15 +162,15 @@ const Navbar = () => {
 
   const handleCategoryClick = (cat) => {
     setCategory(cat);
-  
+
     // Ensure the dropdown closes before refocusing on search
     if (selectRef.current) {
-      const selectElement = selectRef.current; 
+      const selectElement = selectRef.current;
       if (selectElement.parentElement) {
         selectElement.parentElement.blur(); // Manually blur the Select component
       }
     }
-  
+
     setTimeout(() => {
       searchInputRef.current?.focus();
     }, 0);
@@ -221,53 +253,53 @@ const Navbar = () => {
                   },
                 }}
               />
-              
-<Select
-  value={category}
-  onChange={(e) => handleCategoryClick(e.target.value)}
-  disableUnderline
-  ref={selectRef} // Attach the ref here
-  sx={{
-    backgroundColor: "#f4f4f4",
-    minWidth: "100px",
-    height: "30px",
-    borderLeft: "1px solid gray",
-    borderRadius: 0,
-    "& .MuiOutlinedInput-notchedOutline": {
-      border: "none",
-    },
-    "&:hover": {
-      borderColor: "black",
-    },
-    "&.Mui-focused": {
-      borderColor: "black",
-    },
-  }}
->
-  <MenuItem value="movies">Movies</MenuItem>
-  <MenuItem value="tv">TV</MenuItem>
-  <MenuItem value="books">Books</MenuItem>
-  <MenuItem value="users">Users</MenuItem>
-  <MenuItem value="plot">Plot</MenuItem>
-</Select>
+
+              <Select
+                value={category}
+                onChange={(e) => handleCategoryClick(e.target.value)}
+                disableUnderline
+                ref={selectRef} // Attach the ref here
+                sx={{
+                  backgroundColor: "#f4f4f4",
+                  minWidth: "100px",
+                  height: "30px",
+                  borderLeft: "1px solid gray",
+                  borderRadius: 0,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    border: "none",
+                  },
+                  "&:hover": {
+                    borderColor: "black",
+                  },
+                  "&.Mui-focused": {
+                    borderColor: "black",
+                  },
+                }}
+              >
+                <MenuItem value="movies">Movies</MenuItem>
+                <MenuItem value="tv">TV</MenuItem>
+                <MenuItem value="books">Books</MenuItem>
+                <MenuItem value="users">Users</MenuItem>
+                <MenuItem value="plot">Plot</MenuItem>
+              </Select>
 
 
             </Box>
             <button type="submit" style={{ display: "none" }}></button>
           </form>
-          {category === "books" && suggestions.length > 0 && (
+          {["books", "movies", "tv"].includes(category) && suggestions.length > 0 && (
             <List
               sx={{
                 position: "absolute",
                 top: "100%",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "50%",
+                left: 0,
+                width: "60%",
                 backgroundColor: "white",
                 boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
                 borderRadius: "5px",
-                maxHeight: "200px",
+                maxHeight: "300px",
                 overflowY: "auto",
+                zIndex: 10,
               }}
             >
               {suggestions.map((suggestion) => (
@@ -275,17 +307,47 @@ const Navbar = () => {
                   key={suggestion.id}
                   button
                   onClick={() => {
-                    navigate(`/book/${suggestion.id}`);
+                    navigate(
+                      category === "books"
+                        ? `/book/${suggestion.id}`
+                        : category === "movies"
+                          ? `/movie/${suggestion.id}`
+                          : `/tv/${suggestion.id}`
+                    );
                     setSearchQuery("");
                     setSuggestions([]);
                   }}
                   sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
                 >
-                  <ListItemText
-                    primary={suggestion.title}
-                    secondary={suggestion.author}
-                    sx={{ color: "black" }}
-                  />
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                    {/* Left side: title + author/year */}
+                    <ListItemText
+                      primary={suggestion.title}
+                      secondary={
+                        category === "books"
+                          ? suggestion.author
+                          : suggestion.release_date
+                            ? new Date(suggestion.release_date).getFullYear()
+                            : ""
+                      }
+                      sx={{ color: "black" }}
+                    />
+
+                    {/* Right side: poster/cover */}
+                    {suggestion.poster && (
+                      <img
+                        src={suggestion.poster}
+                        alt={suggestion.title}
+                        style={{
+                          width: "40px",
+                          height: "60px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                          marginLeft: "10px",
+                        }}
+                      />
+                    )}
+                  </Box>
                 </ListItem>
               ))}
             </List>
@@ -346,8 +408,10 @@ const Navbar = () => {
                 </MenuItem>
                 <MenuItem onClick={handleProfile}>Profile</MenuItem>
                 <MenuItem onClick={handleLists}>Lists</MenuItem>
+                <MenuItem onClick={() => { navigate("/my-reviews"); handleMenuClose(); }}>Reviews</MenuItem>
                 <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
                 <MenuItem onClick={() => { navigate("/discover") }}>Discover</MenuItem>
+                <MenuItem onClick={() => { navigate("/trending") }}>Trending</MenuItem>
               </Menu>
 
               {/* Logout Button */}

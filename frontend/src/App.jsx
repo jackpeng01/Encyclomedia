@@ -5,7 +5,10 @@ import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
 import ListsPage from "./scenes/ListsPage";
-import LocalListsPage from "./scenes/LocalListsPage";
+import MyReviewsPage from "./scenes/MyReviewsPage";
+import PublicListsPage from './scenes/PublicListsPage';
+import LatestReviewsPage from "./scenes/LatestReviewsPage";
+import FollowedListsPage from './scenes/FollowedListsPage';
 import LandingPage from "./scenes/LandingPage";
 import NotFound from "./scenes/NotFound";
 import { themeSettings } from "./theme";
@@ -20,13 +23,15 @@ import MovieDetails from "./scenes/MovieDetails";
 import SearchResults from "./scenes/SearchResults";
 import BookSearch from "./scenes/BookSearch";
 import BookDetails from "./scenes/BookDetails";
+import ReadLater from "./scenes/ReadLater";
+import BookLog from "./scenes/BookLog";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
 import Discover from "./scenes/Discover";
 import UserSearch from "./scenes/UserSearch";
-import TVDetails from "./scenes/TVDetails";
 import PlotSearchResults from "./scenes/PlotSearchResults";
+import TVDetails from "./scenes/TVDetails";
 
 import TrendingTvPage from "./scenes/TrendingTvPage";
 import TVSearch from "./scenes/TVSearch";
@@ -90,9 +95,18 @@ function App() {
 
               {/* List Management Page */}
               <Route path="/mylists" element={<ListsPage />} />
+              
+              {/* Review Management Page */}
+              <Route path="/my-reviews" element={<MyReviewsPage />} />
 
-              {/* Local List Management Page */}
-              <Route path="/local-lists" element={<LocalListsPage />} />
+              {/* Followed List Management Page */}
+              <Route path="/followed-lists" element={<FollowedListsPage />} />
+
+              {/* List Browsing Page */}
+              <Route path="/public-lists" element={<PublicListsPage />} />
+
+              {/* Review Browsing Page */}
+              <Route path="/recent-reviews" element={<LatestReviewsPage />} />
 
               {/* 404 Not Found Page */}
               <Route path="*" element={<NotFound />} />
@@ -116,6 +130,10 @@ function App() {
             <Route path="/booksearch" element={<BookSearch />} />
 
             <Route path="/book/:id" element={<BookDetails />} />
+
+            <Route path="/:username/read-later" element={<ReadLater />} />
+
+            <Route path="/:username/book-log" element={<BookLog />} />
 
             <Route path="/discover" element={<Discover />} />
 
