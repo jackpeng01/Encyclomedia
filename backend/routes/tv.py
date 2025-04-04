@@ -18,10 +18,38 @@ TRENDING_SEARCH_URL = "https://api.themoviedb.org/3/search/tv"
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 tv_logs_schema = TVLogsSchema()
 
+genre_id_to_name = {
+    10759: "Action & Adventure",
+    16: "Animation",
+    35: "Comedy",
+    80: "Crime",
+    99: "Documentary",
+    18: "Drama",
+    10751: "Family",
+    10762: "Kids",
+    9648: "Mystery",
+    10763: "News",
+    10764: "Reality",
+    10765: "Sci-Fi & Fantasy",
+    10766: "Soap",
+    10767: "Talk",
+    10768: "War & Politics",
+    37: "Western"
+}
+
 @tv_bp.route("/api/tv/search", methods=['GET'])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def search_tv():
     query = request.args.get("query", "")
+    year_start = request.args.get("yearStart", type=int)
+    year_end = request.args.get("yearEnd", type=int)
+    rating_min = request.args.get("ratingMin", type=float)
+    rating_max = request.args.get("ratingMax", type=float)
+    genre = request.args.get("genre", "")
+    genre = genre.split(",") if genre else ""
+    
+    print(request.args)
+    
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
     
@@ -43,8 +71,53 @@ def search_tv():
                 tv.append({
                     "id": item.get("id"),  
                     "title": item.get("name"),
-                    "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}",                })
-        return jsonify({"tv": tv})
+                    "poster_path": f"https://image.tmdb.org/t/p/w500{item.get("poster_path")}" if item.get("poster_path") else None, 
+                    "first_air_date": item.get("first_air_date"),
+                    "vote_average": item.get("vote_average"),
+                    "genre_ids": item.get("genre_ids", []),  # Genre IDs from TMDB
+                    # Map genre IDs to names
+                    "genres": [
+                        genre_id_to_name.get(genre_id, "Unknown")
+                        for genre_id in item.get("genre_ids", [])
+                    ],
+                    })
+                
+            filtered_shows = []
+            
+            for show in tv:
+                # Apply year range filter
+                if year_start:
+                    show_year = (
+                        int(show["first_air_date"][:4]) if show["first_air_date"] else None
+                    )
+                    print(show["title"], show_year)
+                    if not show_year:
+                        continue
+                    if show_year and show_year < year_start:
+                        continue  # Skip this show if it doesn't match the year range
+                if year_end:
+                    show_year = (
+                        int(show["first_air_date"][:4]) if show["first_air_date"] else None
+                    )
+                    if not show_year:
+                        continue
+                    if show_year and show_year > year_end:
+                        continue  # Skip this show if it doesn't match the year range
+
+                # Apply rating filter
+                if rating_min and show["vote_average"] < rating_min:
+                    continue  # Skip this movie if it doesn't meet the rating threshold
+                if rating_max and show["vote_average"] > rating_max:
+                    continue  # Skip this movie if it doesn't meet the rating threshold
+
+                # Apply genre filter (Check if all genres in the filter are in the movie's genres)
+                if genre and not all(g in show["genres"] for g in genre):
+                    continue  # Skip this movie if it doesn't match all genres
+
+                # Add the movie to the filtered list if it passes all filters
+                filtered_shows.append(show)
+            # print(filtered_shows)
+        return jsonify({"tv": filtered_shows})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500

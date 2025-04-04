@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { Box, TextField, Button, Typography } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress"; // Import MUI spinner
 import Navbar from "../components/Navbar";
 import { getUserByToken } from "../api/users";
 import AdvancedSearchModal from "../components/modals/AdvancedSearchModal";
@@ -21,6 +22,7 @@ const Discover = () => {
     const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
     const [userData, setUserData] = useState("");
     const [plotError, setPlotError] = useState("");
+    const [loading, setLoading] = useState(false); // Add loading state
     const MIN_PLOT_LENGTH = 10;  // Minimum number of characters
     const MAX_PLOT_LENGTH = 300; // Maximum number of characters
     // const [movies, setMovies] = useState([]);
@@ -74,11 +76,9 @@ const Discover = () => {
     }, [token]);
 
     const handleRefresh = async () => {
+        setLoading(true); // Start loading
         try {
-            // Convert genre preferences to a comma-separated string
             let interestsQuery = userData.genrePreferences ? userData.genrePreferences.join(",") : "";
-
-            // Extract previously recommended movie titles and years
             const previousMovies = movies.map(movie => movie.title);
             const previousTv = shows.map(show => show.title);
             const previousBooks = books.map(book => book.title);
@@ -86,9 +86,9 @@ const Discover = () => {
             const response = await axios.get("http://127.0.0.1:5000/api/discover/recommended", {
                 params: {
                     query: interestsQuery,
-                    previousMovies: JSON.stringify(previousMovies), // Send as JSON string
-                    previousTv: JSON.stringify(previousTv), // Send as JSON string
-                    previousBooks: JSON.stringify(previousBooks) // Send as JSON string
+                    previousMovies: JSON.stringify(previousMovies),
+                    previousTv: JSON.stringify(previousTv),
+                    previousBooks: JSON.stringify(previousBooks)
                 },
             });
 
@@ -96,8 +96,9 @@ const Discover = () => {
             dispatch(setShows(response.data.shows));
             dispatch(setBooks(response.data.books));
         } catch (error) {
-            console.error("Error fetching recommended movies:", error);
+            console.error("Error fetching recommended media:", error);
         }
+        setLoading(false); // Stop loading
     };
 
     const handleSearchSubmit = () => {
@@ -142,7 +143,16 @@ const Discover = () => {
                 navigate(`/plot-search?query=${searchQuery.trim()}`);
             }
         } else {
-            navigate(`/search?${params}`);
+            params = new URLSearchParams({
+                query: searchQuery.trim(),
+                yearStart: yearStart || "",
+                yearEnd: yearEnd || "",
+                genre: genre.join(",") || "",
+                minRating: minRating || "",
+                maxRating: maxRating || "",
+                category,
+            }).toString();
+            navigate(`/tvsearch?${params}`);
         }
 
         setIsAdvancedSearchOpen(false);
@@ -167,7 +177,7 @@ const Discover = () => {
                 {["movies", "tv", "books", "users", "plot"].map((cat) => (
                     <Button
                         key={cat}
-                        onClick={() => setCategory(cat)}
+                        onClick={() => handleCategoryClick(cat)}
                         sx={{
                             backgroundColor: category === cat ? "#6b46c1" : "#f4f4f4",
                             color: category === cat ? "white" : "black",
@@ -229,7 +239,7 @@ const Discover = () => {
             {/* Recommendations Heading and Refresh Button */}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "80%", marginTop: "2rem", marginBottom: "1rem" }}>
                 <Typography variant="h5" sx={{ fontWeight: "bold", color: "#333" }}>
-                    Recommendations
+                    Recommended
                 </Typography>
                 <Button
                     onClick={handleRefresh}
@@ -239,11 +249,16 @@ const Discover = () => {
                         padding: "6px 12px",
                         fontSize: "14px",
                         borderRadius: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                         "&:hover": { backgroundColor: "#5a38b3" },
                     }}
+                    disabled={loading} // Disable button when loading
                 >
-                    Refresh
+                    {loading ? <CircularProgress size={20} sx={{ color: "white" }} /> : "Refresh"}
                 </Button>
+
             </Box>
 
             {/* Movie Posters */}

@@ -49,7 +49,7 @@ const SearchResults = () => {
                         genre 
                     }
                 });
-                console.log(response.data)
+                console.log(response)
                 setMovies(response.data.movies);
                 setTotalPages(response.data.total_pages);
             } catch (err) {

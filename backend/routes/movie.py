@@ -136,7 +136,7 @@ def get_posters():
         return jsonify(
             {
                 "movies": filtered_movies,
-                "total_pages": len(filtered_movies) / 15 + 1,
+                "total_pages": int(len(filtered_movies) / 15) + 1,
                 # "total_pages": data.get(
                 #     "total_pages", 1
                 # ),  # Include total pages information

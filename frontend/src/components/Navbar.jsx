@@ -16,7 +16,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import LoginModal from "./LoginModal";
 import axios from "axios";
@@ -31,6 +31,8 @@ const Navbar = () => {
   const [userData, setUserData] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
+  const searchInputRef = useRef(null);
+  const selectRef = useRef(null);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -126,6 +128,23 @@ const Navbar = () => {
     handleMenuClose();
   };
 
+  const handleCategoryClick = (cat) => {
+    setCategory(cat);
+  
+    // Ensure the dropdown closes before refocusing on search
+    if (selectRef.current) {
+      const selectElement = selectRef.current; 
+      if (selectElement.parentElement) {
+        selectElement.parentElement.blur(); // Manually blur the Select component
+      }
+    }
+  
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+  };
+
+
   return (
     <AppBar
       position="fixed"
@@ -190,6 +209,7 @@ const Navbar = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 fullWidth
+                inputRef={searchInputRef}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { border: "none" },
@@ -201,33 +221,37 @@ const Navbar = () => {
                   },
                 }}
               />
-              <Select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                disableUnderline
-                sx={{
-                  backgroundColor: "#f4f4f4",
-                  minWidth: "100px",
-                  height: "30px",
-                  borderLeft: "1px solid gray",
-                  borderRadius: 0,
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    border: "none",
-                  },
-                  "&:hover": {
-                    borderColor: "black",
-                  },
-                  "&.Mui-focused": {
-                    borderColor: "black",
-                  },
-                }}
-              >
-                <MenuItem value="movies">Movies</MenuItem>
-                <MenuItem value="tv">TV</MenuItem>
-                <MenuItem value="books">Books</MenuItem>
-                <MenuItem value="users">Users</MenuItem>
-                <MenuItem value="plot">Plot</MenuItem>
-              </Select>
+              
+<Select
+  value={category}
+  onChange={(e) => handleCategoryClick(e.target.value)}
+  disableUnderline
+  ref={selectRef} // Attach the ref here
+  sx={{
+    backgroundColor: "#f4f4f4",
+    minWidth: "100px",
+    height: "30px",
+    borderLeft: "1px solid gray",
+    borderRadius: 0,
+    "& .MuiOutlinedInput-notchedOutline": {
+      border: "none",
+    },
+    "&:hover": {
+      borderColor: "black",
+    },
+    "&.Mui-focused": {
+      borderColor: "black",
+    },
+  }}
+>
+  <MenuItem value="movies">Movies</MenuItem>
+  <MenuItem value="tv">TV</MenuItem>
+  <MenuItem value="books">Books</MenuItem>
+  <MenuItem value="users">Users</MenuItem>
+  <MenuItem value="plot">Plot</MenuItem>
+</Select>
+
+
             </Box>
             <button type="submit" style={{ display: "none" }}></button>
           </form>
