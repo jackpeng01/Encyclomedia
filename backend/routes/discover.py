@@ -190,7 +190,7 @@ def get_recommended(interests, previous_movies, previous_tv, previous_books):
             system_instruction=[types.Part.from_text(
                 text=f"""
                     When given a user's interests, return **exactly** 5 random movies, 5 random TV shows, and 5 random books as a structured JSON object.
-                    If no interests are provided, still return 5 random movies, 5 random TV shows, and 5 random books.
+                    IMPORTANT: If no interests are provided, still return ANY 5 random movies, 5 random TV shows, and 5 random books from ANY genre. Try to provide a mix of genres.
                     
                     Return the movies, then the shows, then the books.
                     
@@ -258,6 +258,7 @@ def recommended_media():
         previous_movies = request.args.get("previousMovies", "[]")
         previous_tv = request.args.get("previousTv", "[]")
         previous_books = request.args.get("previousBooks", "[]")
+        print(request.args)
         
         try:
             previous_movies = json.loads(previous_movies)  # Convert from JSON string to list
