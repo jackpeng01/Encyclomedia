@@ -161,11 +161,23 @@ const PublicListsPage = () => {
 
     const handleUpdateList = async (updatedList) => {
         try {
-            // For public lists, a user would typically not be able to update them
-            // placeholder to follow functionality later
-            console.log("List view only - no updates allowed for public lists");
+            const isCollaborator = updatedList.collaborators?.includes(userData?.username);
+            if (isCollaborator || updatedList.user_id === userData?.username) {
+                await axios.put(`http://127.0.0.1:5000/api/lists/${updatedList._id}`, updatedList, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+                
+                const response = await axios.get("http://127.0.0.1:5000/api/public-lists");
+                setLists(response.data);
+            } else {
+                console.log("Not authorized to update this list");
+            }
         } catch (error) {
             console.error("❌ Error updating list:", error);
+            setError("Failed to update list. Please try again.");
         }
     };
 

@@ -275,21 +275,33 @@ const FollowedListsPage = () => {
           list={selectedList}
           userData={userData}
           onClose={() => setListDetailsOpen(false)}
-          onUpdateList={() => { 
-            const fetchFollowedLists = async () => {
-              try {
-                const response = await axios.get("http://127.0.0.1:5000/api/users/followed-lists", {
-                  headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                  }
-                });
-                setLists(response.data);
-              } catch (err) {
-                console.error("Error refreshing followed lists:", err);
+          onUpdateList={(updatedList) => {
+            axios.put(`http://127.0.0.1:5000/api/lists/${updatedList._id}`, updatedList, {
+              headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
               }
-            };
-            fetchFollowedLists();
+            })
+            .then(() => {
+              const fetchFollowedLists = async () => {
+                try {
+                  const response = await axios.get("http://127.0.0.1:5000/api/users/followed-lists", {
+                    headers: {
+                      "Authorization": `Bearer ${token}`,
+                      "Content-Type": "application/json"
+                    }
+                  });
+                  setLists(response.data);
+                } catch (err) {
+                  console.error("Error refreshing followed lists:", err);
+                }
+              };
+              fetchFollowedLists();
+            })
+            .catch(err => {
+              console.error("Error updating list:", err);
+              setError("Failed to update list. Please try again.");
+            });
           }}
         />
       )}

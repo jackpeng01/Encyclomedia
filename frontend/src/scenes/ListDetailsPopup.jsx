@@ -169,19 +169,21 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
   };
 
   const handleSaveChanges = () => {
-    const updatedList = {
-      ...list,
+    // Send only the essential fields that changed
+    const updatedData = {
+      _id: list._id,
       description: editedDescription,
-      items: items,
-      ...(isOwner && {
-        isPublic: isPublic,
-        isCollaborative: isCollaborative,
-        collaborators: collaborators,
-      }),
-      updatedAt: new Date().toISOString()
+      items: items
     };
-
-    onUpdateList(updatedList);
+    
+    // Only owners can change these settings
+    if (isOwner) {
+      updatedData.isPublic = isPublic;
+      updatedData.isCollaborative = isCollaborative;
+      updatedData.collaborators = collaborators;
+    }
+  
+    onUpdateList(updatedData);
     setIsEditMode(false);
     setShowAddDescription(false);
     setShowCollaborators(false);

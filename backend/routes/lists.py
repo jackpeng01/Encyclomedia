@@ -131,21 +131,6 @@ def update_list(id):
             print("❌ Invalid request. No data provided.\n")
             return jsonify({"error": "No data provided"}), 400
 
-        # Create update structure
-        update_data = {"updated_at": datetime.datetime.utcnow()}
-        if "name" in data:
-            update_data["name"] = data["name"]
-        if "description" in data:
-            update_data["description"] = data["description"]
-        if "items" in data:
-            update_data["items"] = data["items"]
-        if "isPublic" in data:
-            update_data["isPublic"] = data["isPublic"]
-        if "isCollaborative" in data:
-            update_data["isCollaborative"] = data["isCollaborative"]
-        if "collaborators" in data:
-            update_data["collaborators"] = data["collaborators"]
-
         # Check if user is owner or collaborator before updating
         list_item = lists_col.find_one({"_id": ObjectId(id)})
         
@@ -160,11 +145,26 @@ def update_list(id):
         if not (is_owner or is_collaborator):
             print(f"❌ User {current_user} not authorized to update list {id}.\n")
             return jsonify({"error": "Not authorized to update this list"}), 403
+        
+        # Create update structure with the original timestamp format
+        update_data = {"updated_at": datetime.datetime.utcnow()}
+        
+        # Fields that both owners and collaborators can update
+        if "name" in data:
+            update_data["name"] = data["name"]
+        if "description" in data:
+            update_data["description"] = data["description"]
+        if "items" in data:
+            update_data["items"] = data["items"]
             
-        # Only owner can change collaborators or visibility settings
-        if not is_owner and ("isPublic" in data or "isCollaborative" in data or "collaborators" in data):
-            print(f"❌ Only the owner can change visibility or collaborators for list {id}.\n")
-            return jsonify({"error": "Only the owner can change visibility or collaborators"}), 403
+        # Only owner can change these settings
+        if is_owner:
+            if "isPublic" in data:
+                update_data["isPublic"] = data["isPublic"]
+            if "isCollaborative" in data:
+                update_data["isCollaborative"] = data["isCollaborative"]
+            if "collaborators" in data:
+                update_data["collaborators"] = data["collaborators"]
 
         # Update in database
         result = lists_col.update_one(
