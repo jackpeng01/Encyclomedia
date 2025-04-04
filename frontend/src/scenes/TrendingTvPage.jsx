@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import TvInfoModal from "../components/TvInfoModal";
+import { useSelector } from "react-redux";
 
 const TrendingTvPage = () => {
   const [results, setResults] = useState([]);
@@ -8,6 +9,7 @@ const TrendingTvPage = () => {
   const [selectedShowInfo, setSelectedShowInfo] = useState(null);
   const [sortOrder, setSortOrder] = useState("name");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const isDarkMode = useSelector((state) => state.user.isDarkMode);
 
   const getTv = async () => {
     const options = {
@@ -148,6 +150,7 @@ const TrendingTvPage = () => {
                   width: "200px",
                   height: "300px",
                   borderRadius: "10px",
+                  filter: isDarkMode ? "invert(1)" : "invert(0)",
                 }}
               />
               <Typography>{item.name}</Typography>

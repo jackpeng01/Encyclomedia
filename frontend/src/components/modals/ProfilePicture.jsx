@@ -1,12 +1,15 @@
 import React, { useState, useRef } from "react";
 import { Dialog, DialogContent, Button, Typography } from "@mui/material";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const ProfilePicture = ({ userData, viewerData, token }) => {
   const fileInputRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState(userData.profilePicture);
+
+  const isDarkMode = useSelector((state) => state.user.isDarkMode);
 
   const isOwner = userData.username === viewerData.username;
   const defaultProfilePicture =
@@ -84,6 +87,7 @@ const ProfilePicture = ({ userData, viewerData, token }) => {
             objectFit: "cover",
             transition: "opacity 0.3s ease-in-out",
             filter: isHovered ? "brightness(100%)" : "none",
+            filter: isDarkMode ? "invert(1)" : "invert(0)",
           }}
           onClick={() => !isOwner && setIsModalOpen(true)}
         />

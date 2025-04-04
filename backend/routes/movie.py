@@ -106,12 +106,16 @@ def get_posters():
                 movie_year = (
                     int(movie["release_date"][:4]) if movie["release_date"] else None
                 )
+                if not movie_year:
+                    continue
                 if movie_year and movie_year < year_start:
                     continue  # Skip this movie if it doesn't match the year range
             if year_end:
                 movie_year = (
                     int(movie["release_date"][:4]) if movie["release_date"] else None
                 )
+                if not movie_year:
+                    continue
                 if movie_year and movie_year > year_end:
                     continue  # Skip this movie if it doesn't match the year range
 
@@ -132,9 +136,10 @@ def get_posters():
         return jsonify(
             {
                 "movies": filtered_movies,
-                "total_pages": data.get(
-                    "total_pages", 1
-                ),  # Include total pages information
+                "total_pages": int(len(filtered_movies) / 15) + 1,
+                # "total_pages": data.get(
+                #     "total_pages", 1
+                # ),  # Include total pages information
                 "current_page": page,
             }
         )
@@ -143,11 +148,11 @@ def get_posters():
         return jsonify({"error": str(e)}), 500
     
     
-def get_poster(title):
+def get_poster(title, year):
     if not title:
-        return jsonify({'error': 'Query parameter is required'}), 400
+        return jsonify({'error': 'Query parameter "title" is required'}), 400
 
-    # Set up the TMDB API parameters for initial search based on the title
+    # Set up the TMDB API parameters for search
     params = {
         "query": title,
         "include_adult": False,
@@ -155,8 +160,12 @@ def get_poster(title):
         "page": 1,  # Always fetch the first page
     }
 
+    # If a year is provided, add it to the request
+    if year:
+        params["primary_release_year"] = year
+
     try:
-        # Search movies by query (title)
+        # Search movies by query (title) and optionally by year
         url = f"{TMDB_BASE_URL}/search/movie"
         headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
         response = requests.get(url, headers=headers, params=params)
@@ -417,6 +426,8 @@ def get_watch_later():
         }
         insert = movie_logs_schema.load(info)
         movie_logs_col.insert_one(insert)
+        
+        user_movie_log_item = movie_logs_col.find_one({"username": username})
 
     watch_log = user_movie_log_item["watchLater"]
     for entry in watch_log:

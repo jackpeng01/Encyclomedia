@@ -1,6 +1,7 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
-import userReducer from "./userSlice"
+import userReducer from "./userSlice";
+import mediaReducer from "./mediaSlice";
 import {
   persistStore,
   persistReducer,
@@ -17,10 +18,16 @@ import storage from "redux-persist/lib/storage";
 const rootReducer = combineReducers({
   auth: authReducer,
   user: userReducer,
+  media: mediaReducer
 });
 
 // ✅ Persist Reducer Configuration (only persist auth slice, not everything)
-const persistConfig = { key: "root", storage, version: 1 };
+const persistConfig = {
+  key: "root",
+  storage,
+  version: 1,
+  whitelist: ["auth", "media"]
+};
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 // ✅ Create Redux Store

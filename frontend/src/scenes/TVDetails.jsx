@@ -139,7 +139,7 @@ const TVDetails = () => {
 
           // Find the TV show
           const currentTv = response.data.find(
-            (entry) => entry.tvId === Number(id)
+            (entry) => Number(entry.tvId) === Number(id)
           );
 
           if (currentTv) {

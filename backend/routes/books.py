@@ -152,6 +152,36 @@ def search_books():
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
+    
+def search_book(title):
+    if not title:
+        return jsonify({'error': 'Query parameter "title" is required'}), 400
+
+
+    # Construct the full query to include subjects if they are provided
+    full_query = title
+    
+    try:
+        # Perform the search request to Open Library
+        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": full_query, "limit": 1})
+        response.raise_for_status()  # Raise error for bad responses
+        data = response.json()
+
+        books = []
+        for book in data.get("docs", []):
+
+            # Add book data to the list
+            books.append({
+                "id": book.get("key", "").replace("/works/", ""),  # Extracting book ID
+                "title": book.get("title", "Unknown Title"),
+                "author": book.get("author_name", ["Unknown Author"])[0],  # Take first author
+                "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg"  # Default cover if missing
+            })
+
+        return jsonify({"books": books})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 
 

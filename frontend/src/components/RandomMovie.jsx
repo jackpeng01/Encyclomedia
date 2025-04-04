@@ -43,7 +43,7 @@ const RandomMovie = () => {
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h1>Random Movie</h1>
       <button onClick={fetchRandomMovie} style={buttonStyle}>
-        Get Random Movie
+        Surprise Me!
       </button>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}

@@ -11,11 +11,11 @@ const SearchResults = () => {
     const queryParams = new URLSearchParams(location.search);
     const query = queryParams.get("query");
     const category = queryParams.get("category") || "movies"; // Default to "movies"
-    const yearStart = queryParams.get("yearStart");
-    const yearEnd = queryParams.get("yearEnd");
+    const yearStart = queryParams.get("yearStart") || "";
+    const yearEnd = queryParams.get("yearEnd") || "";
     const ratingMin = queryParams.get("minRating") || 0; // Default to 0
     const ratingMax = queryParams.get("maxRating") || 10; // Default to 10
-    const genre = queryParams.get("genre");
+    const genre = queryParams.get("genre") || "";
 
     const [movies, setMovies] = useState([]);
     const [error, setError] = useState("");
@@ -49,6 +49,7 @@ const SearchResults = () => {
                         genre 
                     }
                 });
+                console.log(response)
                 setMovies(response.data.movies);
                 setTotalPages(response.data.total_pages);
             } catch (err) {
@@ -69,7 +70,7 @@ const SearchResults = () => {
         if (currentPage < totalPages) {
             const nextPage = currentPage + 1;
             setCurrentPage(nextPage);
-            navigate(`?query=${query}&category=${category}&page=${nextPage}&ratingMin=${ratingMin}&ratingMax=${ratingMax}`);
+            navigate(`?query=${query}&yearStart=${yearStart}&yearEnd=${yearEnd}&genre=${genre}&ratingMin=${ratingMin}&ratingMax=${ratingMax}&page=${nextPage}&category=${category}`);
         }
         window.scrollTo({
             top: 0,
@@ -81,7 +82,7 @@ const SearchResults = () => {
         if (currentPage > 1) {
             const prevPage = currentPage - 1;
             setCurrentPage(prevPage);
-            navigate(`?query=${query}&category=${category}&page=${prevPage}&ratingMin=${ratingMin}&ratingMax=${ratingMax}`);
+            navigate(`?query=${query}&yearStart=${yearStart}&yearEnd=${yearEnd}&genre=${genre}&ratingMin=${ratingMin}&ratingMax=${ratingMax}&page=${prevPage}&category=${category}`);
         }
         window.scrollTo({
             top: 0,

@@ -16,7 +16,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { setToken } from "../state/authSlice";
 import { getUserByToken } from "../api/users";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import LoginModal from "./LoginModal";
 import axios from "axios";
@@ -31,6 +31,13 @@ const Navbar = () => {
   const [userData, setUserData] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
+  const searchInputRef = useRef(null);
+  const selectRef = useRef(null);
+
+  const MIN_PLOT_LENGTH = 10;  // Minimum number of characters
+  const MAX_PLOT_LENGTH = 300; // Maximum number of characters
+  const [plotError, setPlotError] = useState("");
+
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -53,7 +60,7 @@ const Navbar = () => {
         setSuggestions([]);
         return;
       }
-  
+
       try {
         if (category === "books") {
           const response = await axios.get(
@@ -70,15 +77,15 @@ const Navbar = () => {
             `http://127.0.0.1:5000/api/tv/suggestions?query=${searchQuery}`
           );
           setSuggestions(response.data.suggestions || []);
-        }        
+        }
       } catch (error) {
         console.error(`Error fetching ${category} suggestions:`, error);
       }
     };
-  
+
     fetchSuggestions();
   }, [searchQuery, category]);
-  
+
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -91,13 +98,29 @@ const Navbar = () => {
         );
       } else if (searchQuery.trim()) {
         // Redirect to correct search results page with the query and category
-        if (category === "books") {
+        if (category === "movies") {
+          navigate(
+            `/search?query=${encodeURIComponent(
+              searchQuery.trim()
+            )}&category=${category}`
+          );
+        }
+        else if (category === "books") {
           navigate(
             `/booksearch?query=${encodeURIComponent(searchQuery.trim())}`
           );
           setSuggestions([]);
         } else if (category === "plot") {
-          navigate(`/plot-search?query=${searchQuery.trim()}`);
+          if (searchQuery.length < MIN_PLOT_LENGTH) {
+            alert(`Plot must be at least ${MIN_PLOT_LENGTH} characters.`);
+            return;
+          } else if (searchQuery.length > MAX_PLOT_LENGTH) {
+            alert(`Plot must be no more than ${MAX_PLOT_LENGTH} characters.`);
+            return;
+          } else {
+            setPlotError(""); // Clear any previous error
+            navigate(`/plot-search?query=${searchQuery.trim()}`);
+          }
         } else if (category === "movies") {
           navigate(`/search?query=${encodeURIComponent(
             searchQuery.trim()
@@ -136,6 +159,23 @@ const Navbar = () => {
     dispatch(setDarkMode(!isDarkMode));
     handleMenuClose();
   };
+
+  const handleCategoryClick = (cat) => {
+    setCategory(cat);
+
+    // Ensure the dropdown closes before refocusing on search
+    if (selectRef.current) {
+      const selectElement = selectRef.current;
+      if (selectElement.parentElement) {
+        selectElement.parentElement.blur(); // Manually blur the Select component
+      }
+    }
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+  };
+
 
   return (
     <AppBar
@@ -201,6 +241,7 @@ const Navbar = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 fullWidth
+                inputRef={searchInputRef}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { border: "none" },
@@ -212,10 +253,12 @@ const Navbar = () => {
                   },
                 }}
               />
+
               <Select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => handleCategoryClick(e.target.value)}
                 disableUnderline
+                ref={selectRef} // Attach the ref here
                 sx={{
                   backgroundColor: "#f4f4f4",
                   minWidth: "100px",
@@ -239,74 +282,76 @@ const Navbar = () => {
                 <MenuItem value="users">Users</MenuItem>
                 <MenuItem value="plot">Plot</MenuItem>
               </Select>
+
+
             </Box>
             <button type="submit" style={{ display: "none" }}></button>
           </form>
           {["books", "movies", "tv"].includes(category) && suggestions.length > 0 && (
-          <List
-            sx={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              width: "60%", 
-              backgroundColor: "white",
-              boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-              borderRadius: "5px",
-              maxHeight: "300px",
-              overflowY: "auto",
-              zIndex: 10, 
-            }}
-          >
-            {suggestions.map((suggestion) => (
-              <ListItem
-              key={suggestion.id}
-              button
-              onClick={() => {
-                navigate(
-                  category === "books"
-                    ? `/book/${suggestion.id}`
-                    : category === "movies"
-                    ? `/movie/${suggestion.id}`
-                    : `/tv/${suggestion.id}`
-                );                
-                setSearchQuery("");
-                setSuggestions([]);
+            <List
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                width: "60%",
+                backgroundColor: "white",
+                boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+                borderRadius: "5px",
+                maxHeight: "300px",
+                overflowY: "auto",
+                zIndex: 10,
               }}
-              sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
             >
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                {/* Left side: title + author/year */}
-                <ListItemText
-                  primary={suggestion.title}
-                  secondary={
-                    category === "books"
-                      ? suggestion.author
-                      : suggestion.release_date
-                      ? new Date(suggestion.release_date).getFullYear()
-                      : ""
-                  }
-                  sx={{ color: "black" }}
-                />
-            
-                {/* Right side: poster/cover */}
-                {suggestion.poster && (
-                  <img
-                    src={suggestion.poster}
-                    alt={suggestion.title}
-                    style={{
-                      width: "40px",
-                      height: "60px",
-                      objectFit: "cover",
-                      borderRadius: "4px",
-                      marginLeft: "10px",
-                    }}
-                  />
-                )}
-              </Box>
-            </ListItem>           
-            ))}
-          </List>
-        )}
+              {suggestions.map((suggestion) => (
+                <ListItem
+                  key={suggestion.id}
+                  button
+                  onClick={() => {
+                    navigate(
+                      category === "books"
+                        ? `/book/${suggestion.id}`
+                        : category === "movies"
+                          ? `/movie/${suggestion.id}`
+                          : `/tv/${suggestion.id}`
+                    );
+                    setSearchQuery("");
+                    setSuggestions([]);
+                  }}
+                  sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                    {/* Left side: title + author/year */}
+                    <ListItemText
+                      primary={suggestion.title}
+                      secondary={
+                        category === "books"
+                          ? suggestion.author
+                          : suggestion.release_date
+                            ? new Date(suggestion.release_date).getFullYear()
+                            : ""
+                      }
+                      sx={{ color: "black" }}
+                    />
+
+                    {/* Right side: poster/cover */}
+                    {suggestion.poster && (
+                      <img
+                        src={suggestion.poster}
+                        alt={suggestion.title}
+                        style={{
+                          width: "40px",
+                          height: "60px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                          marginLeft: "10px",
+                        }}
+                      />
+                    )}
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
+          )}
         </Box>
 
         {/* Right Section - Buttons */}
@@ -335,6 +380,7 @@ const Navbar = () => {
                   style={{
                     borderRadius: "50%",
                     objectFit: "cover",
+                    filter: isDarkMode ? "invert(1)" : "invert(0)"
                   }}
                 />
                 {userData.username}
