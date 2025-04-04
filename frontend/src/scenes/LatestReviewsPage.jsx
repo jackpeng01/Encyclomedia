@@ -48,15 +48,15 @@ const LatestReviewsPage = () => {
   const handleCloseContextMenu = () => {
     setContextMenu(null);
   };
-  
+
   const handleOpenCommentDialog = () => {
     setCommentModalOpen(true);
     handleCloseContextMenu();
   };
-  
+
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
-    
+
     try {
       await axios.post(
         `http://127.0.0.1:5000/api/reviews/${selectedReviewId}/comment`,
@@ -68,7 +68,7 @@ const LatestReviewsPage = () => {
           }
         }
       );
-      
+
       fetchReviews();
       setCommentText('');
       setCommentModalOpen(false);
@@ -307,41 +307,45 @@ const LatestReviewsPage = () => {
         )}
       </Box>
       <Menu
-  open={contextMenu !== null}
-  onClose={handleCloseContextMenu}
-  anchorReference="anchorPosition"
-  anchorPosition={contextMenu !== null ? 
-    { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
->
-  <MenuItem onClick={handleOpenCommentDialog}>Add Comment</MenuItem>
-</Menu>
+        open={contextMenu !== null}
+        onClose={handleCloseContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={contextMenu !== null ?
+          { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+      >
+        <MenuItem onClick={handleOpenCommentDialog}>Add Comment</MenuItem>
+      </Menu>
 
-<Dialog open={commentModalOpen} onClose={() => setCommentModalOpen(false)}>
-  <DialogTitle>Add Comment</DialogTitle>
-  <DialogContent>
-    <TextField
-      autoFocus
-      margin="dense"
-      label="Your Comment"
-      fullWidth
-      multiline
-      rows={4}
-      value={commentText}
-      onChange={(e) => setCommentText(e.target.value)}
-    />
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setCommentModalOpen(false)}>Cancel</Button>
-    <Button 
-      onClick={handleAddComment} 
-      color="primary" 
-      variant="contained"
-      disabled={!commentText.trim()}
-    >
-      Post Comment
-    </Button>
-  </DialogActions>
-</Dialog>
+      <Dialog open={commentModalOpen} onClose={() => setCommentModalOpen(false)}>
+        <DialogTitle>Add Comment</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Your Comment"
+            fullWidth
+            multiline
+            rows={6}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            sx={{
+              width: { xs: '100%', sm: '400px', md: '500px' },
+              minHeight: '120px'
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCommentModalOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleAddComment}
+            color="primary"
+            variant="contained"
+            disabled={!commentText.trim()}
+          >
+            Post Comment
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

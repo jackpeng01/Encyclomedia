@@ -528,9 +528,13 @@ const BookDetails = () => {
             label="Your Comment"
             fullWidth
             multiline
-            rows={4}
+            rows={6}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
+            sx={{
+              width: { xs: '100%', sm: '400px', md: '500px' },
+              minHeight: '120px'
+            }}
           />
         </DialogContent>
         <DialogActions>

@@ -137,7 +137,7 @@ const ListDetailsPopup = ({ open, list, userData, onClose, onUpdateList }) => {
     if (!result.destination) return;
 
     // Only allow owners and collaborators to reorder items
-    if (!isOwner && !(list.isCollaborative && list.collaborators?.includes(userData?._id))) {
+    if (!isOwner && !(list.isCollaborative && list.collaborators?.includes(userData?.username))) {
       setError("You don't have permission to modify this list");
       return;
     }

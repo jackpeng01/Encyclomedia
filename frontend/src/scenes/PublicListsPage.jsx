@@ -48,14 +48,14 @@ const PublicListsPage = () => {
 
     useEffect(() => {
         const loadUserData = async () => {
-          const fetchedUserData = await getUserByToken(token);
-          setUserData(fetchedUserData);
+            const fetchedUserData = await getUserByToken(token);
+            setUserData(fetchedUserData);
         };
         if (token) {
-          loadUserData();
+            loadUserData();
         }
-      }, [token]);
-    
+    }, [token]);
+
     useEffect(() => {
         const fetchPublicLists = async () => {
             try {
@@ -169,9 +169,21 @@ const PublicListsPage = () => {
                         "Content-Type": "application/json"
                     }
                 });
-                
-                const response = await axios.get("http://127.0.0.1:5000/api/public-lists");
+
+                const response = await axios.get("http://127.0.0.1:5000/api/public-lists", {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+                });
+
                 setLists(response.data);
+
+                const updatedSelectedList = response.data.find(list => list._id === selectedList._id);
+                if (updatedSelectedList) {
+                    setSelectedList(updatedSelectedList);
+                }
             } else {
                 console.log("Not authorized to update this list");
             }
