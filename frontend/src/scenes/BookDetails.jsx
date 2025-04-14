@@ -1,26 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import axios from "axios";
-import { getUserByToken } from "../api/users";
-import Navbar from "../components/Navbar";
 import {
+  Alert,
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Menu,
   MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Snackbar,
   TextField,
   Typography,
-  Button
 } from "@mui/material";
+import axios from "axios";
+import confetti from "canvas-confetti";
+import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
-import ReviewModal from '../components/modals/ReviewModal.jsx';
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { getUserByToken } from "../api/users";
+import Navbar from "../components/Navbar";
+import ReviewModal from "../components/modals/ReviewModal.jsx";
+
+function launchConfetti() {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+  });
+}
 
 const BookDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [error, setError] = useState("");
   const [readDate, setReadDate] = useState("");
@@ -42,14 +54,14 @@ const BookDetails = () => {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedReviewId, setSelectedReviewId] = useState(null);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const [commentText, setCommentText] = useState('');
-
+  const [commentText, setCommentText] = useState("");
+  const [showAchievementPopup, setShowAchievementPopup] = useState(false);
 
   const handleContextMenu = (event, reviewId) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4
+      mouseY: event.clientY - 4,
     });
     setSelectedReviewId(reviewId);
   };
@@ -72,14 +84,14 @@ const BookDetails = () => {
         { content: commentText },
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
 
       fetchReviews();
-      setCommentText('');
+      setCommentText("");
       setCommentModalOpen(false);
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -93,15 +105,12 @@ const BookDetails = () => {
       console.log("Fetching reviews with URL:", reviewUrl);
       console.log("Looking for book ID:", id, "with type:", "book");
 
-      const response = await axios.get(
-        reviewUrl,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await axios.get(reviewUrl, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
       console.log("Reviews API response:", response.data);
       setReviews(response.data);
     } catch (err) {
@@ -132,7 +141,9 @@ const BookDetails = () => {
   useEffect(() => {
     const fetchBookDetails = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/book/${id}`);
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/book/${id}`
+        );
         setBook(response.data.book);
       } catch (err) {
         setError("Failed to load book details.");
@@ -147,7 +158,9 @@ const BookDetails = () => {
       if (!userData) return;
 
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/book/read_later?username=${userData.username}`);
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/book/read_later?username=${userData.username}`
+        );
         setReadLaterList(response.data);
 
         // Check if the book is already in read later
@@ -169,7 +182,9 @@ const BookDetails = () => {
       if (!userData) return;
 
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/book/log?username=${userData.username}`);
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/book/log?username=${userData.username}`
+        );
         setBookLogList(response.data);
 
         // Check if the book is already in book log
@@ -189,7 +204,13 @@ const BookDetails = () => {
   const formatPublishDate = (dateString) => {
     if (!dateString || dateString === "Unknown Date") return "Unknown";
     const dateObj = new Date(dateString);
-    return isNaN(dateObj.getTime()) ? dateString : dateObj.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    return isNaN(dateObj.getTime())
+      ? dateString
+      : dateObj.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
   };
 
   const cleanDescription = (description) => {
@@ -216,19 +237,26 @@ const BookDetails = () => {
         cover: book.cover_url,
       };
 
-      const response = await axios.post(`http://127.0.0.1:5000/api/book/log/${id}`, payload);
-      alert("Book logged successfully!");
+      const response = await axios.post(
+        `http://127.0.0.1:5000/api/book/log/${id}`,
+        payload
+      );
+      // alert("Book logged successfully!");
       setSavedForLog(true);
-      setCurrentBook(response.data);
+      setCurrentBook(response.data.book);
       setReadDate("");
       setRating(0);
       console.log("Log response:", response.data);
+      if (response.data.achievementUnlocked) {
+        // setShowPopup(true);
+        launchConfetti();
+        setShowAchievementPopup(true);
+      }
     } catch (error) {
       console.error("Error logging book:", error);
       alert("Failed to log the book. Please try again.");
     }
   };
-
 
   const handleReadLater = async () => {
     if (!userData) {
@@ -242,7 +270,10 @@ const BookDetails = () => {
         cover: book.cover_url,
       };
 
-      const response = await axios.post(`http://127.0.0.1:5000/api/book/read_later/${id}`, payload);
+      const response = await axios.post(
+        `http://127.0.0.1:5000/api/book/read_later/${id}`,
+        payload
+      );
       setSavedForLater(true);
       setCurrentBook(response.data);
     } catch (error) {
@@ -258,11 +289,14 @@ const BookDetails = () => {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:5000/api/book/remove", {
-        username: userData.username,
-        entry: currentBook._id,
-        section: "readLater",
-      });
+      const response = await axios.post(
+        "http://127.0.0.1:5000/api/book/remove",
+        {
+          username: userData.username,
+          entry: currentBook._id,
+          section: "readLater",
+        }
+      );
 
       if (response.status === 200) {
         setSavedForLater(false);
@@ -297,10 +331,15 @@ const BookDetails = () => {
           }}
         >
           {/* Top Section: Cover and Log/Save */}
-          <Box sx={{ display: "flex", gap: "1.5rem", alignItems: "flex-start" }}>
+          <Box
+            sx={{ display: "flex", gap: "1.5rem", alignItems: "flex-start" }}
+          >
             {/* Cover Section */}
             <img
-              src={book.cover_url || `${process.env.PUBLIC_URL}/default-book-cover.png`}
+              src={
+                book.cover_url ||
+                `${process.env.PUBLIC_URL}/default-book-cover.png`
+              }
               alt={book.title}
               style={{
                 width: "100%",
@@ -342,7 +381,8 @@ const BookDetails = () => {
                     color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
                     style={{
                       cursor: "pointer",
-                      transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
+                      transition:
+                        "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
                       transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
                     }}
                     onMouseEnter={() => setHover(star)} // Set hover when entering a star
@@ -350,13 +390,21 @@ const BookDetails = () => {
                   />
                 ))}
               </Box>
-              <button onClick={savedForLog ? handleRemove : handleLogBook} style={buttonStyle} disabled={savedForLog}>
+              <button
+                onClick={savedForLog ? handleRemove : handleLogBook}
+                style={buttonStyle}
+                disabled={savedForLog}
+              >
                 {savedForLog ? "Already logged" : "Log Book"}
               </button>
               <br />
 
               {/* Read Later */}
-              <button onClick={savedForLater ? handleRemove : handleReadLater} style={buttonStyle} disabled={savedForLater}>
+              <button
+                onClick={savedForLater ? handleRemove : handleReadLater}
+                style={buttonStyle}
+                disabled={savedForLater}
+              >
                 {savedForLater ? "Already in Read Later" : "Add to Read Later"}
               </button>
             </Box>
@@ -365,24 +413,39 @@ const BookDetails = () => {
           {/* Book Info Section */}
           <Box sx={{ marginTop: "2rem" }}>
             <h1>{book.title}</h1>
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>Published:</strong> {formatPublishDate(book.publish_date)}</p>
+            <p>
+              <strong>Author:</strong> {book.author}
+            </p>
+            <p>
+              <strong>Published:</strong> {formatPublishDate(book.publish_date)}
+            </p>
             <h2>Description</h2>
             <p>{cleanDescription(book.description)}</p>
-            {book.genres && <p><strong>Genres:</strong> {book.genres.join(", ")}</p>}
+            {book.genres && (
+              <p>
+                <strong>Genres:</strong> {book.genres.join(", ")}
+              </p>
+            )}
           </Box>
         </Box>
         {/* Reviews Section */}
-        <Box sx={{ marginTop: '2rem' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Reviews</h2>
+        <Box sx={{ marginTop: "2rem" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1rem",
+            }}
+          >
+            <h2 style={{ fontSize: "1.5rem", margin: 0 }}>Reviews</h2>
             <select
               value={reviewSortBy}
               onChange={(e) => setReviewSortBy(e.target.value)}
               style={{
-                padding: '0.5rem',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
+                padding: "0.5rem",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
               }}
             >
               <option value="recent">Most Recent</option>
@@ -394,13 +457,13 @@ const BookDetails = () => {
           <button
             onClick={() => setReviewModalOpen(true)}
             style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '5px',
-              backgroundColor: '#6200ea',
-              color: '#fff',
-              border: 'none',
-              cursor: 'pointer',
-              marginBottom: '1rem',
+              padding: "0.5rem 1rem",
+              borderRadius: "5px",
+              backgroundColor: "#6200ea",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              marginBottom: "1rem",
             }}
           >
             Write Review
@@ -415,21 +478,28 @@ const BookDetails = () => {
                   key={review._id}
                   onContextMenu={(e) => handleContextMenu(e, review._id)}
                   sx={{
-                    marginBottom: '1rem',
-                    padding: '1rem',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '10px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    marginBottom: "1rem",
+                    padding: "1rem",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "10px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <Box>
                       <h3 style={{ margin: 0 }}>{review.title}</h3>
-                      <p style={{ margin: '0.25rem 0', color: '#666' }}>
-                        By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
+                      <p style={{ margin: "0.25rem 0", color: "#666" }}>
+                        By {review.user_id} •{" "}
+                        {new Date(review.created_at).toLocaleDateString()}
                       </p>
                     </Box>
-                    <Box sx={{ display: 'flex' }}>
+                    <Box sx={{ display: "flex" }}>
                       {[1, 2, 3, 4, 5].map((star) => (
                         <FaStar
                           key={star}
@@ -442,41 +512,59 @@ const BookDetails = () => {
 
                   <Box
                     sx={{
-                      marginTop: '1rem',
-                      '& strong': { fontWeight: 'bold' },
-                      '& em': { fontStyle: 'italic' },
-                      '& u': { textDecoration: 'underline' },
-                      '& ul': { paddingLeft: '1.5rem' },
-                      '& li': { marginBottom: '0.25rem' }
+                      marginTop: "1rem",
+                      "& strong": { fontWeight: "bold" },
+                      "& em": { fontStyle: "italic" },
+                      "& u": { textDecoration: "underline" },
+                      "& ul": { paddingLeft: "1.5rem" },
+                      "& li": { marginBottom: "0.25rem" },
                     }}
                     dangerouslySetInnerHTML={{
                       __html: review.content
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/__(.*?)__/g, '<u>$1</u>')
-                        .replace(/• (.*?)(?=\n|$)/g, '<li>$1</li>')
-                        .replace(/<li>/g, '<ul><li>')
-                        .replace(/<\/li>/g, '</li></ul>')
-                        .replace(/<\/ul><ul>/g, '')
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                        .replace(/__(.*?)__/g, "<u>$1</u>")
+                        .replace(/• (.*?)(?=\n|$)/g, "<li>$1</li>")
+                        .replace(/<li>/g, "<ul><li>")
+                        .replace(/<\/li>/g, "</li></ul>")
+                        .replace(/<\/ul><ul>/g, ""),
                     }}
                   />
 
                   {review.comments && review.comments.length > 0 && (
-                    <Box sx={{ marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
-                      <h4 style={{ margin: '0 0 0.5rem' }}>Comments ({review.comments.length})</h4>
+                    <Box
+                      sx={{
+                        marginTop: "1rem",
+                        borderTop: "1px solid #e0e0e0",
+                        paddingTop: "1rem",
+                      }}
+                    >
+                      <h4 style={{ margin: "0 0 0.5rem" }}>
+                        Comments ({review.comments.length})
+                      </h4>
                       {review.comments.map((comment, index) => (
                         <Box
                           key={index}
                           sx={{
-                            padding: '0.5rem',
-                            backgroundColor: '#f9f9f9',
-                            borderRadius: '5px',
-                            marginBottom: '0.5rem'
+                            padding: "0.5rem",
+                            backgroundColor: "#f9f9f9",
+                            borderRadius: "5px",
+                            marginBottom: "0.5rem",
                           }}
                         >
-                          <p style={{ margin: 0, fontWeight: 'bold' }}>{comment.user_id}</p>
-                          <p style={{ margin: '0.25rem 0' }}>{comment.content}</p>
-                          <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
+                          <p style={{ margin: 0, fontWeight: "bold" }}>
+                            {comment.user_id}
+                          </p>
+                          <p style={{ margin: "0.25rem 0" }}>
+                            {comment.content}
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "0.8rem",
+                              color: "#666",
+                            }}
+                          >
                             {new Date(comment.created_at).toLocaleDateString()}
                           </p>
                         </Box>
@@ -487,8 +575,17 @@ const BookDetails = () => {
               ))}
             </Box>
           ) : (
-            <Box sx={{ textAlign: 'center', padding: '2rem 0', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
-              <p style={{ margin: 0, color: '#666' }}>No reviews yet. Be the first to write a review!</p>
+            <Box
+              sx={{
+                textAlign: "center",
+                padding: "2rem 0",
+                backgroundColor: "#f9f9f9",
+                borderRadius: "10px",
+              }}
+            >
+              <p style={{ margin: 0, color: "#666" }}>
+                No reviews yet. Be the first to write a review!
+              </p>
             </Box>
           )}
         </Box>
@@ -499,7 +596,7 @@ const BookDetails = () => {
         onClose={() => setReviewModalOpen(false)}
         media={{
           ...book,
-          id: id
+          id: id,
         }}
         mediaType="book"
         onReviewSubmitted={(newReview) => {
@@ -512,14 +609,20 @@ const BookDetails = () => {
         open={contextMenu !== null}
         onClose={handleCloseContextMenu}
         anchorReference="anchorPosition"
-        anchorPosition={contextMenu !== null ?
-          { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
       >
         <MenuItem onClick={handleOpenCommentDialog}>Add Comment</MenuItem>
       </Menu>
 
       {/* Comment Dialog */}
-      <Dialog open={commentModalOpen} onClose={() => setCommentModalOpen(false)}>
+      <Dialog
+        open={commentModalOpen}
+        onClose={() => setCommentModalOpen(false)}
+      >
         <DialogTitle>Add Comment</DialogTitle>
         <DialogContent>
           <TextField
@@ -532,8 +635,8 @@ const BookDetails = () => {
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             sx={{
-              width: { xs: '100%', sm: '400px', md: '500px' },
-              minHeight: '120px'
+              width: { xs: "100%", sm: "400px", md: "500px" },
+              minHeight: "120px",
             }}
           />
         </DialogContent>
@@ -549,10 +652,50 @@ const BookDetails = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        open={showAchievementPopup}
+        autoHideDuration={6000}
+        onClose={() => setShowAchievementPopup(false)}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setShowAchievementPopup(false)}
+          sx={{ width: "100%" }}
+        >
+          🎉 Achievement unlocked!{" "}
+          <Typography
+            sx={{
+              display: "inline",
+              cursor: "pointer",
+              fontWeight: 600,
+              textDecoration: "underline",
+              ml: 1,
+            }}
+            color="inherit"
+            onClick={() => {
+              setShowAchievementPopup(false);
+              navigate("/achievements", {
+                state: { newAchievement: "5_books" },
+              });
+            }}
+          >
+            View Achievements
+          </Typography>
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
 
-const buttonStyle = { padding: "0.5rem 1rem", borderRadius: "5px", backgroundColor: "#007bff", color: "#fff", border: "none", cursor: "pointer", marginBottom: "1rem" };
+const buttonStyle = {
+  padding: "0.5rem 1rem",
+  borderRadius: "5px",
+  backgroundColor: "#007bff",
+  color: "#fff",
+  border: "none",
+  cursor: "pointer",
+  marginBottom: "1rem",
+};
 
 export default BookDetails;

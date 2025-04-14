@@ -474,7 +474,26 @@ def handle_log_book(book_id):
     )
     print(user_book_log)
     if result.matched_count > 0:
-        return jsonify(new_entry), 200
+        # Re-fetch updated book log
+        updated_log = book_logs_col.find_one({"username": username})
+        total_books = len(updated_log.get("bookLog", []))
+
+        # Get the user's current achievements (from the users collection)
+        achievements = user.get("achievements", [])
+        achievement_unlocked = False
+
+        if total_books == 5 and "5_books" not in achievements:
+            # Add the achievement to the user's achievements array
+            users_col.update_one(
+                {"username": username},
+                {"$push": {"achievements": "5_books"}}
+            )
+            achievement_unlocked = True
+
+        return jsonify({
+            "book": new_entry,
+            "achievementUnlocked": achievement_unlocked
+        }), 200
     else:
         return jsonify({"error": "User not found or could not be updated."}), 400
 

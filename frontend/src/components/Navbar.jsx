@@ -408,6 +408,7 @@ const Navbar = () => {
                   Home
                 </MenuItem>
                 <MenuItem onClick={handleProfile}>Profile</MenuItem>
+                <MenuItem onClick={() => { navigate("/achievements") }}>Achievements</MenuItem>
                 <MenuItem onClick={handleLists}>Lists</MenuItem>
                 <MenuItem onClick={() => { navigate("/my-reviews"); handleMenuClose(); }}>Reviews</MenuItem>
                 <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
