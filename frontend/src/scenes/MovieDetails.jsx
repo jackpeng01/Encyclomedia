@@ -75,6 +75,24 @@ const MovieDetails = () => {
     handleCloseContextMenu();
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',  // Optional: Makes the scroll smooth
+    });
+  };
+
+  // Handle opening the modal
+  const openModal = () => {
+    scrollToTop();  // Scroll to the top first
+    setIsTrailerModalOpen(true);  // Open the modal
+  };
+
+  const closeModal = () => {
+    setIsTrailerModalOpen(false);  // Close the modal
+  };
+
+
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
 
@@ -488,11 +506,7 @@ const MovieDetails = () => {
                 </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                  <button
-                    onClick={() => {
-                      console.log("Trailer Key:", movie.trailer_url);
-                      setIsTrailerModalOpen(true)}
-                    }
+                <button onClick={openModal}
                     style={{
                       padding: '0.5rem 1rem',
                       borderRadius: '5px',
@@ -722,7 +736,7 @@ const MovieDetails = () => {
       />
       <TrailerModal
         isOpen={isTrailerModalOpen}
-        onClose={() => setIsTrailerModalOpen(false)}
+        onClose={() => closeModal()}
         trailer_key={movie.trailer_key} // Replace with the actual key from your movie data
       />
       {/* Context Menu */}

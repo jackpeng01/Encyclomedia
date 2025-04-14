@@ -64,6 +64,24 @@ const TVDetails = () => {
     handleCloseContextMenu();
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',  // Optional: Makes the scroll smooth
+    });
+  };
+
+  // Handle opening the modal
+  const openModal = () => {
+    scrollToTop();  // Scroll to the top first
+    setIsTrailerModalOpen(true);  // Open the modal
+  };
+
+  const closeModal = () => {
+    setIsTrailerModalOpen(false);  // Close the modal
+  };
+
+
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
 
@@ -475,11 +493,7 @@ const TVDetails = () => {
                 </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                  <button
-                    onClick={() => {
-                      setIsTrailerModalOpen(true)
-                    }
-                    }
+                <button onClick={openModal}
                     style={{
                       padding: '0.5rem 1rem',
                       borderRadius: '5px',
@@ -708,7 +722,7 @@ const TVDetails = () => {
       />
       <TrailerModal
         isOpen={isTrailerModalOpen}
-        onClose={() => setIsTrailerModalOpen(false)}
+        onClose={() => closeModal() }
         trailer_key={tv.trailer_key} // Replace with the actual key from your movie data
       />
 
