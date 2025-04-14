@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
+import TrailerModal from '../components/modals/TrailerModal';
 import {
   Box,
   Menu,
@@ -33,6 +34,7 @@ const TVDetails = () => {
   const [hover, setHover] = useState(0);
   const [currentTv, setCurrentTv] = useState(null);
   const [buttonHover, setButtonHover] = useState(false);
+  const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
 
   // for reviews and comments
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -471,6 +473,25 @@ const TVDetails = () => {
                 >
                   Write Review
                 </button>
+
+                <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+                  <button
+                    onClick={() => {
+                      setIsTrailerModalOpen(true)
+                    }
+                    }
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '5px',
+                      backgroundColor: '#007bff',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Watch Trailer
+                  </button>
+                </Box>
               </Box>
             </Box>
           </Box>
@@ -684,6 +705,11 @@ const TVDetails = () => {
           console.log("Review submitted:", newReview);
           fetchReviews();
         }}
+      />
+      <TrailerModal
+        isOpen={isTrailerModalOpen}
+        onClose={() => setIsTrailerModalOpen(false)}
+        trailer_key={tv.trailer_key} // Replace with the actual key from your movie data
       />
 
       {/* Context Menu */}

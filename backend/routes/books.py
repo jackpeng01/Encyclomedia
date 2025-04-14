@@ -188,6 +188,18 @@ def search_book(title):
 @books_bp.route("/api/book/<book_id>", methods=["GET"])
 def get_book_details(book_id):
     OPEN_LIBRARY_DETAILS_URL = f"https://openlibrary.org/works/{book_id}.json"
+    #ebook_access:[borrowable TO *] -key:"/works/OL262463W" 
+    # subject:("catalepsy" OR "amyl nitrate" OR "suicide by hanging" OR 
+    # "broughams" OR "ancestors" OR "asphyxiation" OR "blackmail" OR "brandy" 
+    # OR "brokers" OR "butlers" OR "cavaliers" OR "Classic Literature" OR "clerks" OR 
+    # "coffee" OR "Detective and mystery stories" OR "Detective Fiction" OR "elms" OR 
+    # "English" OR "English Detective and mystery stories" OR "English Short stories" OR
+    # "gemstones" OR "gold" OR "horse racing" OR "Justices of the Peace" OR "maids" OR "maps" OR 
+    # "meres" OR "mixed race children" OR "Mystery and detective stories" OR "oaks" OR
+    # "opium" OR "police" OR "Private investigators" OR "Private investigators in fiction" 
+    # OR "race horses" OR "redundancy" OR "riddles" OR "scalpels" OR "scrips" OR "Short Stories"
+    # OR "stock market" OR "tobacco pipes" OR "treaties" OR "yellow fever" OR "English literature" 
+    # OR "General" OR "Sherlock Holmes") -author_key:(OL161167A)
 
     try:
         response = requests.get(OPEN_LIBRARY_DETAILS_URL)
@@ -206,7 +218,8 @@ def get_book_details(book_id):
                         author_names.append(author_data.get("name", "Unknown Author"))
 
         # Fetch Edition Data (to get publish date & language)
-        edition_response = requests.get(f"https://openlibrary.org{data.get('key')}.json")
+        # edition_response = requests.get(f"https://openlibrary.org{data.get('key')}.json")
+        edition_response = response
         edition_data = edition_response.json() if edition_response.status_code == 200 else {}
 
         # Extract first 3 genres
@@ -402,6 +415,8 @@ def remove_book():
 
 @books_bp.route("/api/book/log/<book_id>", methods=["POST"])
 def handle_log_book(book_id):
+    OPEN_LIBRARY_EDITIONS_URL = f"https://openlibrary.org/works/{book_id}/editions.json"
+
     data = request.get_json()
     username = data.get("username")
     title = data.get("title")

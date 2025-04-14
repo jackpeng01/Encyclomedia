@@ -202,6 +202,7 @@ def get_movie_details(movie_id):
         # Fetch movie details from TMDB API
         url = f"{TMDB_BASE_URL}/movie/{movie_id}"
         credits_url = f"{TMDB_BASE_URL}/movie/{movie_id}/credits"
+        trailers_url = f"{TMDB_BASE_URL}/movie/{movie_id}/videos"
         headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
 
         # Movie details
@@ -214,22 +215,31 @@ def get_movie_details(movie_id):
         credits_response.raise_for_status()
         credits = credits_response.json()
 
+        # Movie trailers
+        trailers_response = requests.get(trailers_url, headers=headers)
+        trailers_response.raise_for_status()
+        trailers = trailers_response.json()
+
+        # Extract trailer information (looking for official trailer in English if available)
+        trailer_key = None
+        for video in trailers.get("results", []):
+            if video.get("type") == "Trailer" and video.get("site") == "YouTube":
+                trailer_key = video.get("key")
+                break
+
         # Extract cast information (limit to top 20 for brevity)
         cast = []
         for member in credits.get("cast", [])[:20]:
             profile_path = member.get("profile_path")
             # Construct the profile path or set to None if it's the placeholder
-            if profile_path:
-                full_path = f"https://image.tmdb.org/t/p/w500{profile_path}"
-            else:
-                full_path = None
+            full_path = f"https://image.tmdb.org/t/p/w500{profile_path}" if profile_path else None
 
             # Append member details to cast list
             cast.append(
                 {
                     "name": member.get("name"),
                     "character": member.get("character"),
-                    "profile_path": full_path,  # Set to None if no valid image exists
+                    "profile_path": full_path,
                 }
             )
 
@@ -240,19 +250,20 @@ def get_movie_details(movie_id):
             "overview": movie.get("overview"),
             "release_date": movie.get("release_date"),
             "vote_average": movie.get("vote_average"),
-            "poster_path": f"https://image.tmdb.org/t/p/w500{movie['poster_path']}"
-            if movie.get("poster_path")
-            else None,
+            "poster_path": f"https://image.tmdb.org/t/p/w500{movie['poster_path']}" if movie.get("poster_path") else None,
             "genres": [genre["name"] for genre in movie.get("genres", [])],
             "runtime": movie.get("runtime"),
             "status": movie.get("status"),
             "tagline": movie.get("tagline"),
             "cast": cast,  # Add cast to the response
+            # "trailer_url": trailer_url,  # Add trailer URL to the response
+            "trailer_key": trailer_key
         }
 
         return jsonify(movie_details)
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 @movie_bp.route("/api/movie/log/<int:movie_id>", methods=["POST"])
