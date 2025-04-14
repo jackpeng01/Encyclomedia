@@ -38,6 +38,7 @@ import TVSearch from "./scenes/TVSearch";
 import WatchLaterTV from "./scenes/WatchLaterTV";
 import TVLog from "./scenes/TVLog";
 import Trending from "./scenes/Trending";
+import AchievementsPage from "./scenes/AchievementsPage";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -82,6 +83,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AccountSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* achievements page*/}
+              <Route
+                path="/achievements"
+                element={
+                  <ProtectedRoute>
+                    <AchievementsPage />
                   </ProtectedRoute>
                 }
               />
