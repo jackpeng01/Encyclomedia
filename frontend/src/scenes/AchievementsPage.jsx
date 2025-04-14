@@ -144,7 +144,7 @@ const AchievementsPage = () => {
           px: 4,
         }}
       >
-        {userData.achievements.map((key) => {
+        {(userData.achievements || []).map((key) => {
           const info = ACHIEVEMENTS_INFO[key] || {
             name: key,
             icon: "🏆",
