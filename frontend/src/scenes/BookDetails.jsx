@@ -6,6 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Menu,
   MenuItem,
   Snackbar,
@@ -15,9 +16,9 @@ import {
 import axios from "axios";
 import confetti from "canvas-confetti";
 import React, { useEffect, useState } from "react";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaThumbsUp, FaThumbsDown, FaBookmark, FaRegBookmark, FaReply } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
 import ReviewModal from "../components/modals/ReviewModal.jsx";
@@ -56,14 +57,111 @@ const BookDetails = () => {
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [showAchievementPopup, setShowAchievementPopup] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+  const [bookmarkedReviews, setBookmarkedReviews] = useState([]);
 
-  const handleContextMenu = (event, reviewId) => {
+  const handleLikeReview = async (reviewId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/like`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error liking review:", error);
+    }
+  };
+
+  const handleDislikeReview = async (reviewId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/dislike`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error disliking review:", error);
+    }
+  };
+
+  const handleBookmarkReview = async (reviewId) => {
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/bookmark`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      if (response.data.status === "bookmarked") {
+        setBookmarkedReviews([...bookmarkedReviews, reviewId]);
+      } else {
+        setBookmarkedReviews(bookmarkedReviews.filter(id => id !== reviewId));
+      }
+    } catch (error) {
+      console.error("Error bookmarking review:", error);
+    }
+  };
+
+  const handleLikeComment = async (reviewId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/comment/${commentId}/like`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
+
+  const handleDislikeComment = async (reviewId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/comment/${commentId}/dislike`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error disliking comment:", error);
+    }
+  };
+
+  const handleContextMenu = (event, reviewId, commentId = null) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4,
+      mouseY: event.clientY - 4
     });
     setSelectedReviewId(reviewId);
+    setSelectedCommentId(commentId);
   };
 
   const handleCloseContextMenu = () => {
@@ -77,25 +175,70 @@ const BookDetails = () => {
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
-
     try {
       await axios.post(
         `http://127.0.0.1:5000/api/reviews/${selectedReviewId}/comment`,
-        { content: commentText },
+        {
+          content: commentText,
+          parent_comment_id: selectedCommentId
+        },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
         }
       );
-
       fetchReviews();
-      setCommentText("");
+      setCommentText('');
       setCommentModalOpen(false);
+      setSelectedCommentId(null);
     } catch (error) {
       console.error("Error adding comment:", error);
     }
+  };
+
+  const renderComment = (comment, reviewId, level = 0) => {
+    return (
+      <Box
+        key={comment._id}
+        sx={{
+          padding: '0.5rem',
+          backgroundColor: level > 0 ? '#f5f5f5' : '#f9f9f9',
+          borderRadius: '5px',
+          marginBottom: '0.5rem',
+          marginLeft: level * 2 + 'rem',
+          borderLeft: level > 0 ? '2px solid #e0e0e0' : 'none'
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to={`/profile/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Typography sx={{ margin: 0, fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+              {comment.user_id}
+            </Typography>
+          </Link>
+          <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+            <IconButton onClick={() => handleLikeComment(reviewId, comment._id)} size="small">
+              <FaThumbsUp color={comment.liked ? '#4caf50' : '#666'} />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>{comment.likes || 0}</Typography>
+            </IconButton>
+            <IconButton onClick={() => handleDislikeComment(reviewId, comment._id)} size="small">
+              <FaThumbsDown color={comment.disliked ? '#f44336' : '#666'} />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>{comment.dislikes || 0}</Typography>
+            </IconButton>
+            <IconButton onClick={(e) => handleContextMenu(e, reviewId, comment._id)} size="small">
+              <FaReply />
+            </IconButton>
+          </Box>
+        </Box>
+        <Typography sx={{ margin: '0.25rem 0' }}>{comment.content}</Typography>
+        <Typography sx={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
+          {new Date(comment.created_at).toLocaleDateString()}
+        </Typography>
+
+        {comment.replies && comment.replies.map(reply => renderComment(reply, reviewId, level + 1))}
+      </Box>
+    );
   };
 
   const fetchReviews = async () => {
@@ -207,10 +350,10 @@ const BookDetails = () => {
     return isNaN(dateObj.getTime())
       ? dateString
       : dateObj.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
   };
 
   const cleanDescription = (description) => {
@@ -429,28 +572,18 @@ const BookDetails = () => {
           </Box>
         </Box>
         {/* Reviews Section */}
-        <Box sx={{ marginTop: "2rem" }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1rem",
-            }}
-          >
-            <h2 style={{ fontSize: "1.5rem", margin: 0 }}>Reviews</h2>
+        <Box sx={{ marginTop: '2rem' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Reviews</h2>
             <select
               value={reviewSortBy}
               onChange={(e) => setReviewSortBy(e.target.value)}
-              style={{
-                padding: "0.5rem",
-                borderRadius: "5px",
-                border: "1px solid #ccc",
-              }}
+              style={{ padding: '0.5rem', borderRadius: '5px', border: '1px solid #ccc' }}
             >
               <option value="recent">Most Recent</option>
               <option value="highest">Highest Rated</option>
               <option value="lowest">Lowest Rated</option>
+              <option value="popular">Most Popular</option>
             </select>
           </Box>
 
@@ -476,37 +609,46 @@ const BookDetails = () => {
               {reviews.map((review) => (
                 <Box
                   key={review._id}
-                  onContextMenu={(e) => handleContextMenu(e, review._id)}
                   sx={{
-                    marginBottom: "1rem",
-                    padding: "1rem",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "10px",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '10px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                    }}
-                  >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box>
                       <h3 style={{ margin: 0 }}>{review.title}</h3>
-                      <p style={{ margin: "0.25rem 0", color: "#666" }}>
-                        By {review.user_id} •{" "}
-                        {new Date(review.created_at).toLocaleDateString()}
-                      </p>
+                      <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                          By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
+                        </Typography>
+                      </Link>
                     </Box>
-                    <Box sx={{ display: "flex" }}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar
-                          key={star}
-                          size={16}
-                          color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
-                        />
-                      ))}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <Box sx={{ display: 'flex' }}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FaStar
+                            key={star}
+                            size={16}
+                            color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
+                          />
+                        ))}
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+                        <IconButton onClick={() => handleLikeReview(review._id)}>
+                          <FaThumbsUp color={review.liked ? '#4caf50' : '#666'} />
+                          <Typography variant="caption" sx={{ ml: 0.5 }}>{review.likes || 0}</Typography>
+                        </IconButton>
+                        <IconButton onClick={() => handleDislikeReview(review._id)}>
+                          <FaThumbsDown color={review.disliked ? '#f44336' : '#666'} />
+                          <Typography variant="caption" sx={{ ml: 0.5 }}>{review.dislikes || 0}</Typography>
+                        </IconButton>
+                        <IconButton onClick={() => handleBookmarkReview(review._id)}>
+                          {bookmarkedReviews.includes(review._id) ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
+                        </IconButton>
+                      </Box>
                     </Box>
                   </Box>
 
@@ -532,45 +674,20 @@ const BookDetails = () => {
                   />
 
                   {review.comments && review.comments.length > 0 && (
-                    <Box
-                      sx={{
-                        marginTop: "1rem",
-                        borderTop: "1px solid #e0e0e0",
-                        paddingTop: "1rem",
-                      }}
-                    >
-                      <h4 style={{ margin: "0 0 0.5rem" }}>
-                        Comments ({review.comments.length})
-                      </h4>
-                      {review.comments.map((comment, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            padding: "0.5rem",
-                            backgroundColor: "#f9f9f9",
-                            borderRadius: "5px",
-                            marginBottom: "0.5rem",
-                          }}
-                        >
-                          <p style={{ margin: 0, fontWeight: "bold" }}>
-                            {comment.user_id}
-                          </p>
-                          <p style={{ margin: "0.25rem 0" }}>
-                            {comment.content}
-                          </p>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "0.8rem",
-                              color: "#666",
-                            }}
-                          >
-                            {new Date(comment.created_at).toLocaleDateString()}
-                          </p>
-                        </Box>
-                      ))}
+                    <Box sx={{ marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
+                      <h4 style={{ margin: '0 0 0.5rem' }}>Comments ({review.comments.length})</h4>
+                      {review.comments.map((comment) => renderComment(comment, review._id))}
                     </Box>
                   )}
+
+                  <Button
+                    onClick={(e) => handleContextMenu(e, review._id)}
+                    variant="outlined"
+                    size="small"
+                    sx={{ mt: 1 }}
+                  >
+                    Add Comment
+                  </Button>
                 </Box>
               ))}
             </Box>

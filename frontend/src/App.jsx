@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DataPage from "./scenes/DataPage";
 import ListsPage from "./scenes/ListsPage";
 import MyReviewsPage from "./scenes/MyReviewsPage";
+import BookmarkedReviewsPage from "./scenes/BookmarkedReviewsPage";
 import PublicListsPage from './scenes/PublicListsPage';
 import LatestReviewsPage from "./scenes/LatestReviewsPage";
 import FollowedListsPage from './scenes/FollowedListsPage';
@@ -108,6 +109,7 @@ function App() {
               
               {/* Review Management Page */}
               <Route path="/my-reviews" element={<MyReviewsPage />} />
+              <Route path="/bookmarked-reviews" element={<BookmarkedReviewsPage />} />
 
               {/* Followed List Management Page */}
               <Route path="/followed-lists" element={<FollowedListsPage />} />
