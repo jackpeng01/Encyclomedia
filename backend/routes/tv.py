@@ -487,3 +487,98 @@ def tv_suggestions():
 
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
+    
+@tv_bp.route('/api/searchpeople', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def search_people():
+    query = request.args.get("query", "")
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+    
+    try:
+        people = []
+        for page in range(1,30):
+            headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+            params = {
+                "query": query,
+                "include_adult": False,
+                "language": "en-US",
+                "page": page
+            }
+            response = requests.get("https://api.themoviedb.org/3/search/person", headers=headers, params=params)
+            response.raise_for_status() 
+            data = response.json()
+        
+            for item in data.get("results", []):
+                people.append({
+                    "id": item.get("id"),  
+                    "name": item.get("name"),
+                    "known_for": item.get("known_for_department)"),
+                    "profile_path": f"https://image.tmdb.org/t/p/original/{item.get("profile_path")}" if item.get("profile_path") else None,
+                })
+        return jsonify({"people": people})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@tv_bp.route('/api/people/<person_id>', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def person_details(person_id):
+    try:
+        # Fetch movie details from TMDB API
+        url = f"https://api.themoviedb.org/3/person/{person_id}"
+        credits_url = f"https://api.themoviedb.org/3/person/{person_id}/combined_credits"
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+
+        # Movie details
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        item = response.json()
+
+        # Movie credits
+        credits_response = requests.get(credits_url, headers=headers)
+        credits_response.raise_for_status()
+        credits = credits_response.json()
+
+        # Extract cast information (limit to top 20 for brevity)
+        cast = []
+        for member in credits.get("cast", []):
+
+            # Append member details to cast list
+            cast.append({
+                "id": member.get("id"),
+                "title": member.get("title"),
+                "poster_path": f"{TMDB_IMAGE_BASE_URL}{member['poster_path']}",
+                "release_date": member.get("release_date"),
+                "vote_average": member.get("vote_average"),
+                "media_type": member.get("media_type"),
+                "character": member.get("character"),
+            })
+
+        crew = []
+        for member in credits.get("crew", []):
+
+            # Append member details to cast list
+            crew.append({
+                "id": member.get("id"),
+                "title": member.get("title"),
+                "poster_path": f"{TMDB_IMAGE_BASE_URL}{member['poster_path']}",
+                "release_date": member.get("release_date"),
+                 "media_type": member.get("media_type"),
+                "job": member.get("job"),
+            })
+
+        # Format the response data
+        person_details = {
+            "name": item.get("name"),
+            "known_for": item.get("known_for_department"),
+            "biography": item.get("biography"),
+            "profile_path": f"https://image.tmdb.org/t/p/original/{item.get("profile_path")}" if item.get("profile_path") else None,
+            "cast": cast,
+            "crew": crew,
+        }
+        return jsonify(person_details)
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500

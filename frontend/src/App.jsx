@@ -38,6 +38,9 @@ import TVSearch from "./scenes/TVSearch";
 import WatchLaterTV from "./scenes/WatchLaterTV";
 import TVLog from "./scenes/TVLog";
 import Trending from "./scenes/Trending";
+import PeopleSearch from "./scenes/PeopleSearch";
+import PeopleDetails from "./scenes/PeopleDetails";
+import Statistics from "./scenes/Statistics";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -146,6 +149,9 @@ function App() {
             <Route path="/:username/watch-later-tv" element={<WatchLaterTV />} />
             <Route path="/:username/tv-log" element={<TVLog />} />
             <Route path="/trending" element={<Trending />} />
+            <Route path="/searchpeople" element={<PeopleSearch />} />
+            <Route path="/people/:id" element={<PeopleDetails />} />
+            <Route path="/statistics" element={<Statistics />} />
 
 
 

@@ -125,9 +125,13 @@ const Navbar = () => {
           navigate(`/search?query=${encodeURIComponent(
             searchQuery.trim()
           )}&category=${category}`);
-        } else {
+        } else if (category === "tv") {
+          navigate(`/tvsearch?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`);
+        } else if (category === "people") {
           navigate(
-            `/tvsearch?query=${encodeURIComponent(
+            `/searchpeople?query=${encodeURIComponent(
               searchQuery.trim()
             )}&category=${category}`
           );
@@ -281,6 +285,8 @@ const Navbar = () => {
                 <MenuItem value="books">Books</MenuItem>
                 <MenuItem value="users">Users</MenuItem>
                 <MenuItem value="plot">Plot</MenuItem>
+                <MenuItem value="people">Cast & Crew</MenuItem>
+                <MenuItem value="authors">Authors</MenuItem>
               </Select>
 
 
@@ -413,6 +419,7 @@ const Navbar = () => {
                 <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
                 <MenuItem onClick={() => { navigate("/discover") }}>Discover</MenuItem>
                 <MenuItem onClick={() => { navigate("/trending") }}>Trending</MenuItem>
+                <MenuItem onClick={() => { navigate("/statistics") }}>Statistics</MenuItem>
               </Menu>
 
               {/* Logout Button */}
