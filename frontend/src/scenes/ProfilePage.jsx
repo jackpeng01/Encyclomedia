@@ -109,18 +109,15 @@ const ProfilePage = () => {
         }
 
         try {
-          const response = await axios.get(
-            `http://127.0.0.1:5000/api/tv/log`,
-            {
-              params: {
-                username: username,
-              },
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          );
+          const response = await axios.get(`http://127.0.0.1:5000/api/tv/log`, {
+            params: {
+              username: username,
+            },
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
           setTvLog(response.data);
           console.log(response.data);
         } catch (err) {
@@ -212,9 +209,10 @@ const ProfilePage = () => {
             prev.filter((entry) => entry._id !== entryId)
           );
         } else if (section === "readLater") {
-          setReadLaterArray((prev) => prev.filter((entry) => entry._id !== entryId));
+          setReadLaterArray((prev) =>
+            prev.filter((entry) => entry._id !== entryId)
+          );
         }
-        
 
         // alert("Successfully removed!");
       } else {
@@ -250,8 +248,7 @@ const ProfilePage = () => {
           setWatchLaterShows((prev) =>
             prev.filter((entry) => entry._id !== entryId)
           );
-        } 
-        
+        }
 
         // alert("Successfully removed!");
       } else {
@@ -397,7 +394,7 @@ const ProfilePage = () => {
             </Box>
           </Box>
         )}
-        <Box
+        {/* <Box
           sx={{
             display: "flex",
             gap: 2,
@@ -432,7 +429,7 @@ const ProfilePage = () => {
               {media}
             </Box>
           ))}
-        </Box>
+        </Box> */}
 
         {/* Movie Log Section */}
         <Typography
@@ -744,7 +741,7 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/tv-log`)} 
+          onClick={() => navigate(`/${username}/tv-log`)}
         >
           TV Log:
         </Typography>
@@ -758,10 +755,10 @@ const ProfilePage = () => {
           }}
         >
           {tvLog.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; 
+            const isDefaultPoster = !entry.poster;
             return (
               <Link
-                to={`/tv/${entry.tvId}`} 
+                to={`/tv/${entry.tvId}`}
                 key={index}
                 style={{ textDecoration: "none" }}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -915,7 +912,7 @@ const ProfilePage = () => {
           })}
         </Box>
 
-          {/* Watch Later Shows Section */}
+        {/* Watch Later Shows Section */}
         <Typography
           variant="h5"
           sx={{

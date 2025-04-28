@@ -46,6 +46,7 @@ const BookDetails = () => {
   const [bookLogList, setBookLogList] = useState([]);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
+  const [newAchievement, setNewAchievement] = useState("");
 
   // review and comment states
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -390,10 +391,12 @@ const BookDetails = () => {
       setReadDate("");
       setRating(0);
       console.log("Log response:", response.data);
+
       if (response.data.achievementUnlocked) {
         // setShowPopup(true);
         launchConfetti();
         setShowAchievementPopup(true);
+        setNewAchievement(response.data.achievementUnlocked);
       }
     } catch (error) {
       console.error("Error logging book:", error);
@@ -770,10 +773,16 @@ const BookDetails = () => {
         </DialogActions>
       </Dialog>
       <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         open={showAchievementPopup}
         autoHideDuration={6000}
         onClose={() => setShowAchievementPopup(false)}
+        // you can leave anchorOrigin for horizontal centering:
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        // then override the CSS to move it to the true center:
+        sx={{
+          top: "50% !important", // override the default top: 0px
+          transform: "translateY(-50%)", // pull it up by half its own height
+        }}
       >
         <Alert
           severity="success"
@@ -793,7 +802,7 @@ const BookDetails = () => {
             onClick={() => {
               setShowAchievementPopup(false);
               navigate("/achievements", {
-                state: { newAchievement: "5_books" },
+                state: { newAchievement },
               });
             }}
           >
