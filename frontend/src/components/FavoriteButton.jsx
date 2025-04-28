@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IconButton } from '@mui/material';
 import { FaHeart } from 'react-icons/fa';
 
-const FavoriteButton = ({ id, mediaType, userLikes, toggleLike }) => {
+const FavoriteButton = ({ id, mediaType, userLikes = [], toggleLike }) => {
   // Initialize the local isLiked state based on userLikes
-  const [isLiked, setIsLiked] = useState(userLikes[mediaType]?.includes(id));
+  const [isLiked, setIsLiked] = useState(
+    Array.isArray(userLikes) &&
+    userLikes.some(item => item.id === id && item.mediaType === mediaType)
+  );
 
-  // Function to toggle the like status and switch the color
+  // Sync the isLiked state with changes in userLikes prop
+  useEffect(() => {
+    if (Array.isArray(userLikes)) {
+      setIsLiked(
+        userLikes.some(item => item.id === id && item.mediaType === mediaType)
+      );
+    }
+  }, [userLikes, id, mediaType]);
+
+  // Function to toggle the like status
   const handleToggleLike = () => {
-    // Toggle the isLiked state locally
-    setIsLiked(prev => !prev);
-
     // Call the toggleLike function from the parent to update the userLikes state
+    setIsLiked(!isLiked)
     toggleLike(id, mediaType);
   };
 

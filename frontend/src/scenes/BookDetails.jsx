@@ -460,65 +460,65 @@ const BookDetails = () => {
     }
   };
 
-  const toggleLike = async (id, mediaType) => {
-
+  const toggleLike = (id, mediaType) => {
     setUserLikes(prevLikes => {
-      const updatedLikes = { ...prevLikes };
-
-      // Initialize the array for the media type if it doesn't exist
-      if (!updatedLikes[mediaType]) updatedLikes[mediaType] = [];
-
-      // Check if the ID is already in the array
-      const isLiked = updatedLikes[mediaType].includes(id);
-
+      // Ensure prevLikes is an array
+      const updatedLikes = Array.isArray(prevLikes) ? [...prevLikes] : [];
+  
+      console.log("Before Update:", updatedLikes);
+  
+      // Check if the media is already liked
+      const isLiked = updatedLikes.some(item => item.id === id && item.mediaType === mediaType);
+      console.log("Is liked:", isLiked);
+  
+      let result;
       if (isLiked) {
-        // Remove the ID if it's already liked
-        updatedLikes[mediaType] = updatedLikes[mediaType].filter(itemId => itemId !== id);
+        // Remove the media if it's already liked
+        result = updatedLikes.filter(item => !(item.id === id && item.mediaType === mediaType));
       } else {
-        // Add the ID if it's not already liked
-        updatedLikes[mediaType].push(id);
+        // Add the media if it's not already liked
+        result = [...updatedLikes, { id, mediaType, poster: book.cover_url, title: book.title }];
       }
-
-      console.log("Updated Likes:", updatedLikes);
-
-      return updatedLikes;
+  
+      console.log("After Update:", result);
+      return result;
     });
-  }
+  };
+  
 
   useEffect(() => {
     const saveLikes = async () => {
       if (!userData) {
         console.log("Not logged in!");
-        alert("Please Login!");
+        // alert("Please Login!");
         return;
       }
-
+  
       try {
-        // Prepare the payload for the API call
         const payload = {
           username: userData.username,
-          favorites: userLikes, // Send the updated favorites
+          favorites: userLikes, // Send the current favorites (empty array if no favorites)
         };
-
-        // Make the PATCH request to save the updated user likes
+        console.log("Saving Likes:", userLikes);
+  
         const response = await axios.patch(
           `http://127.0.0.1:5000/api/users/${userData.username}`,
           payload,
           { withCredentials: true }
         );
-
+  
         console.log("Updated User Likes:", response.data);
       } catch (error) {
         console.error("Error saving likes:", error);
-        alert("Failed to save your favorites. Please try again.");
+        // alert("Failed to save your favorites. Please try again.");
       }
     };
-
-    // Only run the effect if userLikes is updated
-    if (Object.keys(userLikes).length > 0) {
-      saveLikes();
-    }
+  
+    // Trigger the effect when userLikes or userData changes
+    saveLikes();
+  
   }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
+  
 
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!book) return <p>Loading book details...</p>;
@@ -565,7 +565,7 @@ const BookDetails = () => {
                 <h2>Log/Save</h2>
                 <FavoriteButton
                   id={id}
-                  mediaType={"books"}
+                  mediaType={"book"}
                   userLikes={userData.favorites || []}
                   toggleLike={toggleLike}
                 />
