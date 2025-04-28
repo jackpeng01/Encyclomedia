@@ -16,3 +16,4 @@ class UserSchema(Schema):
     following = fields.List(fields.String(), missing=list)
     genrePreferences = fields.List(fields.String(), missing=list)
     followed_lists = fields.List(fields.String(), missing=list)
+    favorites = fields.List(fields.Str(), default=[])

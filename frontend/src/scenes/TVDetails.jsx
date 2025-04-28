@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { FaStar } from "react-icons/fa";
 import ReviewModal from '../components/modals/ReviewModal.jsx';
+import FavoriteButton from "../components/FavoriteButton.jsx";
 
 const TVDetails = () => {
   const { id } = useParams();
@@ -35,6 +36,7 @@ const TVDetails = () => {
   const [currentTv, setCurrentTv] = useState(null);
   const [buttonHover, setButtonHover] = useState(false);
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
+  const [userLikes, setUserLikes] = useState([]);
 
   // for reviews and comments
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -120,6 +122,7 @@ const TVDetails = () => {
     const loadUserData = async () => {
       const fetchedUserData = await getUserByToken(token);
       setUserData(fetchedUserData);
+      setUserLikes(fetchedUserData.favorites); // Initialize userLikes with fetched data
 
       // After userData is set, load the watch later items
       if (fetchedUserData) {
@@ -297,6 +300,66 @@ const TVDetails = () => {
     setRating(0);
   };
 
+  const toggleLike = async (id, mediaType) => {
+
+    setUserLikes(prevLikes => {
+      const updatedLikes = { ...prevLikes };
+
+      // Initialize the array for the media type if it doesn't exist
+      if (!updatedLikes[mediaType]) updatedLikes[mediaType] = [];
+
+      // Check if the ID is already in the array
+      const isLiked = updatedLikes[mediaType].includes(id);
+
+      if (isLiked) {
+        // Remove the ID if it's already liked
+        updatedLikes[mediaType] = updatedLikes[mediaType].filter(itemId => itemId !== id);
+      } else {
+        // Add the ID if it's not already liked
+        updatedLikes[mediaType].push(id);
+      }
+
+      console.log("Updated Likes:", updatedLikes);
+
+      return updatedLikes;
+    });
+  }
+
+  useEffect(() => {
+    const saveLikes = async () => {
+      if (!userData) {
+        console.log("Not logged in!");
+        alert("Please Login!");
+        return;
+      }
+
+      try {
+        // Prepare the payload for the API call
+        const payload = {
+          username: userData.username,
+          favorites: userLikes, // Send the updated favorites
+        };
+
+        // Make the PATCH request to save the updated user likes
+        const response = await axios.patch(
+          `http://127.0.0.1:5000/api/users/${userData.username}`,
+          payload,
+          { withCredentials: true }
+        );
+
+        console.log("Updated User Likes:", response.data);
+      } catch (error) {
+        console.error("Error saving likes:", error);
+        alert("Failed to save your favorites. Please try again.");
+      }
+    };
+
+    // Only run the effect if userLikes is updated
+    if (Object.keys(userLikes).length > 0) {
+      saveLikes();
+    }
+  }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
+
   const handleLoadMoreActors = () => {
     setVisibleActors((prevVisible) => prevVisible + tv.cast.length); // Increase visible actors by 5
   };
@@ -357,7 +420,15 @@ const TVDetails = () => {
             >
               {/* Log and Save Section */}
               <Box sx={{ flex: 1 }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                  <FavoriteButton
+                    id={id}
+                    mediaType={"tv"}
+                    userLikes={userData.favorites || []}
+                    toggleLike={toggleLike}
+                  />
+                </Box>
                 {/* Log Watched Movie */}
                 <Box sx={{ marginBottom: '1.5rem' }}>
                   <label>
