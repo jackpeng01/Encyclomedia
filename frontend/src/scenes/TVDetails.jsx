@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { getUserByToken } from "../api/users";
@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar";
 import TrailerModal from '../components/modals/TrailerModal';
 import {
   Box,
+  IconButton,
   Menu,
   MenuItem,
   Dialog,
@@ -14,9 +15,10 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Typography,
   Button
 } from "@mui/material";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaThumbsUp, FaThumbsDown, FaBookmark, FaRegBookmark, FaReply } from "react-icons/fa";
 import ReviewModal from '../components/modals/ReviewModal.jsx';
 import FavoriteButton from "../components/FavoriteButton.jsx";
 
@@ -47,14 +49,111 @@ const TVDetails = () => {
   const [selectedReviewId, setSelectedReviewId] = useState(null);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+  const [bookmarkedReviews, setBookmarkedReviews] = useState([]);
 
-  const handleContextMenu = (event, reviewId) => {
+  const handleLikeReview = async (reviewId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/like`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error liking review:", error);
+    }
+  };
+
+  const handleDislikeReview = async (reviewId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/dislike`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error disliking review:", error);
+    }
+  };
+
+  const handleBookmarkReview = async (reviewId) => {
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/bookmark`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      if (response.data.status === "bookmarked") {
+        setBookmarkedReviews([...bookmarkedReviews, reviewId]);
+      } else {
+        setBookmarkedReviews(bookmarkedReviews.filter(id => id !== reviewId));
+      }
+    } catch (error) {
+      console.error("Error bookmarking review:", error);
+    }
+  };
+
+  const handleLikeComment = async (reviewId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/comment/${commentId}/like`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
+
+  const handleDislikeComment = async (reviewId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/reviews/${reviewId}/comment/${commentId}/dislike`,
+        {},
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      fetchReviews();
+    } catch (error) {
+      console.error("Error disliking comment:", error);
+    }
+  };
+
+  const handleContextMenu = (event, reviewId, commentId = null) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX - 2,
       mouseY: event.clientY - 4
     });
     setSelectedReviewId(reviewId);
+    setSelectedCommentId(commentId);
   };
 
   const handleCloseContextMenu = () => {
@@ -66,13 +165,33 @@ const TVDetails = () => {
     handleCloseContextMenu();
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',  // Optional: Makes the scroll smooth
+    });
+  };
+
+  // Handle opening the modal
+  const openModal = () => {
+    scrollToTop();  // Scroll to the top first
+    setIsTrailerModalOpen(true);  // Open the modal
+  };
+
+  const closeModal = () => {
+    setIsTrailerModalOpen(false);  // Close the modal
+  };
+
+
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
-
     try {
       await axios.post(
         `http://127.0.0.1:5000/api/reviews/${selectedReviewId}/comment`,
-        { content: commentText },
+        {
+          content: commentText,
+          parent_comment_id: selectedCommentId
+        },
         {
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -80,13 +199,56 @@ const TVDetails = () => {
           }
         }
       );
-
       fetchReviews();
       setCommentText('');
       setCommentModalOpen(false);
+      setSelectedCommentId(null);
     } catch (error) {
       console.error("Error adding comment:", error);
     }
+  };
+
+  const renderComment = (comment, reviewId, level = 0) => {
+    return (
+      <Box
+        key={comment._id}
+        sx={{
+          padding: '0.5rem',
+          backgroundColor: level > 0 ? '#f5f5f5' : '#f9f9f9',
+          borderRadius: '5px',
+          marginBottom: '0.5rem',
+          marginLeft: level * 2 + 'rem',
+          borderLeft: level > 0 ? '2px solid #e0e0e0' : 'none'
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to={`/profile/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Typography sx={{ margin: 0, fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+              {comment.user_id}
+            </Typography>
+          </Link>
+          <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+            <IconButton onClick={() => handleLikeComment(reviewId, comment._id)} size="small">
+              <FaThumbsUp color={comment.liked ? '#4caf50' : '#666'} />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>{comment.likes || 0}</Typography>
+            </IconButton>
+            <IconButton onClick={() => handleDislikeComment(reviewId, comment._id)} size="small">
+              <FaThumbsDown color={comment.disliked ? '#f44336' : '#666'} />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>{comment.dislikes || 0}</Typography>
+            </IconButton>
+            <IconButton onClick={(e) => handleContextMenu(e, reviewId, comment._id)} size="small">
+              <FaReply />
+            </IconButton>
+          </Box>
+        </Box>
+        <Typography sx={{ margin: '0.25rem 0' }}>{comment.content}</Typography>
+        <Typography sx={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
+          {new Date(comment.created_at).toLocaleDateString()}
+        </Typography>
+
+        {comment.replies && comment.replies.map(reply => renderComment(reply, reviewId, level + 1))}
+      </Box>
+    );
   };
 
   const fetchReviews = async () => {
@@ -546,11 +708,7 @@ const TVDetails = () => {
                 </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                  <button
-                    onClick={() => {
-                      setIsTrailerModalOpen(true)
-                    }
-                    }
+                  <button onClick={openModal}
                     style={{
                       padding: '0.5rem 1rem',
                       borderRadius: '5px',
@@ -664,15 +822,12 @@ const TVDetails = () => {
               <select
                 value={reviewSortBy}
                 onChange={(e) => setReviewSortBy(e.target.value)}
-                style={{
-                  padding: '0.5rem',
-                  borderRadius: '5px',
-                  border: '1px solid #ccc',
-                }}
+                style={{ padding: '0.5rem', borderRadius: '5px', border: '1px solid #ccc' }}
               >
                 <option value="recent">Most Recent</option>
                 <option value="highest">Highest Rated</option>
                 <option value="lowest">Lowest Rated</option>
+                <option value="popular">Most Popular</option>
               </select>
             </Box>
 
@@ -683,7 +838,6 @@ const TVDetails = () => {
                 {reviews.map((review) => (
                   <Box
                     key={review._id}
-                    onContextMenu={(e) => handleContextMenu(e, review._id)}
                     sx={{
                       marginBottom: '1rem',
                       padding: '1rem',
@@ -695,18 +849,35 @@ const TVDetails = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box>
                         <h3 style={{ margin: 0 }}>{review.title}</h3>
-                        <p style={{ margin: '0.25rem 0', color: '#666' }}>
-                          By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
-                        </p>
+                        <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                            By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
+                          </Typography>
+                        </Link>
                       </Box>
-                      <Box sx={{ display: 'flex' }}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <FaStar
-                            key={star}
-                            size={16}
-                            color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
-                          />
-                        ))}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <Box sx={{ display: 'flex' }}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                              key={star}
+                              size={16}
+                              color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
+                            />
+                          ))}
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+                          <IconButton onClick={() => handleLikeReview(review._id)}>
+                            <FaThumbsUp color={review.liked ? '#4caf50' : '#666'} />
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>{review.likes || 0}</Typography>
+                          </IconButton>
+                          <IconButton onClick={() => handleDislikeReview(review._id)}>
+                            <FaThumbsDown color={review.disliked ? '#f44336' : '#666'} />
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>{review.dislikes || 0}</Typography>
+                          </IconButton>
+                          <IconButton onClick={() => handleBookmarkReview(review._id)}>
+                            {bookmarkedReviews.includes(review._id) ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
+                          </IconButton>
+                        </Box>
                       </Box>
                     </Box>
 
@@ -734,25 +905,18 @@ const TVDetails = () => {
                     {review.comments && review.comments.length > 0 && (
                       <Box sx={{ marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.5rem' }}>Comments ({review.comments.length})</h4>
-                        {review.comments.map((comment, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              padding: '0.5rem',
-                              backgroundColor: '#f9f9f9',
-                              borderRadius: '5px',
-                              marginBottom: '0.5rem'
-                            }}
-                          >
-                            <p style={{ margin: 0, fontWeight: 'bold' }}>{comment.user_id}</p>
-                            <p style={{ margin: '0.25rem 0' }}>{comment.content}</p>
-                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
-                              {new Date(comment.created_at).toLocaleDateString()}
-                            </p>
-                          </Box>
-                        ))}
+                        {review.comments.map((comment) => renderComment(comment, review._id))}
                       </Box>
                     )}
+
+                    <Button
+                      onClick={(e) => handleContextMenu(e, review._id)}
+                      variant="outlined"
+                      size="small"
+                      sx={{ mt: 1 }}
+                    >
+                      Add Comment
+                    </Button>
                   </Box>
                 ))}
               </Box>
@@ -779,7 +943,7 @@ const TVDetails = () => {
       />
       <TrailerModal
         isOpen={isTrailerModalOpen}
-        onClose={() => setIsTrailerModalOpen(false)}
+        onClose={() => closeModal()}
         trailer_key={tv.trailer_key} // Replace with the actual key from your movie data
       />
 

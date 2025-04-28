@@ -1,33 +1,33 @@
 import { useState } from "react";
 import axios from "axios";
-import { Button } from "@mui/material";
+import { Button, IconButton, Menu, MenuItem, Box } from "@mui/material";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
-const FollowButton = ({ userData, viewerData, setForceRefresh, initialIsFollowing }) => {
-  // Determine initial follow status based on viewerData.following
-
+const FollowButton = ({
+  userData,
+  viewerData,
+  setForceRefresh,
+  initialIsFollowing,
+}) => {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleClick = async () => {
+  const handleFollowClick = async () => {
     try {
-      // Use sets to enforce uniqueness
       const updatedFollowingSet = new Set(viewerData.following);
       const updatedFollowersSet = new Set(userData.followers);
 
       if (!isFollowing) {
-        // Follow action: add the user to viewer's following, and viewer to user's followers
         updatedFollowingSet.add(userData.username);
         updatedFollowersSet.add(viewerData.username);
       } else {
-        // Unfollow action: remove the user from viewer's following, and viewer from user's followers
         updatedFollowingSet.delete(userData.username);
         updatedFollowersSet.delete(viewerData.username);
       }
 
-      // Convert the sets back to arrays for the API call
       const updatedFollowing = Array.from(updatedFollowingSet);
       const updatedFollowers = Array.from(updatedFollowersSet);
 
-      // Make two PATCH requests: one for updating the viewer and one for updating the user.
       await Promise.all([
         axios.patch(
           `http://127.0.0.1:5000/api/users/${viewerData.username}`,
@@ -41,7 +41,6 @@ const FollowButton = ({ userData, viewerData, setForceRefresh, initialIsFollowin
         ),
       ]);
 
-      // Update follow state
       setIsFollowing((prev) => !prev);
       setForceRefresh((prev) => prev + 1);
     } catch (error) {
@@ -49,31 +48,109 @@ const FollowButton = ({ userData, viewerData, setForceRefresh, initialIsFollowin
     }
   };
 
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleBlock = async () => {
+    try {
+      const updatedBlockedSet = new Set(viewerData.blocked || []);
+      updatedBlockedSet.add(userData.username);
+      const updatedBlocked = Array.from(updatedBlockedSet);
+
+      const updatedViewerFollowing = new Set(viewerData.following || []);
+      updatedViewerFollowing.delete(userData.username);
+
+      const updatedViewerFollowers = new Set(viewerData.followers || []);
+      updatedViewerFollowers.delete(userData.username);
+
+      const updatedUserFollowing = new Set(userData.following || []);
+      updatedUserFollowing.delete(viewerData.username);
+
+      const updatedUserFollowers = new Set(userData.followers || []);
+      updatedUserFollowers.delete(viewerData.username);
+
+      await Promise.all([
+        axios.patch(
+          `http://127.0.0.1:5000/api/users/${viewerData.username}`,
+          {
+            blocked: Array.from(updatedBlocked),
+            following: Array.from(updatedViewerFollowing),
+            followers: Array.from(updatedViewerFollowers),
+          },
+          { withCredentials: true }
+        ),
+        axios.patch(
+          `http://127.0.0.1:5000/api/users/${userData.username}`,
+          {
+            following: Array.from(updatedUserFollowing),
+            followers: Array.from(updatedUserFollowers),
+          },
+          { withCredentials: true }
+        ),
+      ]);
+
+      console.log(
+        "Blocked user and removed mutual follows:",
+        userData.username
+      );
+      setForceRefresh((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error blocking user:", error);
+    } finally {
+      handleMenuClose();
+    }
+  };
+
+  const handleReport = () => {
+    console.log("Report user", userData.username);
+    handleMenuClose();
+  };
+
   return (
-    <Button
-      onClick={handleClick}
-      sx={{
-        backgroundColor: isFollowing ? "white" : "#0095f6",
-        color: isFollowing ? "black" : "white",
-        border: isFollowing ? "1px solid #dbdbdb" : "none",
-        textTransform: "none",
-        fontWeight: "bold",
-        borderRadius: "99px",
-        paddingX: 2.5,
-        paddingY: 1,
-        width: "100px",
-        height: "40px",
-        "&:hover": {
-          backgroundColor: isFollowing ? "#efefef" : "#007dd1",
-        },
-        "&:active": {
-          backgroundColor: isFollowing ? "#e0e0e0" : "#006bb3",
-        },
-      }}
-    >
-      {isFollowing ? "Following" : "Follow"}
-    </Button>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <Button
+        onClick={handleFollowClick}
+        sx={{
+          backgroundColor: isFollowing ? "white" : "#0095f6",
+          color: isFollowing ? "black" : "white",
+          border: isFollowing ? "1px solid #dbdbdb" : "none",
+          textTransform: "none",
+          fontWeight: "bold",
+          borderRadius: "99px",
+          paddingX: 2.5,
+          paddingY: 1,
+          width: "100px",
+          height: "40px",
+          "&:hover": {
+            backgroundColor: isFollowing ? "#efefef" : "#007dd1",
+          },
+          "&:active": {
+            backgroundColor: isFollowing ? "#e0e0e0" : "#006bb3",
+          },
+        }}
+      >
+        {isFollowing ? "Following" : "Follow"}
+      </Button>
+      <IconButton onClick={handleMenuOpen}>
+        <MoreHorizIcon />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuItem onClick={handleBlock}>Block</MenuItem>
+        <MenuItem onClick={handleReport}>Report</MenuItem>
+      </Menu>
+    </Box>
   );
-}
+};
 
 export default FollowButton;
