@@ -56,9 +56,54 @@ const FollowButton = ({
     setAnchorEl(null);
   };
 
-  const handleBlock = () => {
-    console.log("Block user", userData.username);
-    handleMenuClose();
+  const handleBlock = async () => {
+    try {
+      const updatedBlockedSet = new Set(viewerData.blocked || []);
+      updatedBlockedSet.add(userData.username);
+      const updatedBlocked = Array.from(updatedBlockedSet);
+
+      const updatedViewerFollowing = new Set(viewerData.following || []);
+      updatedViewerFollowing.delete(userData.username);
+
+      const updatedViewerFollowers = new Set(viewerData.followers || []);
+      updatedViewerFollowers.delete(userData.username);
+
+      const updatedUserFollowing = new Set(userData.following || []);
+      updatedUserFollowing.delete(viewerData.username);
+
+      const updatedUserFollowers = new Set(userData.followers || []);
+      updatedUserFollowers.delete(viewerData.username);
+
+      await Promise.all([
+        axios.patch(
+          `http://127.0.0.1:5000/api/users/${viewerData.username}`,
+          {
+            blocked: Array.from(updatedBlocked),
+            following: Array.from(updatedViewerFollowing),
+            followers: Array.from(updatedViewerFollowers),
+          },
+          { withCredentials: true }
+        ),
+        axios.patch(
+          `http://127.0.0.1:5000/api/users/${userData.username}`,
+          {
+            following: Array.from(updatedUserFollowing),
+            followers: Array.from(updatedUserFollowers),
+          },
+          { withCredentials: true }
+        ),
+      ]);
+
+      console.log(
+        "Blocked user and removed mutual follows:",
+        userData.username
+      );
+      setForceRefresh((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error blocking user:", error);
+    } finally {
+      handleMenuClose();
+    }
   };
 
   const handleReport = () => {

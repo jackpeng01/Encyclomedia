@@ -261,6 +261,30 @@ const ProfilePage = () => {
   };
 
   if (!userData) return <p>Loading...</p>;
+  if (
+    (viewerData.blocked && viewerData.blocked.includes(userData.username)) ||
+    (userData.blocked && userData.blocked.includes(viewerData.username))
+  ) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          flexDirection: "column",
+          padding: 4,
+        }}
+      >
+        <Typography variant="h4" sx={{ mb: 2, textAlign: "center" }}>
+          This profile is unavailable.
+        </Typography>
+        <Typography sx={{ color: "gray", textAlign: "center" }}>
+          You cannot view this profile because one of you has blocked the other.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box

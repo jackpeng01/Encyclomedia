@@ -1,7 +1,4 @@
-import {
-  Box,
-  Typography
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,7 +28,7 @@ const ACHIEVEMENTS_INFO = {
     name: "Morons",
     icon: "🤠",
     description: "You fell victim to one of the classic blunders!",
-  }
+  },
 };
 
 const AchievementsPage = () => {
@@ -64,11 +61,45 @@ const AchievementsPage = () => {
     <Box sx={{ pt: 12, pb: 10, px: 4 }}>
       <Navbar userData={userData} />
 
+      <Box
+        sx={{
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+          position: "fixed",
+          top: "10vh",
+          bottom: "10vh",
+          left: "10vw",
+          width: "80vw",
+          height: "80vh",
+          backdropFilter: "blur(5px)",
+          backgroundColor: "rgba(255, 255, 255, .8)",
+          borderRadius: "20px",
+          zIndex: -1,
+        }}
+      />
+
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "50vw",
+          height: "50vh",
+          zIndex: -100,
+          pointerEvents: "none",
+        }}
+      >
+        <BouncingSphere />
+      </Box>
+
       <Typography
         variant="h3"
         align="center"
         gutterBottom
-        sx={{ cursor: "pointer" }}
+        sx={{
+          mt: 10,
+          fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+          cursor: "pointer",
+        }}
         onClick={() => dispatch(setDarkMode(!isDarkMode))}
       >
         Achievements
@@ -94,17 +125,27 @@ const AchievementsPage = () => {
           return (
             <motion.div
               key={key}
-              initial={isNew ? { scale: 0.5, rotate: 0, opacity: 0 } : undefined}
-              animate={isNew ? {
-                scale: [1.2, 0.9, 1],
-                rotate: [0, 360],
-                opacity: 1
-              } : undefined}
-              transition={isNew ? {
-                duration: 0.8,
-                times: [0, 0.5, 1],
-                ease: "easeOut"
-              } : undefined}
+              initial={
+                isNew ? { scale: 0.5, rotate: 0, opacity: 0 } : undefined
+              }
+              animate={
+                isNew
+                  ? {
+                      scale: [1.2, 0.9, 1],
+                      rotate: [0, 360],
+                      opacity: 1,
+                    }
+                  : undefined
+              }
+              transition={
+                isNew
+                  ? {
+                      duration: 0.8,
+                      times: [0, 0.5, 1],
+                      ease: "easeOut",
+                    }
+                  : undefined
+              }
             >
               <Box
                 sx={{
