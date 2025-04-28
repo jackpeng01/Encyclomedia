@@ -1,6 +1,19 @@
 import { useState } from "react";
 import axios from "axios";
-import { Button, IconButton, Menu, MenuItem, Box } from "@mui/material";
+import {
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Box,
+  TextField,
+  Typography,
+  Dialog,
+  DialogContent,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { motion } from "framer-motion";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
 const FollowButton = ({
@@ -11,6 +24,10 @@ const FollowButton = ({
 }) => {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [hasReported, setHasReported] = useState(false);
 
   const handleFollowClick = async () => {
     try {
@@ -107,48 +124,160 @@ const FollowButton = ({
   };
 
   const handleReport = () => {
-    console.log("Report user", userData.username);
+    if (hasReported) {
+      setReportSubmitted(true);
+      handleMenuClose();
+      return;
+    }
+    setReportDialogOpen(true);
     handleMenuClose();
   };
 
+  const handleSubmitReport = () => {
+    console.log("Report submitted:", reportText);
+    setReportText("");
+    setReportDialogOpen(false);
+    setReportSubmitted(true);
+    setTimeout(() => {
+      setHasReported(true);
+    }, 3100);
+  };
+
+  const handleSnackbarClose = () => {
+    setReportSubmitted(false);
+  };
+
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      <Button
-        onClick={handleFollowClick}
-        sx={{
-          backgroundColor: isFollowing ? "white" : "#0095f6",
-          color: isFollowing ? "black" : "white",
-          border: isFollowing ? "1px solid #dbdbdb" : "none",
-          textTransform: "none",
-          fontWeight: "bold",
-          borderRadius: "99px",
-          paddingX: 2.5,
-          paddingY: 1,
-          width: "100px",
-          height: "40px",
-          "&:hover": {
-            backgroundColor: isFollowing ? "#efefef" : "#007dd1",
-          },
-          "&:active": {
-            backgroundColor: isFollowing ? "#e0e0e0" : "#006bb3",
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        flexDirection: "column",
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Button
+          onClick={handleFollowClick}
+          sx={{
+            backgroundColor: isFollowing ? "white" : "#0095f6",
+            color: isFollowing ? "black" : "white",
+            border: isFollowing ? "1px solid #dbdbdb" : "none",
+            textTransform: "none",
+            fontWeight: "bold",
+            borderRadius: "99px",
+            paddingX: 2.5,
+            paddingY: 1,
+            width: "100px",
+            height: "40px",
+            "&:hover": {
+              backgroundColor: isFollowing ? "#efefef" : "#007dd1",
+            },
+            "&:active": {
+              backgroundColor: isFollowing ? "#e0e0e0" : "#006bb3",
+            },
+          }}
+        >
+          {isFollowing ? "Following" : "Follow"}
+        </Button>
+        <IconButton onClick={handleMenuOpen}>
+          <MoreHorizIcon />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <MenuItem onClick={handleBlock}>Block</MenuItem>
+          <MenuItem onClick={handleReport} disabled={hasReported}>
+            Report
+          </MenuItem>
+        </Menu>
+      </Box>
+
+      <Dialog
+        open={reportDialogOpen}
+        onClose={() => setReportDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: {
+            style: {
+              backgroundColor: "rgba(255, 255, 255, 0.8)",
+              backdropFilter: "blur(5px)",
+              borderRadius: "10px",
+            },
           },
         }}
       >
-        {isFollowing ? "Following" : "Follow"}
-      </Button>
-      <IconButton onClick={handleMenuOpen}>
-        <MoreHorizIcon />
-      </IconButton>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        <DialogContent>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{ textAlign: "center", padding: "10px" }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+                mb: 2,
+              }}
+            >
+              Report User
+            </Typography>
+
+            <TextField
+              label="Describe the issue"
+              multiline
+              minRows={3}
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+              fullWidth
+              margin="normal"
+              autoFocus
+            />
+
+            <Button
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={handleSubmitReport}
+              disabled={reportText.trim() === ""}
+            >
+              Submit Report
+            </Button>
+            <Button
+              variant="text"
+              color="secondary"
+              fullWidth
+              sx={{ mt: 1 }}
+              onClick={() => setReportDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+
+      <Snackbar
+        open={reportSubmitted}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <MenuItem onClick={handleBlock}>Block</MenuItem>
-        <MenuItem onClick={handleReport}>Report</MenuItem>
-      </Menu>
+        <Alert
+          severity={hasReported ? "warning" : "success"}
+          onClose={handleSnackbarClose}
+          sx={{ width: "100%" }}
+        >
+          {hasReported
+            ? "You have already reported this user. Please wait."
+            : "Report submitted successfully."}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
