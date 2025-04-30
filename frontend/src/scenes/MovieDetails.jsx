@@ -217,7 +217,7 @@ const MovieDetails = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to={`/profile/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <Typography sx={{ margin: 0, fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
               {comment.user_id}
             </Typography>
@@ -856,7 +856,7 @@ const MovieDetails = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box>
                         <h3 style={{ margin: 0 }}>{review.title}</h3>
-                        <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Link to={`/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                           <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
                             By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
                           </Typography>

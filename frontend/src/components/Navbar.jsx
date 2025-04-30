@@ -308,8 +308,8 @@ const Navbar = () => {
                         category === "books"
                           ? `/book/${suggestion.id}`
                           : category === "movies"
-                          ? `/movie/${suggestion.id}`
-                          : `/tv/${suggestion.id}`
+                            ? `/movie/${suggestion.id}`
+                            : `/tv/${suggestion.id}`
                       );
                       setSearchQuery("");
                       setSuggestions([]);
@@ -331,8 +331,8 @@ const Navbar = () => {
                           category === "books"
                             ? suggestion.author
                             : suggestion.release_date
-                            ? new Date(suggestion.release_date).getFullYear()
-                            : ""
+                              ? new Date(suggestion.release_date).getFullYear()
+                              : ""
                         }
                         sx={{ color: "black" }}
                       />
@@ -412,6 +412,14 @@ const Navbar = () => {
                   Home
                 </MenuItem>
                 <MenuItem onClick={handleProfile}>Profile</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    navigate("/collage-creator");
+                    handleMenuClose();
+                  }}
+                >
+                  Collage Creator
+                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     navigate("/achievements");
