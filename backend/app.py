@@ -12,6 +12,7 @@ from services.database import connect_db
 from routes.lists import lists_bp
 from routes.discover import discover_bp
 from routes.reviews import reviews_bp
+from routes.collage import collage_bp
 
 app = Flask(__name__)
 # ✅ Load configuration from config.py
@@ -36,7 +37,8 @@ if db is not None:
         "movieLogs": db.get_collection("movieLogs"),
         "bookLogs": db["bookLogs"],
         "tvLogs": db.get_collection("tvLogs"),
-        "lists": db.get_collection("lists")
+        "lists": db.get_collection("lists"),
+        "collages": db.get_collection("collages") 
     }
 else:
     app.config["collections"] = {}
@@ -53,6 +55,7 @@ app.register_blueprint(books_bp)
 app.register_blueprint(lists_bp) 
 app.register_blueprint(reviews_bp)
 app.register_blueprint(discover_bp)
+app.register_blueprint(collage_bp)
 
 @app.route("/api/test")
 def test():
