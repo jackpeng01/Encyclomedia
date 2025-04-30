@@ -466,13 +466,13 @@ const TVDetails = () => {
     setUserLikes(prevLikes => {
       // Ensure prevLikes is an array
       const updatedLikes = Array.isArray(prevLikes) ? [...prevLikes] : [];
-  
+
       console.log("Before Update:", updatedLikes);
-  
+
       // Check if the media is already liked
       const isLiked = updatedLikes.some(item => item.id === id && item.mediaType === mediaType);
       console.log("Is liked:", isLiked);
-  
+
       let result;
       if (isLiked) {
         // Remove the media if it's already liked
@@ -481,12 +481,12 @@ const TVDetails = () => {
         // Add the media if it's not already liked
         result = [...updatedLikes, { id, mediaType, poster: tv.poster_path, title: tv.title }];
       }
-  
+
       console.log("After Update:", result);
       return result;
     });
   };
-  
+
 
   useEffect(() => {
     const saveLikes = async () => {
@@ -495,32 +495,32 @@ const TVDetails = () => {
         alert("Please Login!");
         return;
       }
-  
+
       try {
         const payload = {
           username: userData.username,
           favorites: userLikes, // Send the current favorites (empty array if no favorites)
         };
         console.log("Saving Likes:", userLikes);
-  
+
         const response = await axios.patch(
           `http://127.0.0.1:5000/api/users/${userData.username}`,
           payload,
           { withCredentials: true }
         );
-  
+
         console.log("Updated User Likes:", response.data);
       } catch (error) {
         console.error("Error saving likes:", error);
         // alert("Failed to save your favorites. Please try again.");
       }
     };
-  
+
     // Trigger the effect when userLikes or userData changes
     saveLikes();
-  
+
   }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
-  
+
 
   const handleLoadMoreActors = () => {
     setVisibleActors((prevVisible) => prevVisible + tv.cast.length); // Increase visible actors by 5
@@ -691,21 +691,6 @@ const TVDetails = () => {
                 >
                   {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
                 </button>
-                <button
-                  onClick={() => setReviewModalOpen(true)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '5px',
-                    backgroundColor: '#6200ea',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    marginBottom: '1rem',
-                    marginTop: '1rem',
-                  }}
-                >
-                  Write Review
-                </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
                   <button onClick={openModal}
@@ -830,7 +815,20 @@ const TVDetails = () => {
                 <option value="popular">Most Popular</option>
               </select>
             </Box>
-
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "5px",
+                backgroundColor: "#6200ea",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              Write Review
+            </button>
             {loadingReviews ? (
               <p>Loading reviews...</p>
             ) : reviews.length > 0 ? (

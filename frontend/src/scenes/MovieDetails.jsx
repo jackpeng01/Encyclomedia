@@ -689,21 +689,6 @@ const MovieDetails = () => {
                 >
                   {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
                 </button>
-                <button
-                  onClick={() => setReviewModalOpen(true)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '5px',
-                    backgroundColor: '#6200ea',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    marginBottom: '1rem',
-                    marginTop: '1rem',
-                  }}
-                >
-                  Write Review
-                </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
                   <button
