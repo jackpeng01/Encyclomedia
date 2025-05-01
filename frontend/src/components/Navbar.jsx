@@ -279,6 +279,7 @@ const Navbar = () => {
                 <MenuItem value="movies">Movies</MenuItem>
                 <MenuItem value="tv">TV</MenuItem>
                 <MenuItem value="books">Books</MenuItem>
+                <MenuItem value="music">Music</MenuItem>
                 <MenuItem value="users">Users</MenuItem>
                 <MenuItem value="plot">Plot</MenuItem>
               </Select>
