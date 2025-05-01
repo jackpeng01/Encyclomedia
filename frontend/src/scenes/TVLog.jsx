@@ -3,10 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
-import { Box, Button, Typography, IconButton, Slider, TextField } from "@mui/material";
-import { FaArrowUp, FaArrowDown, FaEquals, FaStar, FaUndo } from "react-icons/fa";
-import { getUserByUsername } from "../api/users";
-import { getUserByToken } from "../api/users";
+import { Box, Button, Typography, TextField } from "@mui/material";
+import { FaArrowUp, FaArrowDown, FaEquals, FaUndo, FaStar } from "react-icons/fa";
+import StarRatingFilter from "../components/StarRatingFilter"; // Import the StarRatingFilter component
+import { getUserByUsername, getUserByToken } from "../api/users";
 
 const TVLog = () => {
     const { username } = useParams(); // Get the username
@@ -20,7 +20,8 @@ const TVLog = () => {
     const token = useSelector((state) => state.auth.token);
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");         
+    const [searchQuery, setSearchQuery] = useState("");
+    const [resetFilter, setResetFilter] = useState(false); // Reset filter state
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -30,7 +31,7 @@ const TVLog = () => {
             if (token) {
                 const profileToken = await getUserByToken(token);
                 setCurrentUser(profileToken);
-                if (username && profileToken.username == username) {
+                if (username && profileToken.username === username) {
                     setOwnProfile(true);
                 }
             }
@@ -40,9 +41,9 @@ const TVLog = () => {
                     params: { username },
                 });
 
-                setTvLog(response.data); 
-                setSortedTvLog(response.data); 
-                setFilteredTvLog(response.data); 
+                setTvLog(response.data);
+                setSortedTvLog(response.data);
+                setFilteredTvLog(response.data);
                 console.log(response.data);
             } catch (error) {
                 console.error("Error fetching TV logs:", error);
@@ -74,59 +75,18 @@ const TVLog = () => {
         }
     };
 
-    // Handle filtering by rating range
-    const handleRatingRangeChange = (event, newRange) => {
-        setRatingRange(newRange);
-        const filtered = tvLog.filter(
-            (entry) => entry.rating >= newRange[0] && entry.rating <= newRange[1]
-        );
-        setFilteredTvLog(filtered);
-        setSortedTvLog(filtered);
-    };
-
     // Handle reset filter and sort
     const handleReset = () => {
+        setResetFilter(true); // Trigger reset in StarRatingFilter
+        setTimeout(() => setResetFilter(false), 0); // Reset the flag immediately after
         setSortOrder("default");
         setRatingRange([0, 5]);
-        setFilteredTvLog(tvLog); // Reset filtered movies to all movies
-        setSortedTvLog(tvLog); // Reset sorted movies to all movies
+        setFilteredTvLog(tvLog); // Reset filtered TV shows to all shows
+        setSortedTvLog(tvLog); // Reset sorted TV shows to all shows
     };
 
-    const handleRemove = async (section, entryId) => {
-        try {
-            const response = await axios.post(
-                "http://127.0.0.1:5000/api/tv/remove",
-                {
-                    username: username,
-                    entry: entryId,
-                    section: section,
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            if (response.status === 200) {
-                // Update the state to remove the entry locally
-                const updatedMovieLog = tvLog.filter((entry) => entry._id !== entryId);
-                setTvLog(updatedMovieLog);
-                setFilteredTvLog(updatedMovieLog);
-                setSortedTvLog(updatedMovieLog);
-
-                // alert("Successfully removed!");
-            } else {
-                throw new Error("Failed to remove the entry.");
-            }
-        } catch (error) {
-            console.error("Error removing the entry:", error);
-            alert("An error occurred while trying to remove the entry.");
-        }
-    };
-
-    // Filter tv by search query
-    const searchTvShows = sortedTvLog.filter((entry) =>
+    // Filter TV shows by search query
+    const searchTvShows = filteredTvLog.filter((entry) =>
         entry.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -166,29 +126,12 @@ const TVLog = () => {
                         Sort by Rating
                     </Button>
 
-                    {/* Rating Range Filter */}
-                    <Box sx={{ width: "300px", textAlign: "center" }}>
-                        <Typography variant="subtitle1">Filter by Rating Range:</Typography>
-                        <Slider
-                            value={ratingRange}
-                            onChange={handleRatingRangeChange}
-                            valueLabelDisplay="auto"
-                            min={0}
-                            max={5}
-                            marks={[
-                                { value: 0, label: "0" },
-                                { value: 1, label: "1" },
-                                { value: 2, label: "2" },
-                                { value: 3, label: "3" },
-                                { value: 4, label: "4" },
-                                { value: 5, label: "5" },
-                            ]}
-                            sx={{ mt: 2 }}
-                        />
-                        <Typography variant="body2">
-                            Showing TV shows with ratings from {ratingRange[0]} to {ratingRange[1]}
-                        </Typography>
-                    </Box>
+                    {/* Star Rating Filter */}
+                    <StarRatingFilter
+                        movieLog={tvLog} // Pass TV log as movieLog
+                        setFilteredMovieLog={setFilteredTvLog}
+                        resetFilter={resetFilter}
+                    />
 
                     {/* Reset Button */}
                     <Button
@@ -198,10 +141,11 @@ const TVLog = () => {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                         <FaUndo />
+                        Reset Filter
                     </Button>
                 </Box>
 
-                {sortedTvLog.length === 0 ? (
+                {filteredTvLog.length === 0 ? (
                     <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
                         No shows found in your TV log.
                     </Typography>
@@ -215,7 +159,7 @@ const TVLog = () => {
                             const isDefaultPoster = !entry.poster; // Check if there's no poster
                             return (
                                 <Link
-                                    to={`/tv/${entry.tvId}`} 
+                                    to={`/tv/${entry.tvId}`}
                                     key={index}
                                     style={{ textDecoration: "none" }}
                                     onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -240,7 +184,7 @@ const TVLog = () => {
                                     >
                                         <img
                                             src={isDefaultPoster ? `${process.env.PUBLIC_URL}/default-poster-icon.png` : entry.poster}
-                                            alt={entry.title || "Movie Poster"}
+                                            alt={entry.title || "TV Poster"}
                                             style={{
                                                 width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
                                                 height: "auto", // Maintains aspect ratio
@@ -326,22 +270,6 @@ const TVLog = () => {
                                                     </Box>
                                                 </Box>
                                             )}
-
-                                            {/* Remove Button */}
-                                            {ownProfile && (
-                                                <Button
-                                                    variant="contained"
-                                                    color="error"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleRemove("tvLog", entry._id);
-                                                        console.log("Remove TV:", entry.tvId);
-                                                    }}
-                                                    sx={{ mt: 1 }}
-                                                >
-                                                    Remove
-                                                </Button>
-                                            )}
                                         </Box>
                                     </Box>
                                 </Link>
@@ -349,7 +277,6 @@ const TVLog = () => {
                         })}
                     </Box>
                 )}
-
             </Box>
         </Box>
     );

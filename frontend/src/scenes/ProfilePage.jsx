@@ -390,6 +390,7 @@ const ProfilePage = () => {
             fontWeight: 400,
             mb: 2,
           }}
+          onClick={() => navigate(`/${username}/favorite-media`)}
         >
           Favorite Media:
         </Typography>

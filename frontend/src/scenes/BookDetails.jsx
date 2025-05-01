@@ -49,6 +49,7 @@ const BookDetails = () => {
   const [hover, setHover] = useState(0);
   const [newAchievement, setNewAchievement] = useState("");
   const [userLikes, setUserLikes] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
 
 
   // review and comment states
@@ -293,6 +294,17 @@ const BookDetails = () => {
           `http://127.0.0.1:5000/api/book/${id}`
         );
         setBook(response.data.book);
+
+        // console.log("Book details:", response.data.book.genres);
+        const encodedSubjects = encodeURIComponent(response.data.book.genres.join(' OR '));
+        // console.log("Encoded subjects:", encodedSubjects);
+
+        const recommendationsResponse = await axios.get(
+          `http://127.0.0.1:5000/api/book/${id}/recommendations?subjects=${encodedSubjects}`
+        );
+        setRecommendations(recommendationsResponse.data.books);
+        console.log("Recommendations:", recommendationsResponse.data.books);
+
       } catch (err) {
         setError("Failed to load book details.");
       }
@@ -464,13 +476,13 @@ const BookDetails = () => {
     setUserLikes(prevLikes => {
       // Ensure prevLikes is an array
       const updatedLikes = Array.isArray(prevLikes) ? [...prevLikes] : [];
-  
+
       console.log("Before Update:", updatedLikes);
-  
+
       // Check if the media is already liked
       const isLiked = updatedLikes.some(item => item.id === id && item.mediaType === mediaType);
       console.log("Is liked:", isLiked);
-  
+
       let result;
       if (isLiked) {
         // Remove the media if it's already liked
@@ -479,12 +491,12 @@ const BookDetails = () => {
         // Add the media if it's not already liked
         result = [...updatedLikes, { id, mediaType, poster: book.cover_url, title: book.title }];
       }
-  
+
       console.log("After Update:", result);
       return result;
     });
   };
-  
+
 
   useEffect(() => {
     const saveLikes = async () => {
@@ -493,32 +505,32 @@ const BookDetails = () => {
         // alert("Please Login!");
         return;
       }
-  
+
       try {
         const payload = {
           username: userData.username,
           favorites: userLikes, // Send the current favorites (empty array if no favorites)
         };
         console.log("Saving Likes:", userLikes);
-  
+
         const response = await axios.patch(
           `http://127.0.0.1:5000/api/users/${userData.username}`,
           payload,
           { withCredentials: true }
         );
-  
+
         console.log("Updated User Likes:", response.data);
       } catch (error) {
         console.error("Error saving likes:", error);
         // alert("Failed to save your favorites. Please try again.");
       }
     };
-  
+
     // Trigger the effect when userLikes or userData changes
     saveLikes();
-  
+
   }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
-  
+
 
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!book) return <p>Loading book details...</p>;
@@ -532,117 +544,168 @@ const BookDetails = () => {
         {/* Main Container */}
         <Box
           sx={{
-            maxWidth: "50vw",
-            margin: "0 auto",
-            padding: "1.5rem",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-            borderRadius: "10px",
-            backgroundColor: "#ffffff",
+            display: 'flex', // Create a two-column layout
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: '2rem', // Add spacing between the columns
           }}
         >
-          {/* Top Section: Cover and Log/Save */}
+          {/* Left Column: Main Content */}
           <Box
-            sx={{ display: "flex", gap: "1.5rem", alignItems: "flex-start" }}
+            sx={{
+              flex: 3, // Take up more space for the main content
+              maxWidth: '75%', // Main content takes up most of the width
+            }}
           >
-            {/* Cover Section */}
-            <img
-              src={
-                book.cover_url ||
-                `${process.env.PUBLIC_URL}/default-book-cover.png`
-              }
-              alt={book.title}
-              style={{
-                width: "100%",
-                maxWidth: "300px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-              }}
-            />
+            {/* Top Section: Cover and Log/Save */}
+            <Box
+              sx={{ display: "flex", gap: "1.5rem", alignItems: "flex-start" }}
+            >
+              {/* Cover Section */}
+              <img
+                src={
+                  book.cover_url ||
+                  `${process.env.PUBLIC_URL}/default-book-cover.png`
+                }
+                alt={book.title}
+                style={{
+                  width: "100%",
+                  maxWidth: "300px",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                }}
+              />
 
-            {/* Log and Save Section */}
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <h2>Log/Save</h2>
-                <FavoriteButton
-                  id={id}
-                  mediaType={"book"}
-                  userLikes={userData.favorites || []}
-                  toggleLike={toggleLike}
-                />
-              </Box>
-              {/* Log Read Book */}
-              <Box sx={{ marginBottom: "1.5rem" }}>
-                <label>
-                  <strong>Date Read:</strong>
-                  <input
-                    type="date"
-                    value={readDate}
-                    onChange={(e) => setReadDate(e.target.value)}
-                    style={{
-                      marginLeft: "0.5rem",
-                      padding: "0.25rem",
-                      borderRadius: "5px",
-                      border: "1px solid #ccc",
-                    }}
+              {/* Log and Save Section */}
+              <Box sx={{ flex: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <h2>Log/Save</h2>
+                  <FavoriteButton
+                    id={id}
+                    mediaType={"book"}
+                    userLikes={userData.favorites || []}
+                    toggleLike={toggleLike}
                   />
-                </label>
-              </Box>
-              {/* Rating Section */}
-              <Box
-                sx={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
-                onMouseLeave={() => setHover(0)} // Reset hover when the mouse leaves the star container
-              >
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <FaStar
-                    key={star}
-                    size={30}
-                    color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
-                    style={{
-                      cursor: "pointer",
-                      transition:
-                        "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
-                      transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
-                    }}
-                    onMouseEnter={() => setHover(star)} // Set hover when entering a star
-                    onClick={() => setRating(star)} // Update rating on click
-                  />
-                ))}
-              </Box>
-              <button
-                onClick={savedForLog ? handleRemove : handleLogBook}
-                style={buttonStyle}
-                disabled={savedForLog}
-              >
-                {savedForLog ? "Already logged" : "Log Book"}
-              </button>
-              <br />
+                </Box>
+                {/* Log Read Book */}
+                <Box sx={{ marginBottom: "1.5rem" }}>
+                  <label>
+                    <strong>Date Read:</strong>
+                    <input
+                      type="date"
+                      value={readDate}
+                      onChange={(e) => setReadDate(e.target.value)}
+                      style={{
+                        marginLeft: "0.5rem",
+                        padding: "0.25rem",
+                        borderRadius: "5px",
+                        border: "1px solid #ccc",
+                      }}
+                    />
+                  </label>
+                </Box>
+                {/* Rating Section */}
+                <Box
+                  sx={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
+                  onMouseLeave={() => setHover(0)} // Reset hover when the mouse leaves the star container
+                >
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      size={30}
+                      color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
+                      style={{
+                        cursor: "pointer",
+                        transition:
+                          "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
+                        transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
+                      }}
+                      onMouseEnter={() => setHover(star)} // Set hover when entering a star
+                      onClick={() => setRating(star)} // Update rating on click
+                    />
+                  ))}
+                </Box>
+                <button
+                  onClick={savedForLog ? handleRemove : handleLogBook}
+                  style={buttonStyle}
+                  disabled={savedForLog}
+                >
+                  {savedForLog ? "Already logged" : "Log Book"}
+                </button>
+                <br />
 
-              {/* Read Later */}
-              <button
-                onClick={savedForLater ? handleRemove : handleReadLater}
-                style={buttonStyle}
-                disabled={savedForLater}
-              >
-                {savedForLater ? "Already in Read Later" : "Add to Read Later"}
-              </button>
+                {/* Read Later */}
+                <button
+                  onClick={savedForLater ? handleRemove : handleReadLater}
+                  style={buttonStyle}
+                  disabled={savedForLater}
+                >
+                  {savedForLater ? "Already in Read Later" : "Add to Read Later"}
+                </button>
+              </Box>
+            </Box>
+
+            {/* Book Info Section */}
+            <Box sx={{ marginTop: "2rem" }}>
+              <h1>{book.title}</h1>
+              <p>
+                <strong>Author:</strong> {book.author}
+              </p>
+              <p>
+                <strong>Published:</strong> {formatPublishDate(book.publish_date)}
+              </p>
+              <h2>Description</h2>
+              <p>{cleanDescription(book.description)}</p>
+              {book.genres && (
+                <p>
+                  <strong>Genres:</strong> {book.genres.join(", ")}
+                </p>
+              )}
             </Box>
           </Box>
 
-          {/* Book Info Section */}
-          <Box sx={{ marginTop: "2rem" }}>
-            <h1>{book.title}</h1>
-            <p>
-              <strong>Author:</strong> {book.author}
-            </p>
-            <p>
-              <strong>Published:</strong> {formatPublishDate(book.publish_date)}
-            </p>
-            <h2>Description</h2>
-            <p>{cleanDescription(book.description)}</p>
-            {book.genres && (
-              <p>
-                <strong>Genres:</strong> {book.genres.join(", ")}
-              </p>
+          {/* Right Column: Recommendations */}
+          <Box
+            sx={{
+              flex: 1, // Take up less space for recommendations
+              maxWidth: '200px',
+              padding: '1rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              borderRadius: '10px',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <h3 style={{ marginBottom: '1rem' }}>Recommended</h3>
+            {recommendations.length > 0 ? (
+              recommendations.slice(0, 5).map((rec, index) => (
+                <Link
+                  to={`/book/${rec.id}`}
+                  key={index}
+                  style={{ textDecoration: 'none' }}
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'left',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <img
+                      src={rec.cover_url || `${process.env.PUBLIC_URL}/default-book-cover.png`}
+                      alt={rec.title}
+                      style={{
+                        width: '100px',
+                        height: '150px',
+                        borderRadius: '5px',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
+                  </Box>
+                </Link>
+              ))
+            ) : (
+              <p>No recommendations available.</p>
             )}
           </Box>
         </Box>

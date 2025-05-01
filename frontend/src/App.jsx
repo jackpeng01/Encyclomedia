@@ -41,6 +41,7 @@ import TVLog from "./scenes/TVLog";
 import Trending from "./scenes/Trending";
 import AchievementsPage from "./scenes/AchievementsPage";
 import BlockedListPage from "./scenes/BlockedListPage";
+import FavoriteMedia from "./scenes/FavoriteMedia";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -171,6 +172,8 @@ function App() {
               <Route path="/:username/tv-log" element={<TVLog />} />
               <Route path="/trending" element={<Trending />} />
               <Route path="/blocked" element={<BlockedListPage />} />
+              <Route path="/:username/favorite-media" element={<FavoriteMedia />} />
+
             </Routes>
           </Container>
         </div>
