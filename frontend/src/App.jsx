@@ -18,6 +18,7 @@ import PosterTest from "./scenes/PosterTest";
 import axios from "axios";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./scenes/ProfilePage";
+import CollageCreator from "./scenes/CollageCreator";
 import ResetPassPage from "./scenes/ResetPassPage";
 import AccountSettingsPage from "./scenes/AccountSettingsPage";
 import MovieDetails from "./scenes/MovieDetails";
@@ -108,6 +109,10 @@ function App() {
                 path="/user/reset-password/:token?"
                 element={<ResetPassPage />}
               />
+
+              {/* Collage Maker Page */}
+              <Route path="/collage-creator" element={<CollageCreator />} />
+
               {/* Data Management Page */}
               <Route path="/data" element={<DataPage />} />
 

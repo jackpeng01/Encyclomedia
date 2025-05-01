@@ -224,7 +224,7 @@ const TVDetails = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to={`/profile/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <Typography sx={{ margin: 0, fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
               {comment.user_id}
             </Typography>
@@ -672,64 +672,49 @@ const TVDetails = () => {
 
 
 
-                    <button
-                      onClick={handleLogTV}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '5px',
-                        backgroundColor: '#007bff',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: 'pointer',
-                        marginBottom: '1rem',
-                      }}
-                    >
-                      Log Movie
-                    </button>
-                    <br />
-                    {/* Save for Later */}
-                    <button
-                      onClick={() => {
-                        if (watchLater) {
-                          handleRemove("watchLater", currentTv._id); // Call the unsave function
-                        } else {
-                          handleSaveForLater(); // Call the save function
-                        }
-                      }}
-                      onMouseEnter={() => setButtonHover(true)} // Set hover state to true
-                      onMouseLeave={() => setButtonHover(false)} // Reset hover state to false
-                      style={{
-                        padding: "0.5rem 1rem",
-                        borderRadius: "5px",
-                        backgroundColor:
-                          buttonHover
-                            ? (watchLater ? "#dc3545" : "#28a745") // Red if saved, green if not saved on hover
-                            : (watchLater ? "#28a745" : "#ffc107"), // Red if saved, yellow if not saved when not hovered
-                        color: "#fff",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "background-color 0.3s ease", // Smooth background color transition
-                      }}
-                    >
-                      {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
-                    </button>
-                    <button
-                      onClick={() => setReviewModalOpen(true)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '5px',
-                        backgroundColor: '#6200ea',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: 'pointer',
-                        marginBottom: '1rem',
-                        marginTop: '1rem',
-                      }}
-                    >
-                      Write Review
-                    </button>
+                <button
+                  onClick={handleLogTV}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '5px',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  Log Movie
+                </button>
+                <br />
+                {/* Save for Later */}
+                <button
+                  onClick={() => {
+                    if (watchLater) {
+                      handleRemove("watchLater", currentTv._id); // Call the unsave function
+                    } else {
+                      handleSaveForLater(); // Call the save function
+                    }
+                  }}
+                  onMouseEnter={() => setButtonHover(true)} // Set hover state to true
+                  onMouseLeave={() => setButtonHover(false)} // Reset hover state to false
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "5px",
+                    backgroundColor:
+                      buttonHover
+                        ? (watchLater ? "#dc3545" : "#28a745") // Red if saved, green if not saved on hover
+                        : (watchLater ? "#28a745" : "#ffc107"), // Red if saved, yellow if not saved when not hovered
+                    color: "#fff",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "background-color 0.3s ease", // Smooth background color transition
+                  }}
+                >
+                  {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
+                </button>
 
-                    <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+                  <Box sx={{ marginTop: '1rem', marginBottom: '1.5rem', textAlign: 'left' }}>
                       <button onClick={openModal}
                         style={{
                           padding: '0.5rem 1rem',
@@ -777,131 +762,144 @@ const TVDetails = () => {
                 )}
               </Box>
 
-              {/* Cast Section */}
-              <Box sx={{ marginTop: '2rem' }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Cast</h2>
+          {/* Cast Section */}
+          <Box sx={{ marginTop: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Cast</h2>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: '1rem',
+                overflowX: 'auto',
+                scrollbarWidth: 'none', // Firefox
+              }}
+              className="hide-scrollbar"
+            >
+              {displayedActors.map((actor, index) => (
                 <Box
+                  key={index}
                   sx={{
-                    display: 'flex',
-                    gap: '1rem',
-                    overflowX: 'auto',
-                    scrollbarWidth: 'none', // Firefox
+                    textAlign: 'center',
+                    minWidth: '120px',
+                    maxWidth: '120px',
+                    flexShrink: 0, // Prevent shrinking
                   }}
-                  className="hide-scrollbar"
                 >
-                  {displayedActors.map((actor, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        textAlign: 'center',
-                        minWidth: '120px',
-                        maxWidth: '120px',
-                        flexShrink: 0, // Prevent shrinking
-                      }}
-                    >
-                      <img
-                        src={actor.profile_path ? actor.profile_path : `${process.env.PUBLIC_URL}/default-actor-icon.png`}
-                        alt={actor.name}
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          borderRadius: '10px',
-                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                          marginBottom: '0.5rem',
-                        }}
-                      />
-                      <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                        {actor.name}
-                      </p>
-                      <p style={{ fontSize: '0.8rem', color: '#666' }}>
-                        as {actor.character}
-                      </p>
-                    </Box>
-                  ))}
-                  {visibleActors < tv.cast.length && (
-                    <button
-                      onClick={handleLoadMoreActors}
-                      style={{
-                        padding: '0.5rem',
-                        borderRadius: '5px',
-                        backgroundColor: '#007bff',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: 'pointer',
-                        alignSelf: 'center',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      ➡️
-                    </button>
-                  )}
+                  <img
+                    src={actor.profile_path ? actor.profile_path : `${process.env.PUBLIC_URL}/default-actor-icon.png`}
+                    alt={actor.name}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                      marginBottom: '0.5rem',
+                    }}
+                  />
+                  <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                    {actor.name}
+                  </p>
+                  <p style={{ fontSize: '0.8rem', color: '#666' }}>
+                    as {actor.character}
+                  </p>
                 </Box>
-              </Box>
-              {/* Reviews Section */}
-              <Box sx={{ marginTop: '2rem' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Reviews</h2>
-                  <select
-                    value={reviewSortBy}
-                    onChange={(e) => setReviewSortBy(e.target.value)}
-                    style={{ padding: '0.5rem', borderRadius: '5px', border: '1px solid #ccc' }}
+              ))}
+              {visibleActors < tv.cast.length && (
+                <button
+                  onClick={handleLoadMoreActors}
+                  style={{
+                    padding: '0.5rem',
+                    borderRadius: '5px',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    alignSelf: 'center',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ➡️
+                </button>
+              )}
+            </Box>
+          </Box>
+          {/* Reviews Section */}
+          <Box sx={{ marginTop: '2rem' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Reviews</h2>
+              <select
+                value={reviewSortBy}
+                onChange={(e) => setReviewSortBy(e.target.value)}
+                style={{ padding: '0.5rem', borderRadius: '5px', border: '1px solid #ccc' }}
+              >
+                <option value="recent">Most Recent</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+                <option value="popular">Most Popular</option>
+              </select>
+            </Box>
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "5px",
+                backgroundColor: "#6200ea",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              Write Review
+            </button>
+            {loadingReviews ? (
+              <p>Loading reviews...</p>
+            ) : reviews.length > 0 ? (
+              <Box>
+                {reviews.map((review) => (
+                  <Box
+                    key={review._id}
+                    sx={{
+                      marginBottom: '1rem',
+                      padding: '1rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '10px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
                   >
-                    <option value="recent">Most Recent</option>
-                    <option value="highest">Highest Rated</option>
-                    <option value="lowest">Lowest Rated</option>
-                    <option value="popular">Most Popular</option>
-                  </select>
-                </Box>
-
-                {loadingReviews ? (
-                  <p>Loading reviews...</p>
-                ) : reviews.length > 0 ? (
-                  <Box>
-                    {reviews.map((review) => (
-                      <Box
-                        key={review._id}
-                        sx={{
-                          marginBottom: '1rem',
-                          padding: '1rem',
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '10px',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <Box>
-                            <h3 style={{ margin: 0 }}>{review.title}</h3>
-                            <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                              <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
-                                By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
-                              </Typography>
-                            </Link>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <Box sx={{ display: 'flex' }}>
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <FaStar
-                                  key={star}
-                                  size={16}
-                                  color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
-                                />
-                              ))}
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-                              <IconButton onClick={() => handleLikeReview(review._id)}>
-                                <FaThumbsUp color={review.liked ? '#4caf50' : '#666'} />
-                                <Typography variant="caption" sx={{ ml: 0.5 }}>{review.likes || 0}</Typography>
-                              </IconButton>
-                              <IconButton onClick={() => handleDislikeReview(review._id)}>
-                                <FaThumbsDown color={review.disliked ? '#f44336' : '#666'} />
-                                <Typography variant="caption" sx={{ ml: 0.5 }}>{review.dislikes || 0}</Typography>
-                              </IconButton>
-                              <IconButton onClick={() => handleBookmarkReview(review._id)}>
-                                {bookmarkedReviews.includes(review._id) ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
-                              </IconButton>
-                            </Box>
-                          </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Box>
+                        <h3 style={{ margin: 0 }}>{review.title}</h3>
+                        <Link to={`/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                            By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
+                          </Typography>
+                        </Link>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <Box sx={{ display: 'flex' }}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                              key={star}
+                              size={16}
+                              color={star <= review.rating ? "#ffc107" : "#e4e5e9"}
+                            />
+                          ))}
                         </Box>
+                        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+                          <IconButton onClick={() => handleLikeReview(review._id)}>
+                            <FaThumbsUp color={review.liked ? '#4caf50' : '#666'} />
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>{review.likes || 0}</Typography>
+                          </IconButton>
+                          <IconButton onClick={() => handleDislikeReview(review._id)}>
+                            <FaThumbsDown color={review.disliked ? '#f44336' : '#666'} />
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>{review.dislikes || 0}</Typography>
+                          </IconButton>
+                          <IconButton onClick={() => handleBookmarkReview(review._id)}>
+                            {bookmarkedReviews.includes(review._id) ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </Box>
 
                         <Box
                           sx={{
