@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
+import FavoriteButton from "../components/FavoriteButton.jsx";
 import TrailerModal from '../components/modals/TrailerModal';
 import {
+  Alert,
   Box,
   Button,
   Rating,
@@ -14,6 +16,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  IconButton,
   Avatar,
   List,
   ListItem,
@@ -25,44 +28,60 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Snackbar,
   MenuItem,
   Typography,
-  TextField,
-  IconButton
+  TextField
 } from "@mui/material";
 import ReviewModal from '../components/modals/ReviewModal.jsx';
 import { FaStar, FaRegEdit, FaThumbsUp, FaThumbsDown, FaBookmark, FaRegBookmark, FaReply } from "react-icons/fa";
 
 const MovieDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // Get the movie ID from the URL
   const [movie, setMovie] = useState(null);
   const [error, setError] = useState("");
   const [watchedDate, setWatchedDate] = useState("");
   const [tags, setTags] = useState("");
   const [watchLater, setWatchLater] = useState(false);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
-  const [visibleActors, setVisibleActors] = useState(5);
+  const [visibleActors, setVisibleActors] = useState(5); // Number of actors visible
   const token = useSelector((state) => state.auth.token);
   const [userData, setUserData] = useState([]);
-  const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
+  const [rating, setRating] = useState(0); // Added rating state
+  const [hover, setHover] = useState(0); // Hover value for stars
   const [currentMovie, setCurrentMovie] = useState(null);
-  const [buttonHover, setButtonHover] = useState(false);
+  const [buttonHover, setButtonHover] = useState(false); // Separate state for button hover
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewSortBy, setReviewSortBy] = useState("recent");
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedReviewId, setSelectedReviewId] = useState(null);
-  const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
+  const [userLikes, setUserLikes] = useState([]);
   const [bookmarkedReviews, setBookmarkedReviews] = useState([]);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+  const [newAchievement, setNewAchievement] = useState("");
+  const [showAchievementPopup, setShowAchievementPopup] = useState(false);
+
+  const handleContextMenu = (event, reviewId, commentId = null) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4
+    });
+    setSelectedReviewId(reviewId);
+    setSelectedCommentId(commentId);
+  };
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
 
   const handleLikeReview = async (reviewId) => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `http://127.0.0.1:5000/api/reviews/${reviewId}/like`,
         {},
         {
@@ -80,7 +99,7 @@ const MovieDetails = () => {
 
   const handleDislikeReview = async (reviewId) => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `http://127.0.0.1:5000/api/reviews/${reviewId}/dislike`,
         {},
         {
@@ -154,44 +173,13 @@ const MovieDetails = () => {
     }
   };
 
-  const handleContextMenu = (event, reviewId, commentId = null) => {
-    event.preventDefault();
-    setContextMenu({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4
-    });
-    setSelectedReviewId(reviewId);
-    setSelectedCommentId(commentId);
-  };
-
-  const handleCloseContextMenu = () => {
-    setContextMenu(null);
-  };
-
   const handleOpenCommentDialog = () => {
     setCommentModalOpen(true);
     handleCloseContextMenu();
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
-  const openModal = () => {
-    scrollToTop();  // Scroll to the top first
-    setIsTrailerModalOpen(true);  // Open the modal
-  };
-
-  const closeModal = () => {
-    setIsTrailerModalOpen(false);  // Close the modal
-  };
-
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
-
     try {
       await axios.post(
         `http://127.0.0.1:5000/api/reviews/${selectedReviewId}/comment`,
@@ -206,7 +194,6 @@ const MovieDetails = () => {
           }
         }
       );
-
       fetchReviews();
       setCommentText('');
       setCommentModalOpen(false);
@@ -217,7 +204,6 @@ const MovieDetails = () => {
   };
 
   const renderComment = (comment, reviewId, level = 0) => {
-    if (!comment._id) return null;
     return (
       <Box
         key={comment._id}
@@ -264,12 +250,19 @@ const MovieDetails = () => {
     try {
       setLoadingReviews(true);
       const reviewUrl = `http://127.0.0.1:5000/api/reviews/movie/${id}?sort=${reviewSortBy}`;
-      const response = await axios.get(reviewUrl, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
+      console.log("Fetching reviews with URL:", reviewUrl);
+      console.log("Looking for movie ID:", id, "with type:", "movie");
+
+      const response = await axios.get(
+        reviewUrl,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      console.log("Reviews API response:", response.data);
       setReviews(response.data);
     } catch (err) {
       console.error("Error loading reviews:", err);
@@ -286,6 +279,7 @@ const MovieDetails = () => {
     const loadUserData = async () => {
       const fetchedUserData = await getUserByToken(token);
       setUserData(fetchedUserData);
+      setUserLikes(fetchedUserData.favorites);
 
       // After userData is set, load the watch later items
       if (fetchedUserData) {
@@ -465,6 +459,67 @@ const MovieDetails = () => {
     setRating(0);
   };
 
+  const toggleLike = (id, mediaType) => {
+    setUserLikes(prevLikes => {
+      // Ensure prevLikes is an array
+      const updatedLikes = Array.isArray(prevLikes) ? [...prevLikes] : [];
+
+      console.log("Before Update:", updatedLikes);
+
+      // Check if the media is already liked
+      const isLiked = updatedLikes.some(item => item.id === id && item.mediaType === mediaType);
+      console.log("Is liked:", isLiked);
+
+      let result;
+      if (isLiked) {
+        // Remove the media if it's already liked
+        result = updatedLikes.filter(item => !(item.id === id && item.mediaType === mediaType));
+      } else {
+        // Add the media if it's not already liked
+        result = [...updatedLikes, { id, mediaType, poster: movie.poster_path, title: movie.title }];
+      }
+
+      console.log("After Update:", result);
+      return result;
+    });
+  };
+
+
+  useEffect(() => {
+    const saveLikes = async () => {
+      if (!userData) {
+        console.log("Not logged in!");
+        alert("Please Login!");
+        return;
+      }
+
+      try {
+        const payload = {
+          username: userData.username,
+          favorites: userLikes, // Send the current favorites (empty array if no favorites)
+        };
+        console.log("Saving Likes:", userLikes);
+
+        const response = await axios.patch(
+          `http://127.0.0.1:5000/api/users/${userData.username}`,
+          payload,
+          { withCredentials: true }
+        );
+
+        console.log("Updated User Likes:", response.data);
+      } catch (error) {
+        console.error("Error saving likes:", error);
+        // alert("Failed to save your favorites. Please try again.");
+      }
+    };
+
+    // Trigger the effect when userLikes or userData changes
+    saveLikes();
+
+  }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
+
+
+
   const handleLoadMoreActors = () => {
     setVisibleActors((prevVisible) => prevVisible + movie.cast.length); // Increase visible actors by 5
   };
@@ -525,7 +580,15 @@ const MovieDetails = () => {
             >
               {/* Log and Save Section */}
               <Box sx={{ flex: 1 }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                  <FavoriteButton
+                    id={id}
+                    mediaType={"movie"}
+                    userLikes={userData.favorites || []}
+                    toggleLike={toggleLike}
+                  />
+                </Box>
                 {/* Log Watched Movie */}
                 <Box sx={{ marginBottom: '1.5rem' }}>
                   <label>
@@ -626,24 +689,14 @@ const MovieDetails = () => {
                 >
                   {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
                 </button>
-                <button
-                  onClick={() => setReviewModalOpen(true)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '5px',
-                    backgroundColor: '#6200ea',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    marginBottom: '1rem',
-                    marginTop: '1rem',
-                  }}
-                >
-                  Write Review
-                </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                  <button onClick={openModal}
+                  <button
+                    onClick={() => {
+                      console.log("Trailer Key:", movie.trailer_url);
+                      setIsTrailerModalOpen(true)
+                    }
+                    }
                     style={{
                       padding: '0.5rem 1rem',
                       borderRadius: '5px',
@@ -761,11 +814,7 @@ const MovieDetails = () => {
               <select
                 value={reviewSortBy}
                 onChange={(e) => setReviewSortBy(e.target.value)}
-                style={{
-                  padding: '0.5rem',
-                  borderRadius: '5px',
-                  border: '1px solid #ccc',
-                }}
+                style={{ padding: '0.5rem', borderRadius: '5px', border: '1px solid #ccc' }}
               >
                 <option value="recent">Most Recent</option>
                 <option value="highest">Highest Rated</option>
@@ -773,6 +822,21 @@ const MovieDetails = () => {
                 <option value="popular">Most Popular</option>
               </select>
             </Box>
+
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "5px",
+                backgroundColor: "#6200ea",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              Write Review
+            </button>
 
             {loadingReviews ? (
               <p>Loading reviews...</p>
@@ -826,22 +890,22 @@ const MovieDetails = () => {
 
                     <Box
                       sx={{
-                        marginTop: '1rem',
-                        '& strong': { fontWeight: 'bold' },
-                        '& em': { fontStyle: 'italic' },
-                        '& u': { textDecoration: 'underline' },
-                        '& ul': { paddingLeft: '1.5rem' },
-                        '& li': { marginBottom: '0.25rem' }
+                        marginTop: "1rem",
+                        "& strong": { fontWeight: "bold" },
+                        "& em": { fontStyle: "italic" },
+                        "& u": { textDecoration: "underline" },
+                        "& ul": { paddingLeft: "1.5rem" },
+                        "& li": { marginBottom: "0.25rem" },
                       }}
                       dangerouslySetInnerHTML={{
                         __html: review.content
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          .replace(/__(.*?)__/g, '<u>$1</u>')
-                          .replace(/• (.*?)(?=\n|$)/g, '<li>$1</li>')
-                          .replace(/<li>/g, '<ul><li>')
-                          .replace(/<\/li>/g, '</li></ul>')
-                          .replace(/<\/ul><ul>/g, '')
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                          .replace(/__(.*?)__/g, "<u>$1</u>")
+                          .replace(/• (.*?)(?=\n|$)/g, "<li>$1</li>")
+                          .replace(/<li>/g, "<ul><li>")
+                          .replace(/<\/li>/g, "</li></ul>")
+                          .replace(/<\/ul><ul>/g, ""),
                       }}
                     />
 
@@ -864,12 +928,20 @@ const MovieDetails = () => {
                 ))}
               </Box>
             ) : (
-              <Box sx={{ textAlign: 'center', padding: '2rem 0', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
-                <p style={{ margin: 0, color: '#666' }}>No reviews yet. Be the first to write a review!</p>
+              <Box
+                sx={{
+                  textAlign: "center",
+                  padding: "2rem 0",
+                  backgroundColor: "#f9f9f9",
+                  borderRadius: "10px",
+                }}
+              >
+                <p style={{ margin: 0, color: "#666" }}>
+                  No reviews yet. Be the first to write a review!
+                </p>
               </Box>
             )}
           </Box>
-
         </Box>
       </Box>
       <ReviewModal
@@ -884,7 +956,7 @@ const MovieDetails = () => {
       />
       <TrailerModal
         isOpen={isTrailerModalOpen}
-        onClose={() => closeModal()}
+        onClose={() => setIsTrailerModalOpen(false)}
         trailer_key={movie.trailer_key} // Replace with the actual key from your movie data
       />
       {/* Context Menu */}

@@ -22,6 +22,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { getUserByToken } from "../api/users";
 import Navbar from "../components/Navbar";
 import ReviewModal from "../components/modals/ReviewModal.jsx";
+import FavoriteButton from "../components/FavoriteButton.jsx";
 
 function launchConfetti() {
   confetti({
@@ -46,6 +47,9 @@ const BookDetails = () => {
   const [bookLogList, setBookLogList] = useState([]);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
+  const [newAchievement, setNewAchievement] = useState("");
+  const [userLikes, setUserLikes] = useState([]);
+
 
   // review and comment states
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -212,7 +216,7 @@ const BookDetails = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to={`/profile/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <Typography sx={{ margin: 0, fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
               {comment.user_id}
             </Typography>
@@ -273,6 +277,7 @@ const BookDetails = () => {
         try {
           const fetchedUserData = await getUserByToken(token);
           setUserData(fetchedUserData);
+          setUserLikes(fetchedUserData.favorites);
         } catch (err) {
           console.error("Error fetching user data:", err);
         }
@@ -390,10 +395,12 @@ const BookDetails = () => {
       setReadDate("");
       setRating(0);
       console.log("Log response:", response.data);
+
       if (response.data.achievementUnlocked) {
         // setShowPopup(true);
         launchConfetti();
         setShowAchievementPopup(true);
+        setNewAchievement(response.data.achievementUnlocked);
       }
     } catch (error) {
       console.error("Error logging book:", error);
@@ -453,6 +460,66 @@ const BookDetails = () => {
     }
   };
 
+  const toggleLike = (id, mediaType) => {
+    setUserLikes(prevLikes => {
+      // Ensure prevLikes is an array
+      const updatedLikes = Array.isArray(prevLikes) ? [...prevLikes] : [];
+  
+      console.log("Before Update:", updatedLikes);
+  
+      // Check if the media is already liked
+      const isLiked = updatedLikes.some(item => item.id === id && item.mediaType === mediaType);
+      console.log("Is liked:", isLiked);
+  
+      let result;
+      if (isLiked) {
+        // Remove the media if it's already liked
+        result = updatedLikes.filter(item => !(item.id === id && item.mediaType === mediaType));
+      } else {
+        // Add the media if it's not already liked
+        result = [...updatedLikes, { id, mediaType, poster: book.cover_url, title: book.title }];
+      }
+  
+      console.log("After Update:", result);
+      return result;
+    });
+  };
+  
+
+  useEffect(() => {
+    const saveLikes = async () => {
+      if (!userData) {
+        console.log("Not logged in!");
+        // alert("Please Login!");
+        return;
+      }
+  
+      try {
+        const payload = {
+          username: userData.username,
+          favorites: userLikes, // Send the current favorites (empty array if no favorites)
+        };
+        console.log("Saving Likes:", userLikes);
+  
+        const response = await axios.patch(
+          `http://127.0.0.1:5000/api/users/${userData.username}`,
+          payload,
+          { withCredentials: true }
+        );
+  
+        console.log("Updated User Likes:", response.data);
+      } catch (error) {
+        console.error("Error saving likes:", error);
+        // alert("Failed to save your favorites. Please try again.");
+      }
+    };
+  
+    // Trigger the effect when userLikes or userData changes
+    saveLikes();
+  
+  }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
+  
+
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!book) return <p>Loading book details...</p>;
 
@@ -494,7 +561,15 @@ const BookDetails = () => {
 
             {/* Log and Save Section */}
             <Box sx={{ flex: 1 }}>
-              <h2>Log/Save</h2>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <h2>Log/Save</h2>
+                <FavoriteButton
+                  id={id}
+                  mediaType={"book"}
+                  userLikes={userData.favorites || []}
+                  toggleLike={toggleLike}
+                />
+              </Box>
               {/* Log Read Book */}
               <Box sx={{ marginBottom: "1.5rem" }}>
                 <label>
@@ -620,7 +695,7 @@ const BookDetails = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box>
                       <h3 style={{ margin: 0 }}>{review.title}</h3>
-                      <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <Link to={`/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                         <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
                           By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
                         </Typography>
@@ -770,10 +845,16 @@ const BookDetails = () => {
         </DialogActions>
       </Dialog>
       <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         open={showAchievementPopup}
         autoHideDuration={6000}
         onClose={() => setShowAchievementPopup(false)}
+        // you can leave anchorOrigin for horizontal centering:
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        // then override the CSS to move it to the true center:
+        sx={{
+          top: "50% !important", // override the default top: 0px
+          transform: "translateY(-50%)", // pull it up by half its own height
+        }}
       >
         <Alert
           severity="success"
@@ -793,7 +874,7 @@ const BookDetails = () => {
             onClick={() => {
               setShowAchievementPopup(false);
               navigate("/achievements", {
-                state: { newAchievement: "5_books" },
+                state: { newAchievement },
               });
             }}
           >

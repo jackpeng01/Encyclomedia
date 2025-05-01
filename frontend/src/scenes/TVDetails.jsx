@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { FaStar, FaThumbsUp, FaThumbsDown, FaBookmark, FaRegBookmark, FaReply } from "react-icons/fa";
 import ReviewModal from '../components/modals/ReviewModal.jsx';
+import FavoriteButton from "../components/FavoriteButton.jsx";
 
 const TVDetails = () => {
   const { id } = useParams();
@@ -37,6 +38,7 @@ const TVDetails = () => {
   const [currentTv, setCurrentTv] = useState(null);
   const [buttonHover, setButtonHover] = useState(false);
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
+  const [userLikes, setUserLikes] = useState([]);
 
   // for reviews and comments
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -220,7 +222,7 @@ const TVDetails = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to={`/profile/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/${comment.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <Typography sx={{ margin: 0, fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
               {comment.user_id}
             </Typography>
@@ -282,6 +284,7 @@ const TVDetails = () => {
     const loadUserData = async () => {
       const fetchedUserData = await getUserByToken(token);
       setUserData(fetchedUserData);
+      setUserLikes(fetchedUserData.favorites); // Initialize userLikes with fetched data
 
       // After userData is set, load the watch later items
       if (fetchedUserData) {
@@ -459,6 +462,66 @@ const TVDetails = () => {
     setRating(0);
   };
 
+  const toggleLike = (id, mediaType) => {
+    setUserLikes(prevLikes => {
+      // Ensure prevLikes is an array
+      const updatedLikes = Array.isArray(prevLikes) ? [...prevLikes] : [];
+
+      console.log("Before Update:", updatedLikes);
+
+      // Check if the media is already liked
+      const isLiked = updatedLikes.some(item => item.id === id && item.mediaType === mediaType);
+      console.log("Is liked:", isLiked);
+
+      let result;
+      if (isLiked) {
+        // Remove the media if it's already liked
+        result = updatedLikes.filter(item => !(item.id === id && item.mediaType === mediaType));
+      } else {
+        // Add the media if it's not already liked
+        result = [...updatedLikes, { id, mediaType, poster: tv.poster_path, title: tv.title }];
+      }
+
+      console.log("After Update:", result);
+      return result;
+    });
+  };
+
+
+  useEffect(() => {
+    const saveLikes = async () => {
+      if (!userData) {
+        console.log("Not logged in!");
+        alert("Please Login!");
+        return;
+      }
+
+      try {
+        const payload = {
+          username: userData.username,
+          favorites: userLikes, // Send the current favorites (empty array if no favorites)
+        };
+        console.log("Saving Likes:", userLikes);
+
+        const response = await axios.patch(
+          `http://127.0.0.1:5000/api/users/${userData.username}`,
+          payload,
+          { withCredentials: true }
+        );
+
+        console.log("Updated User Likes:", response.data);
+      } catch (error) {
+        console.error("Error saving likes:", error);
+        // alert("Failed to save your favorites. Please try again.");
+      }
+    };
+
+    // Trigger the effect when userLikes or userData changes
+    saveLikes();
+
+  }, [userLikes, userData]); // Trigger the effect when userLikes or userData changes
+
+
   const handleLoadMoreActors = () => {
     setVisibleActors((prevVisible) => prevVisible + tv.cast.length); // Increase visible actors by 5
   };
@@ -519,7 +582,15 @@ const TVDetails = () => {
             >
               {/* Log and Save Section */}
               <Box sx={{ flex: 1 }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                  <FavoriteButton
+                    id={id}
+                    mediaType={"tv"}
+                    userLikes={userData.favorites || []}
+                    toggleLike={toggleLike}
+                  />
+                </Box>
                 {/* Log Watched Movie */}
                 <Box sx={{ marginBottom: '1.5rem' }}>
                   <label>
@@ -619,21 +690,6 @@ const TVDetails = () => {
                   }}
                 >
                   {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
-                </button>
-                <button
-                  onClick={() => setReviewModalOpen(true)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '5px',
-                    backgroundColor: '#6200ea',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    marginBottom: '1rem',
-                    marginTop: '1rem',
-                  }}
-                >
-                  Write Review
                 </button>
 
                 <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
@@ -759,7 +815,20 @@ const TVDetails = () => {
                 <option value="popular">Most Popular</option>
               </select>
             </Box>
-
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "5px",
+                backgroundColor: "#6200ea",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                marginBottom: "1rem",
+              }}
+            >
+              Write Review
+            </button>
             {loadingReviews ? (
               <p>Loading reviews...</p>
             ) : reviews.length > 0 ? (
@@ -778,7 +847,7 @@ const TVDetails = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box>
                         <h3 style={{ margin: 0 }}>{review.title}</h3>
-                        <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Link to={`/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                           <Typography sx={{ margin: '0.25rem 0', color: '#666', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
                             By {review.user_id} • {new Date(review.created_at).toLocaleDateString()}
                           </Typography>

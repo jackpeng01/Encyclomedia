@@ -90,7 +90,7 @@ def search_tv():
                     show_year = (
                         int(show["first_air_date"][:4]) if show["first_air_date"] else None
                     )
-                    if not show_year:
+                    if not show_year: 
                         continue
                     if show_year and show_year < year_start:
                         continue  # Skip this show if it doesn't match the year range
@@ -191,7 +191,6 @@ def get_tv_details(tv_id):
         # Fetch movie details from TMDB API
         url = f"https://api.themoviedb.org/3/tv/{tv_id}"
         credits_url = f"https://api.themoviedb.org/3/tv/{tv_id}/credits"
-        trailers_url = f"https://api.themoviedb.org/3/tv/{tv_id}/videos"
         headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
 
         # Movie details
@@ -203,18 +202,6 @@ def get_tv_details(tv_id):
         credits_response = requests.get(credits_url, headers=headers)
         credits_response.raise_for_status()
         credits = credits_response.json()
-        
-        # Movie trailers
-        trailers_response = requests.get(trailers_url, headers=headers)
-        trailers_response.raise_for_status()
-        trailers = trailers_response.json()
-
-        # Extract trailer information (looking for official trailer in English if available)
-        trailer_key = None
-        for video in trailers.get("results", []):
-            if video.get("type") == "Trailer" and video.get("site") == "YouTube":
-                trailer_key = video.get("key")
-                break
 
         # Extract cast information (limit to top 20 for brevity)
         cast = []
@@ -246,7 +233,6 @@ def get_tv_details(tv_id):
             "status": item.get("status"),
             "tagline": item.get("tagline"),
             "cast": cast,  # Add cast to the response
-            "trailer_key": trailer_key
         }
 
         return jsonify(tv_details)

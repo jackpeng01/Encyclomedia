@@ -40,6 +40,7 @@ const ProfilePage = () => {
 
         setViewerData(fetchedViewerData);
         setUserData(fetchedProfile);
+        setFavorites(fetchedProfile.favorites || []);
       } catch (error) {
         console.error("Error loading data:", error);
       }
@@ -53,6 +54,7 @@ const ProfilePage = () => {
   const [tvLog, setTvLog] = useState([]);
   const [watchLaterShows, setWatchLaterShows] = useState([]);
   const [readLaterArray, setReadLaterArray] = useState([]);
+  const [favorites, setFavorites] = useState([]);
   const [loggedBooks, setLoggedBooks] = useState([]);
   const [error, setError] = useState("");
   const [ownProfile, setOwnProfile] = useState(false);
@@ -109,18 +111,15 @@ const ProfilePage = () => {
         }
 
         try {
-          const response = await axios.get(
-            `http://127.0.0.1:5000/api/tv/log`,
-            {
-              params: {
-                username: username,
-              },
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          );
+          const response = await axios.get(`http://127.0.0.1:5000/api/tv/log`, {
+            params: {
+              username: username,
+            },
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
           setTvLog(response.data);
           console.log(response.data);
         } catch (err) {
@@ -212,9 +211,10 @@ const ProfilePage = () => {
             prev.filter((entry) => entry._id !== entryId)
           );
         } else if (section === "readLater") {
-          setReadLaterArray((prev) => prev.filter((entry) => entry._id !== entryId));
+          setReadLaterArray((prev) =>
+            prev.filter((entry) => entry._id !== entryId)
+          );
         }
-        
 
         // alert("Successfully removed!");
       } else {
@@ -250,8 +250,7 @@ const ProfilePage = () => {
           setWatchLaterShows((prev) =>
             prev.filter((entry) => entry._id !== entryId)
           );
-        } 
-        
+        }
 
         // alert("Successfully removed!");
       } else {
@@ -264,6 +263,30 @@ const ProfilePage = () => {
   };
 
   if (!userData) return <p>Loading...</p>;
+  if (
+    (viewerData.blocked && viewerData.blocked.includes(userData.username)) ||
+    (userData.blocked && userData.blocked.includes(viewerData.username))
+  ) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          flexDirection: "column",
+          padding: 4,
+        }}
+      >
+        <Typography variant="h4" sx={{ mb: 2, textAlign: "center" }}>
+          This profile is unavailable.
+        </Typography>
+        <Typography sx={{ color: "gray", textAlign: "center" }}>
+          You cannot view this profile because one of you has blocked the other.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -405,34 +428,47 @@ const ProfilePage = () => {
             justifyContent: "center",
           }}
         >
-          {[
-            "The Great Gatsby",
-            "Cars 2",
-            "Diary of a Wimpy Kid: Rodrick Rules",
-            "The Brothers Karamazov",
-            "Boruto",
-            "Introduction to Algorithms",
-          ].map((media, index) => (
-            <Box
+          {[...favorites].reverse().slice(0, 5).map((entry, index) => (
+            <Link
+              to={`/${entry.mediaType}/${entry.id}`} // Adjust route based on your setup
               key={index}
-              sx={{
-                width: "160px",
-                height: "200px",
-                backgroundColor: "lightgray",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                borderRadius: "5px",
-                fontSize: "1rem",
-                fontWeight: "400",
-                padding: "10px",
-              }}
+              style={{ textDecoration: "none" }}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
-              {media}
-            </Box>
+              <Box
+                sx={{
+                  width: "160px",
+                  height: "240px",
+                  display: "inline-block",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src={entry.poster || `${process.env.PUBLIC_URL}/default-cover.png`} // Default cover image
+                  alt={entry.title}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: "5px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                >
+                  {entry.title}
+                </Typography>
+              </Box>
+            </Link>
           ))}
+
         </Box>
+
 
         {/* Movie Log Section */}
         <Typography
@@ -744,7 +780,7 @@ const ProfilePage = () => {
             cursor: "pointer",
             textDecoration: "underline",
           }}
-          onClick={() => navigate(`/${username}/tv-log`)} 
+          onClick={() => navigate(`/${username}/tv-log`)}
         >
           TV Log:
         </Typography>
@@ -758,10 +794,10 @@ const ProfilePage = () => {
           }}
         >
           {tvLog.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; 
+            const isDefaultPoster = !entry.poster;
             return (
               <Link
-                to={`/tv/${entry.tvId}`} 
+                to={`/tv/${entry.tvId}`}
                 key={index}
                 style={{ textDecoration: "none" }}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -915,7 +951,7 @@ const ProfilePage = () => {
           })}
         </Box>
 
-          {/* Watch Later Shows Section */}
+        {/* Watch Later Shows Section */}
         <Typography
           variant="h5"
           sx={{
