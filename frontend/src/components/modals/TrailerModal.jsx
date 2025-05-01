@@ -37,7 +37,7 @@ const TrailerModal = ({ isOpen, onClose, trailer_key }) => {
             <div
                 style={{
                     position: 'relative',
-                    top: '25%',
+                    top: '20%',
                     transform: 'translateY(-50%)',
                     margin: '0 auto',
                     width: '80%',

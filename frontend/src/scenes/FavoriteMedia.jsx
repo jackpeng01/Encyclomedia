@@ -56,12 +56,6 @@ const FavoriteMedia = () => {
     loadData();
   }, [token, username, forceRefresh]);
 
-  // Handle reset filter
-  const handleReset = () => {
-    setSearchQuery("");
-    setFilteredFavorites(favorites); // Reset filtered favorites to all favorites
-  };
-
   // Filter favorites by search query
   const searchFavorites = filteredFavorites.filter((entry) =>
     entry.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -88,19 +82,6 @@ const FavoriteMedia = () => {
             sx={{ width: "100%", maxWidth: 400 }}
             InputLabelProps={{ shrink: true }}
           />
-        </Box>
-
-        {/* Reset Button */}
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={handleReset}
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <FaUndo />
-            Reset
-          </Button>
         </Box>
 
         {favorites.length === 0 ? (

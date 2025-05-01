@@ -703,6 +703,7 @@ const MovieDetails = () => {
                     <button
                       onClick={() => {
                         console.log("Trailer Key:", movie.trailer_url);
+                        window.scrollTo({ top: 0, behavior: "smooth" })
                         setIsTrailerModalOpen(true)
                       }
                       }

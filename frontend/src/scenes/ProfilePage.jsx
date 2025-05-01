@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Chip } from "@mui/material";
+import { Box, Button, Typography, Chip, Tabs, Tab } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -262,6 +262,12 @@ const ProfilePage = () => {
     }
   };
 
+  const [activeTab, setActiveTab] = useState(0); // State to track the active tab
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   if (!userData) return <p>Loading...</p>;
   if (
     (viewerData.blocked && viewerData.blocked.includes(userData.username)) ||
@@ -381,843 +387,704 @@ const ProfilePage = () => {
       </Box>
 
       {/* The rest of your ProfilePage content (Favorite Media, Movie Log, etc.) */}
-      <Box sx={{ maxWidth: "900px", margin: "auto", mt: 5 }}>
-        {/* Favorite Media Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-          }}
-          onClick={() => navigate(`/${username}/favorite-media`)}
+      <Box sx={{ maxWidth: "950px", margin: "auto", mt: 5 }}>
+        {/* Tabs for navigation */}
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          centered
+          sx={{ marginBottom: 3 }}
         >
-          Favorite Media:
-        </Typography>
-        {userData.genrePreferences && userData.genrePreferences.length > 0 && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              mb: 3,
-              width: "100%",
-              // pl: 2, // optional padding to align with the rest of the content
-            }}
-          >
-            {/* <Typography variant="body2" sx={{ color: "gray", mr: 1 }}>
-                Favorite Genres:
-              </Typography> */}
+          <Tab label="Favorite Media" />
+          <Tab label="Movie Log" />
+          <Tab label="Watch Later (Movies)" />
+          <Tab label="TV Log" />
+          <Tab label="Watch Later (TV)" />
+          <Tab label="Book Log" />
+          <Tab label="Read Later" />
+        </Tabs>
+
+        {/* Tab Content */}
+        {activeTab === 0 && (
+          <Box>
             <Box
               sx={{
                 display: "flex",
-                gap: 1,
+                gap: 2,
                 flexWrap: "wrap",
-                justifyContent: "flex-start",
+                justifyContent: "center",
               }}
             >
-              {userData.genrePreferences.map((genre, idx) => (
-                <Chip key={idx} label={genre} variant="outlined" />
-              ))}
+              {favorites.length === 0 ? (
+                <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                  You have no favorite media yet.
+                </Typography>
+              ) : (
+                [...favorites].reverse().slice(0, 5).map((entry, index) => (
+                  <Link
+                    to={`/${entry.mediaType}/${entry.id}`}
+                    key={index}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Box
+                      sx={{
+                        width: "160px",
+                        height: "240px",
+                        display: "inline-block",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <img
+                        src={entry.poster || `${process.env.PUBLIC_URL}/default-cover.png`}
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                      >
+                        {entry.title}
+                      </Typography>
+                    </Box>
+                  </Link>
+                ))
+              )}
+            </Box>
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/favorite-media`)}
+              >
+                View All Favorite Media
+              </Button>
             </Box>
           </Box>
         )}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {[...favorites].reverse().slice(0, 5).map((entry, index) => (
-            <Link
-              to={`/${entry.mediaType}/${entry.id}`} // Adjust route based on your setup
-              key={index}
-              style={{ textDecoration: "none" }}
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            >
+
+        {activeTab === 1 && (
+          <Box>
+            {movieLog.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                Your movie log is empty.
+              </Typography>
+            ) : (
               <Box
                 sx={{
-                  width: "160px",
-                  height: "240px",
-                  display: "inline-block",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  borderRadius: "8px",
-                  overflow: "hidden",
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                <img
-                  src={entry.poster || `${process.env.PUBLIC_URL}/default-cover.png`} // Default cover image
-                  alt={entry.title}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "5px",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
-                >
-                  {entry.title}
-                </Typography>
-              </Box>
-            </Link>
-          ))}
-
-        </Box>
-
-
-        {/* Movie Log Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={() => navigate(`/${username}/movie-log`)}
-        >
-          Movie Log:
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {movieLog.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster;
-            return (
-              <Link
-                to={`/movie/${entry.movieId}`}
-                key={index}
-                style={{ textDecoration: "none" }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              >
-                <Box
-                  key={index}
-                  sx={{
-                    width: "160px",
-                    height: "240px",
-                    display: "inline-block",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    position: "relative",
-                    "&:hover .overlay": {
-                      display: "flex",
-                    },
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <img
-                    src={
-                      isDefaultPoster
-                        ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
-                        : entry.poster
-                    }
-                    alt={entry.title || "Movie Poster"}
-                    style={{
-                      width: isDefaultPoster ? "85%" : "100%",
-                      height: "auto",
-                      maxHeight: isDefaultPoster ? "85%" : "auto",
-                      borderRadius: "5px",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      cursor: "pointer",
-                    }}
-                  />
-                  {isDefaultPoster && (
-                    <Typography
-                      variant="h6"
-                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                {movieLog.slice(0, 5).map((entry, index) => {
+                  const isDefaultPoster = !entry.poster;
+                  return (
+                    <Link
+                      to={`/movie/${entry.movieId}`}
+                      key={index}
+                      style={{ textDecoration: "none" }}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                     >
-                      {entry.title || "Unknown Title"}
-                    </Typography>
-                  )}
-                  <Box
-                    className="overlay"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: "none",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)",
-                      color: "white",
-                      padding: 2,
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      fontSize: "0.9rem",
-                      fontWeight: 500,
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: "0.2rem",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar
-                          key={star}
-                          size={20}
-                          color={
-                            star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
-                          }
-                        />
-                      ))}
-                    </Box>
-                    <Typography>
-                      {entry.watchDate
-                        ? `Watched on: ${entry.watchDate}`
-                        : "No Watch Date"}
-                    </Typography>
-                    {entry.tags && entry.tags.length > 0 && (
-                      <Box sx={{ mt: 1 }}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontSize: "0.8rem", fontWeight: 600 }}
-                        >
-                          Tags:
-                        </Typography>
-                        <Box
-                          sx={{
+                      <Box
+                        key={index}
+                        sx={{
+                          width: "160px",
+                          height: "240px",
+                          display: "inline-block",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          textAlign: "center",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          position: "relative",
+                          "&:hover .overlay": {
                             display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
+                          },
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <img
+                          src={
+                            isDefaultPoster
+                              ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                              : entry.poster
+                          }
+                          alt={entry.title || "Movie Poster"}
+                          style={{
+                            width: isDefaultPoster ? "85%" : "100%",
+                            height: "auto",
+                            maxHeight: isDefaultPoster ? "85%" : "auto",
+                            borderRadius: "5px",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                            cursor: "pointer",
+                          }}
+                        />
+                        {isDefaultPoster && (
+                          <Typography
+                            variant="h6"
+                            sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                          >
+                            {entry.title || "Unknown Title"}
+                          </Typography>
+                        )}
+                        <Box
+                          className="overlay"
+                          sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "none",
+                            flexDirection: "column",
                             justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            color: "white",
+                            padding: 2,
+                            borderRadius: "8px",
+                            textAlign: "center",
+                            fontSize: "0.9rem",
+                            fontWeight: 500,
+                            gap: 1,
                           }}
                         >
-                          {entry.tags.map((tag, idx) => (
-                            <Typography
-                              key={idx}
-                              sx={{
-                                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                                padding: "2px 6px",
-                                borderRadius: "12px",
-                                fontSize: "0.75rem",
-                                whiteSpace: "nowrap",
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: "0.2rem",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <FaStar
+                                key={star}
+                                size={20}
+                                color={
+                                  star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
+                                }
+                              />
+                            ))}
+                          </Box>
+                          <Typography>
+                            {entry.watchDate
+                              ? `Watched on: ${entry.watchDate}`
+                              : "No Watch Date"}
+                          </Typography>
+                          {entry.tags && entry.tags.length > 0 && (
+                            <Box sx={{ mt: 1 }}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ fontSize: "0.8rem", fontWeight: 600 }}
+                              >
+                                Tags:
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 0.5,
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {entry.tags.map((tag, idx) => (
+                                  <Typography
+                                    key={idx}
+                                    sx={{
+                                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                                      padding: "2px 6px",
+                                      borderRadius: "12px",
+                                      fontSize: "0.75rem",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {tag}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            </Box>
+                          )}
+                          {ownProfile && (
+                            <Button
+                              variant="contained"
+                              color="error"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleRemove("movieLog", entry._id);
                               }}
+                              sx={{ mt: 1 }}
                             >
-                              {tag}
-                            </Typography>
-                          ))}
+                              Remove
+                            </Button>
+                          )}
                         </Box>
                       </Box>
-                    )}
-                    {ownProfile && (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleRemove("movieLog", entry._id);
-                        }}
-                        sx={{ mt: 1 }}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              </Link>
-            );
-          })}
-        </Box>
-
-        {/* Watch Later Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={() => navigate(`/${username}/watch-later`)}
-        >
-          Watch Later:
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {watchLaterArray.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster;
-            return (
-              <Link
-                to={`/movie/${entry.movieId}`}
-                key={index}
-                style={{ textDecoration: "none" }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    </Link>
+                  );
+                })}
+              </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/movie-log`)}
               >
-                <Box
-                  key={index}
-                  sx={{
-                    width: "160px",
-                    height: "240px",
-                    display: "inline-block",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    position: "relative",
-                    "&:hover .overlay": {
-                      display: "flex",
-                    },
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
+                View Full Movie Log
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {activeTab === 2 && (
+          <Box>
+            {watchLaterArray.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                You have no movies saved to watch later.
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                {watchLaterArray.slice(0, 5).map((entry, index) => (
                   <Link
                     to={`/movie/${entry.movieId}`}
-                    onClick={() =>
-                      window.scrollTo({ top: 0, behavior: "smooth" })
-                    }
+                    key={index}
+                    style={{ textDecoration: "none" }}
                   >
-                    <img
-                      src={
-                        isDefaultPoster
-                          ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
-                          : entry.poster
-                      }
-                      alt={entry.title || "Movie Poster"}
-                      style={{
-                        width: isDefaultPoster ? "85%" : "100%",
-                        height: "auto",
-                        maxHeight: isDefaultPoster ? "85%" : "auto",
-                        borderRadius: "5px",
-                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </Link>
-                  {isDefaultPoster && (
-                    <Typography
-                      variant="h6"
-                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
-                    >
-                      {entry.title || "Unknown Title"}
-                    </Typography>
-                  )}
-                  <Box
-                    className="overlay"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: "none",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)",
-                      color: "white",
-                      padding: 2,
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      fontSize: "0.9rem",
-                      fontWeight: 500,
-                      gap: 1,
-                    }}
-                  >
-                    {entry.tags && entry.tags.length > 0 && (
-                      <Typography>Tags: {entry.tags.join(", ")}</Typography>
-                    )}
-                    {ownProfile && (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleRemove("watchLater", entry._id);
-                        }}
-                        sx={{ mt: 1 }}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              </Link>
-            );
-          })}
-        </Box>
-
-        {/* TV Log Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={() => navigate(`/${username}/tv-log`)}
-        >
-          TV Log:
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {tvLog.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster;
-            return (
-              <Link
-                to={`/tv/${entry.tvId}`}
-                key={index}
-                style={{ textDecoration: "none" }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              >
-                <Box
-                  key={index}
-                  sx={{
-                    width: "160px",
-                    height: "240px",
-                    display: "inline-block",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    position: "relative", // Required for hover effect
-                    "&:hover .overlay": {
-                      display: "flex", // Show the overlay content on hover
-                    },
-                  }}
-                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
-                >
-                  <img
-                    src={
-                      isDefaultPoster
-                        ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
-                        : entry.poster
-                    }
-                    alt={entry.title || "TV Poster"}
-                    style={{
-                      width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
-                      height: "auto", // Maintains aspect ratio
-                      maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
-                      borderRadius: "5px",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      cursor: "pointer",
-                    }}
-                  />
-                  {isDefaultPoster && (
-                    <Typography
-                      variant="h6"
-                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
-                    >
-                      {entry.title || "Unknown Title"}
-                    </Typography>
-                  )}
-
-                  {/* Hover Overlay */}
-                  <Box
-                    className="overlay"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: "none", // Initially hidden
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
-                      color: "white",
-                      padding: 2,
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      fontSize: "0.9rem",
-                      fontWeight: 500,
-                      gap: 1,
-                    }}
-                  >
-                    {/* Display Rating */}
                     <Box
                       sx={{
-                        display: "flex",
-                        gap: "0.2rem",
-                        justifyContent: "center",
+                        width: "160px",
+                        height: "240px",
+                        display: "inline-block",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
                       }}
                     >
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar
-                          key={star}
-                          size={20}
-                          color={
-                            star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
-                          }
-                        />
-                      ))}
+                      <img
+                        src={
+                          entry.poster || `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                        }
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                      >
+                        {entry.title}
+                      </Typography>
                     </Box>
+                  </Link>
+                ))}
+              </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/watch-later`)}
+              >
+                View All Watch Later (Movies)
+              </Button>
+            </Box>
+          </Box>
+        )}
 
-                    {/* Watch Date */}
-                    <Typography>
-                      {entry.watchDate
-                        ? `Watched on: ${entry.watchDate}`
-                        : "No Watch Date"}
-                    </Typography>
-
-                    {/* Tags */}
-                    {entry.tags && entry.tags.length > 0 && (
-                      <Box sx={{ mt: 1 }}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontSize: "0.8rem", fontWeight: 600 }}
-                        >
-                          Tags:
-                        </Typography>
-                        <Box
-                          sx={{
+        {activeTab === 3 && (
+          <Box>
+            {tvLog.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                Your TV log is empty.
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                {tvLog.slice(0, 5).map((entry, index) => {
+                  const isDefaultPoster = !entry.poster;
+                  return (
+                    <Link
+                      to={`/tv/${entry.tvId}`}
+                      key={index}
+                      style={{ textDecoration: "none" }}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    >
+                      <Box
+                        key={index}
+                        sx={{
+                          width: "160px",
+                          height: "240px",
+                          display: "inline-block",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          textAlign: "center",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          position: "relative",
+                          "&:hover .overlay": {
                             display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
+                          },
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <img
+                          src={
+                            isDefaultPoster
+                              ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                              : entry.poster
+                          }
+                          alt={entry.title || "TV Poster"}
+                          style={{
+                            width: isDefaultPoster ? "85%" : "100%",
+                            height: "auto",
+                            maxHeight: isDefaultPoster ? "85%" : "auto",
+                            borderRadius: "5px",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                            cursor: "pointer",
+                          }}
+                        />
+                        {isDefaultPoster && (
+                          <Typography
+                            variant="h6"
+                            sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                          >
+                            {entry.title || "Unknown Title"}
+                          </Typography>
+                        )}
+                        <Box
+                          className="overlay"
+                          sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "none",
+                            flexDirection: "column",
                             justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            color: "white",
+                            padding: 2,
+                            borderRadius: "8px",
+                            textAlign: "center",
+                            fontSize: "0.9rem",
+                            fontWeight: 500,
+                            gap: 1,
                           }}
                         >
-                          {entry.tags.map((tag, idx) => (
-                            <Typography
-                              key={idx}
-                              sx={{
-                                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                                padding: "2px 6px",
-                                borderRadius: "12px",
-                                fontSize: "0.75rem",
-                                whiteSpace: "nowrap",
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: "0.2rem",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <FaStar
+                                key={star}
+                                size={20}
+                                color={
+                                  star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
+                                }
+                              />
+                            ))}
+                          </Box>
+                          <Typography>
+                            {entry.watchDate
+                              ? `Watched on: ${entry.watchDate}`
+                              : "No Watch Date"}
+                          </Typography>
+                          {entry.tags && entry.tags.length > 0 && (
+                            <Box sx={{ mt: 1 }}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ fontSize: "0.8rem", fontWeight: 600 }}
+                              >
+                                Tags:
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 0.5,
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {entry.tags.map((tag, idx) => (
+                                  <Typography
+                                    key={idx}
+                                    sx={{
+                                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                                      padding: "2px 6px",
+                                      borderRadius: "12px",
+                                      fontSize: "0.75rem",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {tag}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            </Box>
+                          )}
+                          {ownProfile && (
+                            <Button
+                              variant="contained"
+                              color="error"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleRemoveTV("tvLog", entry._id);
                               }}
+                              sx={{ mt: 1 }}
                             >
-                              {tag}
-                            </Typography>
-                          ))}
+                              Remove
+                            </Button>
+                          )}
                         </Box>
                       </Box>
-                    )}
-
-                    {/* Remove Button */}
-                    {ownProfile && (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleRemoveTV("tvLog", entry._id);
-                          console.log("Remove TV:", entry.tvId);
-                        }}
-                        sx={{ mt: 1 }}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              </Link>
-            );
-          })}
-        </Box>
-
-        {/* Watch Later Shows Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={() => navigate(`/${username}/watch-later-tv`)} // Redirect to Watch Later page
-        >
-          Watch Later (TV):
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {watchLaterShows.slice(0, 5).map((entry, index) => {
-            const isDefaultPoster = !entry.poster; // Check if there's no poster
-            return (
-              <Link
-                to={`/tv/${entry.tvId}`} // Redirect to the movie details page
-                key={index}
-                style={{ textDecoration: "none" }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    </Link>
+                  );
+                })}
+              </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/tv-log`)}
               >
-                <Box
-                  key={index}
-                  sx={{
-                    width: "160px",
-                    height: "240px",
-                    display: "inline-block",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    position: "relative", // Required for hover effect
-                    "&:hover .overlay": {
-                      display: "flex", // Show the overlay content on hover
-                    },
-                  }}
-                  onClick={(e) => e.stopPropagation()} // Prevent link redirection when clicking specific buttons
-                >
+                View Full TV Log
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {activeTab === 4 && (
+          <Box>
+            {watchLaterShows.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                You have no TV shows saved to watch later.
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                {watchLaterShows.slice(0, 5).map((entry, index) => (
                   <Link
                     to={`/tv/${entry.tvId}`}
-                    onClick={() =>
-                      window.scrollTo({ top: 0, behavior: "smooth" })
-                    }
+                    key={index}
+                    style={{ textDecoration: "none" }}
                   >
-                    <img
-                      src={
-                        isDefaultPoster
-                          ? `${process.env.PUBLIC_URL}/default-poster-icon.png`
-                          : entry.poster
-                      }
-                      alt={entry.title || "TV Poster"}
-                      style={{
-                        width: isDefaultPoster ? "85%" : "100%", // Smaller width for default posters
-                        height: "auto", // Maintains aspect ratio
-                        maxHeight: isDefaultPoster ? "85%" : "auto", // Smaller height for default posters
-                        borderRadius: "5px",
-                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                        cursor: "pointer",
+                    <Box
+                      sx={{
+                        width: "160px",
+                        height: "240px",
+                        display: "inline-block",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
                       }}
-                    />
-                  </Link>
-                  {isDefaultPoster && (
-                    <Typography
-                      variant="h6"
-                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
                     >
-                      {entry.title || "Unknown Title"}
-                    </Typography>
-                  )}
-
-                  {/* Hover Overlay */}
-                  <Box
-                    className="overlay"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: "none", // Initially hidden
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark background for better visibility
-                      color: "white",
-                      padding: 2,
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      fontSize: "0.9rem",
-                      fontWeight: 500,
-                      gap: 1,
-                    }}
-                  >
-                    {/* Tags (Optional Section) */}
-                    {entry.tags && entry.tags.length > 0 && (
-                      <Typography>Tags: {entry.tags.join(", ")}</Typography>
-                    )}
-
-                    {/* Remove Button */}
-                    {ownProfile && (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleRemoveTV("watchLater", entry._id);
-                          console.log("Remove TV:", entry.tvId);
+                      <img
+                        src={
+                          entry.poster || `${process.env.PUBLIC_URL}/default-poster-icon.png`
+                        }
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                         }}
-                        sx={{ mt: 1 }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
                       >
-                        Remove
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              </Link>
-            );
-          })}
-        </Box>
+                        {entry.title}
+                      </Typography>
+                    </Box>
+                  </Link>
+                ))}
+              </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/watch-later-tv`)}
+              >
+                View All Watch Later (TV)
+              </Button>
+            </Box>
+          </Box>
+        )}
 
-        {/* Book Log Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={() => navigate(`/${username}/book-log`)}
-        >
-          Book Log:
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {loggedBooks.slice(0, 5).map((entry, index) => (
-            <Link
-              to={`/book/${entry.bookId}`}
-              key={index}
-              style={{ textDecoration: "none" }}
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            >
+        {activeTab === 5 && (
+          <Box>
+            {loggedBooks.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                Your book log is empty.
+              </Typography>
+            ) : (
               <Box
                 sx={{
-                  width: "160px",
-                  height: "240px",
-                  display: "inline-block",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  borderRadius: "8px",
-                  overflow: "hidden",
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                <img
-                  src={
-                    entry.cover ||
-                    `${process.env.PUBLIC_URL}/default-book-cover.png`
-                  }
-                  alt={entry.title}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "5px",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
-                >
-                  {entry.title}
-                </Typography>
+                {loggedBooks.slice(0, 5).map((entry, index) => (
+                  <Link
+                    to={`/book/${entry.bookId}`}
+                    key={index}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Box
+                      sx={{
+                        width: "160px",
+                        height: "240px",
+                        display: "inline-block",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <img
+                        src={
+                          entry.cover || `${process.env.PUBLIC_URL}/default-book-cover.png`
+                        }
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                      >
+                        {entry.title}
+                      </Typography>
+                    </Box>
+                  </Link>
+                ))}
               </Box>
-            </Link>
-          ))}
-        </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/book-log`)}
+              >
+                View Full Book Log
+              </Button>
+            </Box>
+          </Box>
+        )}
 
-        {/* Read Later Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-          onClick={() => navigate(`/${username}/read-later`)}
-        >
-          Read Later:
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          {readLaterArray.slice(0, 5).map((entry, index) => (
-            <Link
-              to={`/book/${entry.bookId}`}
-              key={index}
-              style={{ textDecoration: "none" }}
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            >
+        {activeTab === 6 && (
+          <Box>
+            {readLaterArray.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                You have no books saved to read later.
+              </Typography>
+            ) : (
               <Box
                 sx={{
-                  width: "160px",
-                  height: "240px",
-                  display: "inline-block",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  borderRadius: "8px",
-                  overflow: "hidden",
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                <img
-                  src={
-                    entry.cover ||
-                    `${process.env.PUBLIC_URL}/default-book-cover.png`
-                  }
-                  alt={entry.title}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "5px",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
-                >
-                  {entry.title}
-                </Typography>
+                {readLaterArray.slice(0, 5).map((entry, index) => (
+                  <Link
+                    to={`/book/${entry.bookId}`}
+                    key={index}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Box
+                      sx={{
+                        width: "160px",
+                        height: "240px",
+                        display: "inline-block",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <img
+                        src={
+                          entry.cover || `${process.env.PUBLIC_URL}/default-book-cover.png`
+                        }
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                      >
+                        {entry.title}
+                      </Typography>
+                    </Box>
+                  </Link>
+                ))}
               </Box>
-            </Link>
-          ))}
-        </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/read-later`)}
+              >
+                View All Read Later
+              </Button>
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>
   );
