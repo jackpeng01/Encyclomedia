@@ -27,6 +27,7 @@ import BookSearch from "./scenes/BookSearch";
 import BookDetails from "./scenes/BookDetails";
 import ReadLater from "./scenes/ReadLater";
 import BookLog from "./scenes/BookLog";
+import MusicSearch from "./scenes/MusicSearch";
 import MovieLog from "./scenes/MovieLog";
 import WatchLater from "./scenes/WatchLater";
 import TvSearchPage from "./scenes/TvSearchPage";
@@ -157,6 +158,8 @@ function App() {
               <Route path="/booksearch" element={<BookSearch />} />
 
               <Route path="/book/:id" element={<BookDetails />} />
+              <Route path="/musicsearch" element={<MusicSearch />} />
+
 
               <Route path="/:username/read-later" element={<ReadLater />} />
 
