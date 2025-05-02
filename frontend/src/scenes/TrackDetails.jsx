@@ -47,6 +47,8 @@ const TrackDetails = () => {
           `http://127.0.0.1:5000/api/music/track/${id}`
         );
         setTrack(response.data);
+        setRating(0);
+        setHover(0);
       } catch (err) {
         console.error("Failed to load track details:", err);
         setError("Failed to load track details.");

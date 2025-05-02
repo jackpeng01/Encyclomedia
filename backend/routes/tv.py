@@ -556,7 +556,7 @@ def search_people():
                     "id": item.get("id"),  
                     "name": item.get("name"),
                     "known_for": item.get("known_for_department)"),
-                    "profile_path": f"https://image.tmdb.org/t/p/original/{item.get("profile_path")}" if item.get("profile_path") else None,
+                    "profile_path": f"https://image.tmdb.org/t/p/original/{item.get('profile_path')}" if item.get("profile_path") else None,
                 })
         return jsonify({"people": people})
 
@@ -616,7 +616,7 @@ def person_details(person_id):
             "name": item.get("name"),
             "known_for": item.get("known_for_department"),
             "biography": item.get("biography"),
-            "profile_path": f"https://image.tmdb.org/t/p/original/{item.get("profile_path")}" if item.get("profile_path") else None,
+            "profile_path": f"https://image.tmdb.org/t/p/original/{item.get('profile_path')}" if item.get("profile_path") else None,
             "cast": cast,
             "crew": crew,
         }
