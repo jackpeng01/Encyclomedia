@@ -37,6 +37,7 @@ if db is not None:
         "reviews": db.get_collection("reviews"),
         "movieLogs": db.get_collection("movieLogs"),
         "bookLogs": db["bookLogs"],
+        "musicLogs": db.get_collection("musicLogs"),
         "tvLogs": db.get_collection("tvLogs"),
         "lists": db.get_collection("lists"),
         "collages": db.get_collection("collages") 
