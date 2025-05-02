@@ -383,6 +383,7 @@ const TVDetails = () => {
         username: userData.username, // Replace with the current user's ID (from context or props)
         title: tv.title,
         poster: tv.poster_path,
+        number_of_episodes: tv.number_of_episodes,
       };
 
       // Make the POST request to log the movie

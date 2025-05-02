@@ -374,6 +374,7 @@ const MovieDetails = () => {
         username: userData.username, // Replace with the current user's ID (from context or props)
         title: movie.title,
         poster: movie.poster_path,
+        runtime: movie.runtime,
       };
 
       // Make the POST request to log the movie

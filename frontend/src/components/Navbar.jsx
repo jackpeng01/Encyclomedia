@@ -129,14 +129,22 @@ const Navbar = () => {
               searchQuery.trim()
             )}&category=${category}`
           );
-         // MUSIC HERE 
         } else if (category === "music") {
           navigate(
             `/musicsearch?query=${encodeURIComponent(searchQuery.trim())}`
           );
-        } else {
+        } else if (category === "tv") {
+          navigate(`/tvsearch?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`);
+        } else if (category === "authors") {
+          navigate(`/searchauthor?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`);
+        }
+        else if (category === "people") {
           navigate(
-            `/tvsearch?query=${encodeURIComponent(
+            `/searchpeople?query=${encodeURIComponent(
               searchQuery.trim()
             )}&category=${category}`
           );
@@ -290,6 +298,8 @@ const Navbar = () => {
                 <MenuItem value="music">Music</MenuItem>
                 <MenuItem value="users">Users</MenuItem>
                 <MenuItem value="plot">Plot</MenuItem>
+                <MenuItem value="people">Cast & Crew</MenuItem>
+                <MenuItem value="authors">Authors</MenuItem>
               </Select>
             </Box>
             <button type="submit" style={{ display: "none" }}></button>

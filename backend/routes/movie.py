@@ -304,6 +304,7 @@ def log_movie(movie_id):
     username = data.get("username")
     title = data.get("title")
     poster = data.get("poster")
+    runtime = data.get("runtime")
 
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -342,6 +343,7 @@ def log_movie(movie_id):
         "tags": tags.split(",") if tags else [],  # Convert tags into a list if provided
         "title": title,
         "poster": poster,  # Add poster path to the movie log
+        "runtime": runtime,
     }
 
     result = movie_logs_col.update_one(

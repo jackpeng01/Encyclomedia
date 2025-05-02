@@ -395,6 +395,7 @@ const BookDetails = () => {
         username: userData.username,
         title: book.title,
         cover: book.cover_url,
+        author: book.author,
       };
 
       const response = await axios.post(

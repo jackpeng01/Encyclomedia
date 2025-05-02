@@ -51,12 +51,21 @@ const ProfilePage = () => {
 
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
+  const [movieTime, setMovieTime] = useState(0);
+  const [movieCount, setMovieCount] = useState(0);
+  const [movieActivity, setMovieActivity] = useState("");
   const [tvLog, setTvLog] = useState([]);
   const [watchLaterShows, setWatchLaterShows] = useState([]);
+  const [tvTime, setTvTime] = useState(0);
+  const [tvCount, setTvCount] = useState(0);
+  const [tvActivity, setTvActivity] = useState("");
   const [readLaterArray, setReadLaterArray] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [loggedBooks, setLoggedBooks] = useState([]);
   const [musicLog, setMusicLog] = useState([]);
+  const [bookCount, setBookCount] = useState([]);
+  const [bookActivity, setBookActivity] = useState("");
+  const [mostRead, setMostRead] = useState("");
   const [error, setError] = useState("");
   const [ownProfile, setOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -85,7 +94,28 @@ const ProfilePage = () => {
             }
           );
           setMovieLog(response.data);
-          console.log(response.data);
+          //calculate total watched time
+          setMovieTime(response.data.reduce((sum, item) => sum + item.runtime, 0));
+          //calculate total movies watched (doesn not include repeats)
+          const movieIds = response.data.map(item => item.movieId);
+          const uniqueMovieIds = new Set(movieIds);
+          setMovieCount(uniqueMovieIds.size);
+          //calculates month with highest activity
+          const moviesByMonth = response.data.reduce((acc, movie) => {
+            const date = movie.watchDate.slice(0, 7);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+          }, {});
+          let highestMonth = "No data";
+          let highestCount = 0;
+          for (const [month, count] of Object.entries(moviesByMonth)) {
+            if (count > highestCount) {
+              highestCount = count;
+              highestMonth = month;
+            }
+          }
+          setMovieActivity(highestMonth);
+          console.log(movieActivity);
         } catch (err) {
           console.log(err);
           setError("Failed to load movie log.");
@@ -122,6 +152,26 @@ const ProfilePage = () => {
             },
           });
           setTvLog(response.data);
+          setTvTime(response.data.reduce((sum, item) => sum + item.number_of_episodes, 0));
+          const tvIds = response.data.map(item => item.movieId);
+          const uniqueTvIds = new Set(tvIds);
+          setTvCount(uniqueTvIds.size);
+          //calculates month with highest activity
+          const tvByMonth = response.data.reduce((acc, tv) => {
+            const date = tv.watchDate.slice(0, 7);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+          }, {});
+          let highestMonth = "No data";
+          let highestCount = 0;
+          for (const [month, count] of Object.entries(tvByMonth)) {
+            if (count > highestCount) {
+              highestCount = count;
+              highestMonth = month;
+            }
+          }
+          setTvActivity(highestMonth);
+          console.log(tvActivity);
           console.log(response.data);
         } catch (err) {
           console.log(err);
@@ -177,6 +227,39 @@ const ProfilePage = () => {
             }
           );
           setLoggedBooks(response.data);
+          const bookIds = response.data.map(item => item.bookId);
+          const uniqueBookIds = new Set(bookIds);
+          setBookCount(uniqueBookIds.size);
+          //find month with most logged books
+          const booksByMonth = response.data.reduce((acc, book) => {
+            const date = book.readDate.slice(0, 7);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+          }, {});
+          let highestMonth = "No data";
+          let highestCount = 0;
+          for (const [month, count] of Object.entries(booksByMonth)) {
+            if (count > highestCount) {
+              highestCount = count;
+              highestMonth = month;
+            }
+          }
+          setBookActivity(highestMonth);
+          //find most read author
+          const mostRead = response.data.reduce((acc, book) => {
+            const author = book.author
+            acc[author] = (acc[author] || 0) + 1;
+            return acc;
+          }, {});
+          let highestAuthor = "No data";
+          let maxCount = 0;
+          for (const [author, count] of Object.entries(mostRead)) {
+            if (count > maxCount) {
+              maxCount = count;
+              highestAuthor = author;
+            }
+          }
+          setMostRead(highestAuthor);
           console.log(response.data);
         } catch (err) {
           console.log(err);
@@ -1152,125 +1235,217 @@ const ProfilePage = () => {
           </Box>
         )}
         {activeTab === 7 && (
-  <Box>
-    {musicLog.length === 0 ? (
-      <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
-        Your music log is empty.
-      </Typography>
-    ) : (
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
-        {musicLog.slice(0, 5).map((entry, index) => (
-          <Link
-            to={`/track/${entry.trackId}`}
-            key={index}
-            style={{ textDecoration: "none" }}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          >
-            <Box
-              sx={{
-                width: "160px",
-                height: "240px",
-                position: "relative",
-                textAlign: "center",
-                borderRadius: "8px",
-                overflow: "hidden",
-                "&:hover .overlay": {
-                  display: "flex",
-                },
-              }}
-            >
-              <img
-                src={entry.cover || `${process.env.PUBLIC_URL}/default-cover.png`}
-                alt={entry.title}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  borderRadius: "5px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-              <Typography
-                variant="h6"
-                sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
-              >
-                {entry.title} - {entry.artist}
+          <Box>
+            {musicLog.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                Your music log is empty.
               </Typography>
-
+            ) : (
               <Box
-                className="overlay"
                 sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: "none",
-                  flexDirection: "column",
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
                   justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "rgba(0, 0, 0, 0.7)",
-                  color: "white",
-                  padding: 2,
-                  borderRadius: "8px",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
-                  fontWeight: 500,
-                  gap: 1,
                 }}
               >
-                <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <FaStar
-                      key={star}
-                      size={20}
-                      color={
-                        star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
-                      }
-                    />
-                  ))}
-                </Box>
-                <Typography>
-                  {entry.listenDate ? `Listened on: ${entry.listenDate}` : "No Listen Date"}
-                </Typography>
-
-                {ownProfile && (
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRemoveMusic("musicLog", entry._id);
-                    }}
-                    sx={{ mt: 1 }}
+                {musicLog.slice(0, 5).map((entry, index) => (
+                  <Link
+                    to={`/track/${entry.trackId}`}
+                    key={index}
+                    style={{ textDecoration: "none" }}
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                   >
-                    Remove
-                  </Button>
-                )}
+                    <Box
+                      sx={{
+                        width: "160px",
+                        height: "240px",
+                        position: "relative",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        "&:hover .overlay": {
+                          display: "flex",
+                        },
+                      }}
+                    >
+                      <img
+                        src={entry.cover || `${process.env.PUBLIC_URL}/default-cover.png`}
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                      >
+                        {entry.title} - {entry.artist}
+                      </Typography>
+
+                      <Box
+                        className="overlay"
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: "none",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "rgba(0, 0, 0, 0.7)",
+                          color: "white",
+                          padding: 2,
+                          borderRadius: "8px",
+                          textAlign: "center",
+                          fontSize: "0.9rem",
+                          fontWeight: 500,
+                          gap: 1,
+                        }}
+                      >
+                        <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                              key={star}
+                              size={20}
+                              color={
+                                star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
+                              }
+                            />
+                          ))}
+                        </Box>
+                        <Typography>
+                          {entry.listenDate ? `Listened on: ${entry.listenDate}` : "No Listen Date"}
+                        </Typography>
+
+                        {ownProfile && (
+                          <Button
+                            variant="contained"
+                            color="error"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleRemoveMusic("musicLog", entry._id);
+                            }}
+                            sx={{ mt: 1 }}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </Box>
+                    </Box>
+                  </Link>
+                ))}
               </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/music-log`)}
+              >
+                View Full Music Log
+              </Button>
             </Box>
-          </Link>
-        ))}
-      </Box>
-    )}
-    <Box sx={{ textAlign: "center", mt: 3 }}>
-      <Button
-        variant="outlined"
-        onClick={() => navigate(`/${username}/music-log`)}
-      >
-        View Full Music Log
-      </Button>
-    </Box>
-  </Box>
-)}
+          </Box>
+        )}
 
-
+        {/* User Stats Section */}
+        <div style={{ display: 'flex', gap: '20px', marginTop: '50px'}}>
+         <div style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#d9d8d4',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '300px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          margin: 'auto',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
+        <h2 style={{
+          fontSize: '24px',
+          color: '#54608a',
+          marginBottom: '15px'
+        }}>Movie Stats</h2>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Minutes Watched: </strong>
+          <span style={{ color: '#54608a' }}>{movieTime}</span> minutes
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Movies Watched: </strong>
+          <span style={{ color: '#54608a' }}>{movieCount}</span> movies
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Activity in: </strong>
+          <span style={{ color: '#54608a' }}>{movieActivity}</span>
+        </p>
+      </div>
+      <div style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#d9d8d4',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '300px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          margin: 'auto',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
+        <h2 style={{
+          fontSize: '24px',
+          color: '#54608a',
+          marginBottom: '15px'
+        }}>TV Stats</h2>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Episodes Watched: </strong>
+          <span style={{ color: '#54608a' }}>{tvTime}</span> episodes
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Shows Watched: </strong>
+          <span style={{ color: '#54608a' }}>{tvCount}</span> shows
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Activity in: </strong>
+          <span style={{ color: '#54608a' }}>{tvActivity}</span>
+        </p>
+      </div>
+      <div style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#d9d8d4',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '300px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          margin: 'auto',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
+        <h2 style={{
+          fontSize: '24px',
+          color: '#54608a',
+          marginBottom: '15px'
+        }}>Book Stats</h2>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Read Author: </strong>
+          <span style={{ color: '#54608a' }}>{mostRead}</span>
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Books Read: </strong>
+          <span style={{ color: '#54608a' }}>{bookCount}</span> books
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Activity in: </strong>
+          <span style={{ color: '#54608a' }}>{bookActivity}</span>
+        </p>
+      </div>
+      </div>
       </Box>
     </Box>
   );

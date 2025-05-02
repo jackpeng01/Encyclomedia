@@ -507,6 +507,7 @@ def handle_log_book(book_id):
     cover = data.get("cover")
     read_date = data.get("read_date")
     rating = data.get("rating")
+    author = data.get('author')
 
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -549,6 +550,7 @@ def handle_log_book(book_id):
         "cover": cover,
         "readDate": read_date,
         "rating": rating,
+        "author": author,
     }
 
     result = book_logs_col.update_one(
@@ -691,6 +693,82 @@ def trending_books():
                 }
             )
         return jsonify({"book": book})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
+@books_bp.route("/api/searchauthor", methods=["GET"])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def search_author():
+    author = request.args.get("query", "")
+    if not author:
+        return jsonify({'error': 'Query parameter "author" is required'}), 400
+
+
+    # Construct the full query to include subjects if they are provided
+    full_query = author
+    
+    try:
+        # Perform the search request to Open Library
+        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"author": full_query, "sort": "new"})
+        response.raise_for_status()  # Raise error for bad responses
+        data = response.json()
+
+        authors = []
+        for each in data.get("docs", []):
+            for i, author in enumerate(each.get("author_key", [])):
+                name = each.get("author_name", [])[i]
+                if not any(author == a["id"] for a in authors) and full_query.lower() in name.lower():
+                    authors.append({
+                    "id": author, # Extracting book ID
+                    "name": name,
+                    "image_url": f"https://covers.openlibrary.org/a/olid/{author}-M.jpg" if author else "https://covers.openlibrary.org/b/id/10909258-M.jpg"  # Default cover if missing
+                })
+
+        return jsonify({"authors": authors})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+    
+@books_bp.route('/api/authors/<author_id>', methods=['GET'])
+@cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
+def person_details(author_id):
+    try:
+        # Fetch movie details from TMDB API
+        url = f"https://openlibrary.org/authors/{author_id}.json"
+        credits_url = f"https://openlibrary.org/search.json?author={author_id}"
+
+        # Movie details
+        response = requests.get(url)
+        response.raise_for_status()
+        item = response.json()
+
+        # Movie credits
+        books_response = requests.get(credits_url)
+        books_response.raise_for_status()
+        books = books_response.json()
+
+        # Extract cast information (limit to top 20 for brevity)
+        work = []
+        totalCount = books.get("numFound")
+        for member in books.get("docs", []):
+
+            # Append member details to cast list
+            work.append({
+                "id": member.get("key", "").replace("/works/", ""),  # Extracting book ID
+                "title": member.get("title", "Unknown Title"),
+                "cover_url": f"https://covers.openlibrary.org/b/id/{member.get('cover_i', '10909258')}-M.jpg"
+            })
+
+        # Format the response data
+        author_details = {
+            "name": item.get("name"),
+            "biography": item.get("bio"),
+            "image_url": f"https://covers.openlibrary.org/a/olid/{author_id}-M.jpg" if author_id else "https://covers.openlibrary.org/b/id/10909258-M.jpg",  # Default cover if missing
+            "num_books": totalCount,
+            "work": work,
+        }
+        return jsonify(author_details)
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500

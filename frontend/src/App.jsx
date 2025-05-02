@@ -46,6 +46,10 @@ import Trending from "./scenes/Trending";
 import AchievementsPage from "./scenes/AchievementsPage";
 import BlockedListPage from "./scenes/BlockedListPage";
 import FavoriteMedia from "./scenes/FavoriteMedia";
+import PeopleSearch from "./scenes/PeopleSearch";
+import PeopleDetails from "./scenes/PeopleDetails";
+import AuthorSearch from "./scenes/AuthorSearch";
+import AuthorDetails from "./scenes/AuthorDetails";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -187,6 +191,17 @@ function App() {
               <Route path="/trending" element={<Trending />} />
               <Route path="/blocked" element={<BlockedListPage />} />
               <Route path="/:username/favorite-media" element={<FavoriteMedia />} />
+            <Route path="/tvsearch" element={<TVSearch />} />
+            <Route path="/tv/:id" element={<TVDetails />} />
+            <Route path="/:username/watch-later-tv" element={<WatchLaterTV />} />
+            <Route path="/:username/tv-log" element={<TVLog />} />
+            <Route path="/trending" element={<Trending />} />
+            <Route path="/searchpeople" element={<PeopleSearch />} />
+            <Route path="/people/:id" element={<PeopleDetails />} />
+            <Route path="/searchauthor" element={<AuthorSearch />} />
+            <Route path="/authors/:id" element={<AuthorDetails />} />
+
+
 
             </Routes>
           </Container>
