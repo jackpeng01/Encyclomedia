@@ -69,11 +69,11 @@ const MovieLog = () => {
         setSortOrder(nextSortOrder);
 
         if (nextSortOrder === "highToLow") {
-            setSortedMovieLog([...filteredMovieLog].sort((a, b) => b.rating - a.rating));
+            setFilteredMovieLog([...filteredMovieLog].sort((a, b) => b.rating - a.rating));
         } else if (nextSortOrder === "lowToHigh") {
-            setSortedMovieLog([...filteredMovieLog].sort((a, b) => a.rating - b.rating));
+            setFilteredMovieLog([...filteredMovieLog].sort((a, b) => a.rating - b.rating));
         } else {
-            setSortedMovieLog(filteredMovieLog); // Reset to the filtered list
+            setFilteredMovieLog(filteredMovieLog); // Reset to the filtered list
         }
     };
 

@@ -67,11 +67,11 @@ const TVLog = () => {
         setSortOrder(nextSortOrder);
 
         if (nextSortOrder === "highToLow") {
-            setSortedTvLog([...filteredTvLog].sort((a, b) => b.rating - a.rating));
+            setFilteredTvLog([...filteredTvLog].sort((a, b) => b.rating - a.rating));
         } else if (nextSortOrder === "lowToHigh") {
-            setSortedTvLog([...filteredTvLog].sort((a, b) => a.rating - b.rating));
+            setFilteredTvLog([...filteredTvLog].sort((a, b) => a.rating - b.rating));
         } else {
-            setSortedTvLog(filteredTvLog); // Reset to the filtered list
+            setFilteredTvLog(filteredTvLog); // Reset to the filtered list
         }
     };
 
