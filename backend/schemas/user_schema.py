@@ -17,4 +17,4 @@ class UserSchema(Schema):
     blocked = fields.List(fields.String(), missing=list)
     genrePreferences = fields.List(fields.String(), missing=list)
     followed_lists = fields.List(fields.String(), missing=list)
-    favorites = fields.List(fields.Str(), default=[])
+    favorites = fields.List(fields.Raw(), missing=list)
