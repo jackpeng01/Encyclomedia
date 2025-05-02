@@ -76,6 +76,11 @@ const Navbar = () => {
             `http://127.0.0.1:5000/api/tv/suggestions?query=${searchQuery}`
           );
           setSuggestions(response.data.suggestions || []);
+        } else if (category === "music") {
+          const response = await axios.get(
+            `http://127.0.0.1:5000/api/music/search?q=${encodeURIComponent(searchQuery)}`
+          );
+          setSuggestions(response.data || []);
         }
       } catch (error) {
         console.error(`Error fetching ${category} suggestions:`, error);
@@ -123,6 +128,10 @@ const Navbar = () => {
             `/search?query=${encodeURIComponent(
               searchQuery.trim()
             )}&category=${category}`
+          );
+        } else if (category === "music") {
+          navigate(
+            `/musicsearch?query=${encodeURIComponent(searchQuery.trim())}`
           );
         } else if (category === "tv") {
           navigate(`/tvsearch?query=${encodeURIComponent(
@@ -286,6 +295,7 @@ const Navbar = () => {
                 <MenuItem value="movies">Movies</MenuItem>
                 <MenuItem value="tv">TV</MenuItem>
                 <MenuItem value="books">Books</MenuItem>
+                <MenuItem value="music">Music</MenuItem>
                 <MenuItem value="users">Users</MenuItem>
                 <MenuItem value="plot">Plot</MenuItem>
                 <MenuItem value="people">Cast & Crew</MenuItem>
@@ -294,7 +304,7 @@ const Navbar = () => {
             </Box>
             <button type="submit" style={{ display: "none" }}></button>
           </form>
-          {["books", "movies", "tv"].includes(category) &&
+          {["books", "movies", "tv", "music"].includes(category) &&
             suggestions.length > 0 && (
               <List
                 sx={{
@@ -320,7 +330,10 @@ const Navbar = () => {
                           ? `/book/${suggestion.id}`
                           : category === "movies"
                             ? `/movie/${suggestion.id}`
+                            : category === "music"
+                            ? `/track/${suggestion.id}`
                             : `/tv/${suggestion.id}`
+                             
                       );
                       setSearchQuery("");
                       setSuggestions([]);
@@ -341,6 +354,8 @@ const Navbar = () => {
                         secondary={
                           category === "books"
                             ? suggestion.author
+                            : category === "music"
+                            ? suggestion.artist?.name
                             : suggestion.release_date
                               ? new Date(suggestion.release_date).getFullYear()
                               : ""
@@ -349,7 +364,9 @@ const Navbar = () => {
                       />
 
                       {/* Right side: poster/cover */}
-                      {suggestion.poster && (
+                      {(category === "books" && suggestion.poster) ||
+                      (category === "movies" && suggestion.poster) ||
+                      (category === "tv" && suggestion.poster) ? (
                         <img
                           src={suggestion.poster}
                           alt={suggestion.title}
@@ -361,7 +378,19 @@ const Navbar = () => {
                             marginLeft: "10px",
                           }}
                         />
-                      )}
+                      ) : category === "music" && suggestion.album?.cover_medium ? (
+                        <img
+                          src={suggestion.album.cover_medium}
+                          alt={suggestion.title}
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            objectFit: "cover",
+                            borderRadius: "4px",
+                            marginLeft: "10px",
+                          }}
+                        />
+                      ) : null}
                     </Box>
                   </ListItem>
                 ))}

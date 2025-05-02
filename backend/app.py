@@ -7,6 +7,7 @@ from routes.auth import auth_bp
 from routes.tv import tv_bp
 from routes.movie import movie_bp
 from routes.books import books_bp
+from routes.music import music_bp
 from services.config import Config
 from services.database import connect_db
 from routes.lists import lists_bp
@@ -36,6 +37,7 @@ if db is not None:
         "reviews": db.get_collection("reviews"),
         "movieLogs": db.get_collection("movieLogs"),
         "bookLogs": db["bookLogs"],
+        "musicLogs": db.get_collection("musicLogs"),
         "tvLogs": db.get_collection("tvLogs"),
         "lists": db.get_collection("lists"),
         "collages": db.get_collection("collages") 
@@ -51,6 +53,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(tv_bp)
 app.register_blueprint(movie_bp)
 app.register_blueprint(books_bp)
+app.register_blueprint(music_bp)
 
 app.register_blueprint(lists_bp) 
 app.register_blueprint(reviews_bp)

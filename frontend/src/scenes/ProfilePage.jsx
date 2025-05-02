@@ -62,6 +62,7 @@ const ProfilePage = () => {
   const [readLaterArray, setReadLaterArray] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [loggedBooks, setLoggedBooks] = useState([]);
+  const [musicLog, setMusicLog] = useState([]);
   const [bookCount, setBookCount] = useState([]);
   const [bookActivity, setBookActivity] = useState("");
   const [mostRead, setMostRead] = useState("");
@@ -264,6 +265,15 @@ const ProfilePage = () => {
           console.log(err);
           setError("Failed to load book log.");
         }
+        /* Fetch music log */
+        try {
+          const response = await axios.get(`http://127.0.0.1:5000/api/music/log`, {
+            params: { username }
+          });
+          setMusicLog(response.data);
+        } catch (err) {
+          console.log(err);
+        }
       }
     };
     fetchProfile();
@@ -300,6 +310,33 @@ const ProfilePage = () => {
         }
 
         // alert("Successfully removed!");
+      } else {
+        throw new Error("Failed to remove the entry.");
+      }
+    } catch (error) {
+      console.error("Error removing the entry:", error);
+      alert("An error occurred while trying to remove the entry.");
+    }
+  };
+
+  const handleRemoveMusic = async (section, entryId) => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:5000/api/music/remove",
+        {
+          username: username,
+          entry: entryId,
+          section: section,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        setMusicLog((prev) => prev.filter((entry) => entry._id !== entryId));
       } else {
         throw new Error("Failed to remove the entry.");
       }
@@ -513,6 +550,7 @@ const ProfilePage = () => {
           <Tab label="Watch Later (TV)" />
           <Tab label="Book Log" />
           <Tab label="Read Later" />
+          <Tab label="Music Log" />
         </Tabs>
 
         {/* Tab Content */}
@@ -1192,6 +1230,124 @@ const ProfilePage = () => {
                 onClick={() => navigate(`/${username}/read-later`)}
               >
                 View All Read Later
+              </Button>
+            </Box>
+          </Box>
+        )}
+        {activeTab === 7 && (
+          <Box>
+            {musicLog.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+                Your music log is empty.
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                {musicLog.slice(0, 5).map((entry, index) => (
+                  <Link
+                    to={`/track/${entry.trackId}`}
+                    key={index}
+                    style={{ textDecoration: "none" }}
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  >
+                    <Box
+                      sx={{
+                        width: "160px",
+                        height: "240px",
+                        position: "relative",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        "&:hover .overlay": {
+                          display: "flex",
+                        },
+                      }}
+                    >
+                      <img
+                        src={entry.cover || `${process.env.PUBLIC_URL}/default-cover.png`}
+                        alt={entry.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "5px",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                      >
+                        {entry.title} - {entry.artist}
+                      </Typography>
+
+                      <Box
+                        className="overlay"
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: "none",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "rgba(0, 0, 0, 0.7)",
+                          color: "white",
+                          padding: 2,
+                          borderRadius: "8px",
+                          textAlign: "center",
+                          fontSize: "0.9rem",
+                          fontWeight: 500,
+                          gap: 1,
+                        }}
+                      >
+                        <Box sx={{ display: "flex", gap: "0.2rem", justifyContent: "center" }}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                              key={star}
+                              size={20}
+                              color={
+                                star <= (entry.rating || 0) ? "#ffc107" : "#e4e5e9"
+                              }
+                            />
+                          ))}
+                        </Box>
+                        <Typography>
+                          {entry.listenDate ? `Listened on: ${entry.listenDate}` : "No Listen Date"}
+                        </Typography>
+
+                        {ownProfile && (
+                          <Button
+                            variant="contained"
+                            color="error"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleRemoveMusic("musicLog", entry._id);
+                            }}
+                            sx={{ mt: 1 }}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </Box>
+                    </Box>
+                  </Link>
+                ))}
+              </Box>
+            )}
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/${username}/music-log`)}
+              >
+                View Full Music Log
               </Button>
             </Box>
           </Box>
