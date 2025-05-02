@@ -63,6 +63,7 @@ const ProfilePage = () => {
   const [favorites, setFavorites] = useState([]);
   const [loggedBooks, setLoggedBooks] = useState([]);
   const [musicLog, setMusicLog] = useState([]);
+  const [listenLaterMusic, setListenLaterMusic] = useState([]);
   const [bookCount, setBookCount] = useState([]);
   const [bookActivity, setBookActivity] = useState("");
   const [mostRead, setMostRead] = useState("");
@@ -274,6 +275,17 @@ const ProfilePage = () => {
         } catch (err) {
           console.log(err);
         }
+        /* Fetch listen later */
+        try {
+          const response = await axios.get("http://127.0.0.1:5000/api/music/listen_later", {
+            params: { username }
+          });
+          setListenLaterMusic(response.data);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to load Listen Later music.");
+        }
+
       }
     };
     fetchProfile();
@@ -551,6 +563,8 @@ const ProfilePage = () => {
           <Tab label="Book Log" />
           <Tab label="Read Later" />
           <Tab label="Music Log" />
+          <Tab label="Listen Later (Music)" />
+
         </Tabs>
 
         {/* Tab Content */}
@@ -1352,6 +1366,76 @@ const ProfilePage = () => {
             </Box>
           </Box>
         )}
+        {activeTab === 8 && (
+        <Box>
+          {listenLaterMusic.length === 0 ? (
+            <Typography sx={{ textAlign: "center", color: "gray", mt: 2 }}>
+              You have no tracks saved to Listen Later.
+            </Typography>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                flexWrap: "wrap",
+                justifyContent: "center",
+              }}
+            >
+              {listenLaterMusic.slice(0, 5).map((entry, index) => (
+                <Link
+                  to={`/track/${entry.trackId}`}
+                  key={index}
+                  style={{ textDecoration: "none" }}
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                >
+                  <Box
+                    sx={{
+                      width: "160px",
+                      height: "240px",
+                      textAlign: "center",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <img
+                      src={entry.cover || `${process.env.PUBLIC_URL}/default-music-cover.png`}
+                      alt={entry.title}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        borderRadius: "5px",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Typography
+                      variant="h6"
+                      sx={{ fontSize: "0.8rem", fontWeight: 500, mt: 1 }}
+                    >
+                      {entry.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontSize: "0.75rem", color: "gray" }}
+                    >
+                      {entry.artist}
+                    </Typography>
+                    
+                  </Box>
+                </Link>
+              ))}
+            </Box>
+          )}
+          <Box sx={{ textAlign: "center", mt: 3 }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate(`/${username}/listen-later`)}
+            >
+              View All Listen Later (Music)
+            </Button>
+          </Box>
+        </Box>
+      )}
+
 
         {/* User Stats Section */}
         <div style={{ display: 'flex', gap: '20px', marginTop: '50px'}}>
