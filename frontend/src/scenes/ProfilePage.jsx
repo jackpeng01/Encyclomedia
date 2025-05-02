@@ -383,6 +383,34 @@ const ProfilePage = () => {
           >
             {userData.bio}
           </Typography>
+
+          {userData.genrePreferences && userData.genrePreferences.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 3,
+              width: "100%",
+              // pl: 2, // optional padding to align with the rest of the content
+            }}
+          >
+            {/* <Typography variant="body2" sx={{ color: "gray", mr: 1 }}>
+                Favorite Genres:
+              </Typography> */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                justifyContent: "flex-start",
+              }}
+            >
+              {userData.genrePreferences.map((genre, idx) => (
+                <Chip key={idx} label={genre} variant="outlined" />
+              ))}
+            </Box>
+          </Box>
+        )}
         </Box>
       </Box>
 
