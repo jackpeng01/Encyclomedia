@@ -1198,19 +1198,6 @@ const ProfilePage = () => {
         )}
 
         {/* User Stats Section */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
-            fontWeight: 400,
-            mb: 2,
-            mt: 5,
-            cursor: "pointer",
-            textDecoration: "underline",
-          }}
-        >
-          Statistics:
-        </Typography>
         <div style={{ display: 'flex', gap: '20px', marginTop: '50px'}}>
          <div style={{
           fontFamily: 'Arial, sans-serif',
