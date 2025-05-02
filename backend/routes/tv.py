@@ -8,6 +8,7 @@ import requests
 import os
 from schemas.tv_logs_schema import TVLogsSchema
 from datetime import datetime
+from controllers.updateUserStat import update_user_section
 
 tv_bp = Blueprint("tv", __name__)
 
@@ -361,6 +362,7 @@ def remove_tv():
     if result.modified_count == 0:
         return jsonify({"error": "TV not found in log or removal failed"}), 404
         
+    update_user_section(username, "decrement", "media")
     return jsonify({"success": True, "message": f"TV removed from {section}."}), 200
 
 
@@ -458,6 +460,7 @@ def log_tv(tv_id):
     )
 
     if result.matched_count > 0:
+        update_user_section(username, "increment", "media")
         return {"message": "TV successfully added to your log."}, 200
     else:
         return {"error": "User not found or could not be updated."}, 400

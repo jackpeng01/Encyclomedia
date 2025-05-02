@@ -27,9 +27,9 @@ const ProfileStats = ({ userData, isDarkMode }) => {
 
   // Define the stats with flags for clickable fields
   const stats = [
-    { label: "Reviews", value: 0 },
-    { label: "Lists", value: 0 },
-    { label: "Media", value: 99 },
+    { label: "Reviews", value: userData.reviews },
+    { label: "Lists", value: userData.lists},
+    { label: "Media", value: userData.media },
     {
       label: userData.followers.length === 1 ? "Follower" : "Followers",
       value: userData.followers.length,

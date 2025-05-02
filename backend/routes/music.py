@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from schemas.music_logs_schema import MusicLogsSchema 
 import requests
 from datetime import datetime
+from controllers.updateUserStat import update_user_section
 
 music_logs_schema = MusicLogsSchema()  # Initialize schema
 music_bp = Blueprint("music", __name__)
@@ -93,6 +94,7 @@ def handle_log_music(track_id):
     )
 
     if result.matched_count > 0:
+        update_user_section(username, "increment", "media")
         return jsonify(new_entry), 200
     else:
         return jsonify({"error": "User not found or could not be updated."}), 400
@@ -159,6 +161,7 @@ def remove_music_log():
     if result.modified_count == 0:
         return jsonify({"error": "Track not found or removal failed"}), 404
 
+    update_user_section(username, "decrement", "media")
     return jsonify({"success": True, "message": f"Track removed from {section}."}), 200
 
 @music_bp.route("/api/music/listen_later", methods=["GET"])

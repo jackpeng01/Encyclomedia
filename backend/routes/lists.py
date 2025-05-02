@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from pymongo import errors
 import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
+from controllers.updateUserStat import update_user_section
 
 # Define Blueprint
 lists_bp = Blueprint("lists", __name__)
@@ -109,6 +110,8 @@ def create_list():
         # Return the created list with ID
         new_list["_id"] = str(result.inserted_id)
         print(f"✅ Successfully created list: {new_list['name']} with ID {result.inserted_id}\n")
+        update_user_section(current_user, "increment", "lists")
+
 
         response = make_response(jsonify(new_list), 201)
         return response
@@ -205,6 +208,7 @@ def delete_list(id):
 
         print(f"✅ Successfully deleted list with ID {id}\n")
 
+        update_user_section(current_user, "decrement", "lists")
         response = make_response(jsonify({"message": "List deleted successfully"}), 200)
         return response
     except Exception as e:

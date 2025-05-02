@@ -47,7 +47,7 @@ const StarRatingFilter = ({ movieLog, setFilteredMovieLog, resetFilter }) => {
                 size={30}
                 color={isHovered || isSelected ? "#ffc107" : "#e4e5e9"} // Highlight hovered or selected stars
                 style={{
-                    cursor: "pointer",
+                    cursor: "ew-resize", // Change cursor to horizontal resize icon
                     transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out",
                     transform: isHovered ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
                 }}

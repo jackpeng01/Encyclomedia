@@ -8,6 +8,7 @@ import requests
 import os
 from datetime import datetime
 from schemas.movie_logs_schema import MovieLogsSchema
+from controllers.updateUserStat import update_user_section
 
 # Load environment variables
 load_dotenv()
@@ -356,6 +357,7 @@ def log_movie(movie_id):
     )
 
     if result.matched_count > 0:
+        update_user_section(username, "increment", "media")
         return {"message": "Movie successfully added to your log."}, 200
     else:
         return {"error": "User not found or could not be updated."}, 400
@@ -507,7 +509,8 @@ def remove_movie():
 
     if result.modified_count == 0:
         return jsonify({"error": "Movie not found in log or removal failed"}), 404
-
+    
+    update_user_section(username, "decrement", "media")
     return jsonify({"success": True, "message": f"Movie removed from {section}."}), 200
 
 

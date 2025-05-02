@@ -18,3 +18,6 @@ class UserSchema(Schema):
     genrePreferences = fields.List(fields.String(), missing=list)
     followed_lists = fields.List(fields.String(), missing=list)
     favorites = fields.List(fields.Raw(), missing=list)
+    lists = fields.Integer(missing=0)
+    reviews = fields.Integer(missing=0)
+    media = fields.Integer(missing=0)

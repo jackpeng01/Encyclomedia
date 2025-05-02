@@ -3,6 +3,7 @@ from flask_cors import cross_origin
 from bson.objectid import ObjectId
 import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
+from controllers.updateUserStat import update_user_section
 
 # Define Blueprint
 reviews_bp = Blueprint("reviews", __name__)
@@ -57,6 +58,7 @@ def create_review():
         result = reviews_col.insert_one(new_review)
         new_review["_id"] = str(result.inserted_id)
         
+        update_user_section(current_user, "increment", "reviews")
         print(f"✅ Review created by {current_user} for {data.get('media_type')} {data.get('media_id')}.\n")
         return jsonify(new_review), 201
     
@@ -671,6 +673,7 @@ def delete_review(id):
             print(f"❌ Failed to delete review {id}.\n")
             return jsonify({"error": "Failed to delete review"}), 500
             
+        update_user_section(current_user, "decrement", "reviews")
         print(f"✅ Review {id} deleted successfully by user {current_user}.\n")
         return jsonify({"message": "Review deleted successfully"}), 200
         

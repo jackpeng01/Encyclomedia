@@ -311,6 +311,7 @@ const ProfilePage = () => {
         // Update the state to remove the entry locally
         if (section === "movieLog") {
           setMovieLog((prev) => prev.filter((entry) => entry._id !== entryId));
+          setForceRefresh((prev) => prev + 1);
         } else if (section === "watchLater") {
           setWatchLaterArray((prev) =>
             prev.filter((entry) => entry._id !== entryId)
@@ -349,6 +350,7 @@ const ProfilePage = () => {
   
       if (response.status === 200) {
         setMusicLog((prev) => prev.filter((entry) => entry._id !== entryId));
+        setForceRefresh((prev) => prev + 1);
       } else {
         throw new Error("Failed to remove the entry.");
       }
@@ -378,6 +380,7 @@ const ProfilePage = () => {
         // Update the state to remove the entry locally
         if (section === "tvLog") {
           setTvLog((prev) => prev.filter((entry) => entry._id !== entryId));
+          setForceRefresh((prev) => prev + 1);
         } else if (section === "watchLater") {
           setWatchLaterShows((prev) =>
             prev.filter((entry) => entry._id !== entryId)
@@ -552,6 +555,8 @@ const ProfilePage = () => {
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
           centered
           sx={{ marginBottom: 3 }}
         >

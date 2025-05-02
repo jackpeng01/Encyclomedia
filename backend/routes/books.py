@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from schemas.book_logs_schema import BookLogsSchema  # Import the new schema
 import requests
 from datetime import datetime
+from controllers.updateUserStat import update_user_section
 
 
 genres_and_subjects = [
@@ -589,6 +590,7 @@ def handle_log_book(book_id):
             )
             achievement_unlocked = "8_books"
 
+        update_user_section(username, "increment", "media")
         return jsonify(
             {"book": new_entry, "achievementUnlocked": achievement_unlocked}
         ), 200
@@ -663,7 +665,7 @@ def remove_book_log():
 
     if result.modified_count == 0:
         return jsonify({"error": "Book not found in log or removal failed"}), 404
-
+    update_user_section(username, "decrement", "media")
     return jsonify({"success": True, "message": f"Book removed from {section}."}), 200
 
 
