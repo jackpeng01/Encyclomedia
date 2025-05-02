@@ -16,28 +16,35 @@ const TrackDetails = () => {
   const [hover, setHover] = useState(0);
   const [userData, setUserData] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
+  const [isInListenLater, setIsInListenLater] = useState(false);
 
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
-    const fetchUserDataAndCheckLog = async () => {
+    const fetchUserDataAndCheckStatus = async () => {
       if (!token) return;
+  
       try {
         const user = await getUserByToken(token);
         setUserData(user);
-
-        const res = await axios.get("http://127.0.0.1:5000/api/music/log", {
-          params: { username: user.username },
-        });
-
-        const alreadyLogged = res.data.some((entry) => entry.trackId === id);
-        setIsLogged(alreadyLogged);
+  
+        const [logRes, laterRes] = await Promise.all([
+          axios.get("http://127.0.0.1:5000/api/music/log", {
+            params: { username: user.username },
+          }),
+          axios.get("http://127.0.0.1:5000/api/music/listen_later", {
+            params: { username: user.username },
+          }),
+        ]);
+  
+        setIsLogged(logRes.data.some((entry) => entry.trackId === id));
+        setIsInListenLater(laterRes.data.some((entry) => entry.trackId === id));
       } catch (err) {
-        console.error("Error loading user or checking music log:", err);
+        console.error("Error checking status:", err);
       }
     };
-
-    fetchUserDataAndCheckLog();
+  
+    fetchUserDataAndCheckStatus();
   }, [token, id]);
 
   useEffect(() => {
@@ -87,8 +94,26 @@ const TrackDetails = () => {
     }
   };
 
-  const handleSaveForLater = () => {
-   // alert("Track added to Listen Later (placeholder action)");
+  const handleSaveForLater = async () => {
+    if (!userData || !track) return;
+  
+    const payload = {
+      username: userData.username,
+      title: track.title,
+      artist: track.artist?.name || "Unknown Artist",
+      cover: track.album?.cover_medium || null,
+    };
+  
+    try {
+      await axios.post(
+        `http://127.0.0.1:5000/api/music/listen_later/${track.id}`,
+        payload
+      );
+      setIsInListenLater(true);
+    } catch (error) {
+      console.error("Error saving to Listen Later:", error);
+      alert("Could not save track.");
+    }
   };
 
   if (error) return <p style={{ color: "red" }}>{error}</p>;
@@ -151,9 +176,14 @@ const TrackDetails = () => {
               >
                 {isLogged ? "Already Logged" : "Log Track"}
               </Button>
-              <Button variant="contained" color="primary" onClick={handleSaveForLater}>
-                Add to Listen Later
-              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSaveForLater}
+                disabled={isInListenLater}
+                >
+                {isInListenLater ? "Already Saved" : "Add to Listen Later"}
+                </Button>
             </Box>
           </Box>
 

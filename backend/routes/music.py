@@ -160,3 +160,111 @@ def remove_music_log():
         return jsonify({"error": "Track not found or removal failed"}), 404
 
     return jsonify({"success": True, "message": f"Track removed from {section}."}), 200
+
+@music_bp.route("/api/music/listen_later", methods=["GET"])
+@cross_origin()
+def get_listen_later():
+    username = request.args.get("username")
+    users_col = current_app.config["collections"].get("users")
+    music_logs_col = current_app.config["collections"].get("musicLogs")
+
+    if users_col is None or music_logs_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+
+    user_music_log = music_logs_col.find_one({"username": username})
+
+    if user_music_log is None:
+        info = {
+            "username": username,
+            "musicLog": [],
+            "listenLater": [],
+        }
+        music_logs_col.insert_one(info)
+        return jsonify([])
+
+    listen_later = user_music_log.get("listenLater", [])
+    for entry in listen_later:
+        entry["_id"] = str(entry["_id"])
+
+    return jsonify(listen_later)
+
+@music_bp.route("/api/music/listen_later/<track_id>", methods=["POST"])
+@cross_origin()
+def handle_listen_later(track_id):
+    data = request.get_json()
+    username = data.get("username")
+    title = data.get("title")
+    artist = data.get("artist")
+    cover = data.get("cover")
+
+    users_col = current_app.config["collections"].get("users")
+    music_logs_col = current_app.config["collections"].get("musicLogs")
+
+    if users_col is None or music_logs_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    user = users_col.find_one({"username": username})
+    if user is None:
+        return jsonify({"error": "User not logged in!"}), 500
+
+    user_music_log = music_logs_col.find_one({"username": username})
+
+    # Create new log doc if it doesn't exist
+    if user_music_log is None:
+        info = {
+            "username": username,
+            "musicLog": [],
+            "listenLater": [],
+        }
+        music_logs_col.insert_one(info)
+        user_music_log = music_logs_col.find_one({"username": username})
+
+    # Prevent duplicates
+    for track in user_music_log.get("listenLater", []):
+        if track["trackId"] == track_id:
+            return jsonify({"error": "Track is already in Listen Later."}), 400
+
+    new_entry = {
+        "_id": str(ObjectId()),
+        "trackId": track_id,
+        "title": title,
+        "artist": artist,
+        "cover": cover,
+    }
+
+    result = music_logs_col.update_one(
+        {"username": username},
+        {"$push": {"listenLater": new_entry}},
+    )
+
+    if result.matched_count > 0:
+        return jsonify(new_entry), 200
+    else:
+        return jsonify({"error": "User not found or could not be updated."}), 400
+
+@music_bp.route("/api/music/remove_listen_later", methods=["POST"])
+@cross_origin()
+def remove_listen_later():
+    data = request.get_json()
+    username = data.get("username")
+    entry_id = data.get("entry")  # _id of the track to remove
+
+    users_col = current_app.config["collections"].get("users")
+    music_logs_col = current_app.config["collections"].get("musicLogs")
+
+    if users_col is None or music_logs_col is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    result = music_logs_col.update_one(
+        {"username": username},
+        {"$pull": {"listenLater": {"_id": str(entry_id)}}}
+    )
+
+    if result.modified_count == 0:
+        return jsonify({"error": "Track not found or removal failed."}), 404
+
+    return jsonify({"success": True, "message": "Track removed from Listen Later."}), 200
