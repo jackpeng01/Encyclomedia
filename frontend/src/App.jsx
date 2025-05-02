@@ -40,7 +40,8 @@ import TVLog from "./scenes/TVLog";
 import Trending from "./scenes/Trending";
 import PeopleSearch from "./scenes/PeopleSearch";
 import PeopleDetails from "./scenes/PeopleDetails";
-import Statistics from "./scenes/Statistics";
+import AuthorSearch from "./scenes/AuthorSearch";
+import AuthorDetails from "./scenes/AuthorDetails";
 
 function App() {
   // Redux state for theme mode (if used in your app)
@@ -151,7 +152,8 @@ function App() {
             <Route path="/trending" element={<Trending />} />
             <Route path="/searchpeople" element={<PeopleSearch />} />
             <Route path="/people/:id" element={<PeopleDetails />} />
-            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/searchauthor" element={<AuthorSearch />} />
+            <Route path="/authors/:id" element={<AuthorDetails />} />
 
 
 

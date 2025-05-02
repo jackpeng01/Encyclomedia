@@ -214,6 +214,7 @@ const BookDetails = () => {
         username: userData.username,
         title: book.title,
         cover: book.cover_url,
+        author: book.author,
       };
 
       const response = await axios.post(`http://127.0.0.1:5000/api/book/log/${id}`, payload);

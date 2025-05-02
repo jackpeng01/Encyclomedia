@@ -50,10 +50,19 @@ const ProfilePage = () => {
 
   const [movieLog, setMovieLog] = useState([]);
   const [watchLaterArray, setWatchLaterArray] = useState([]);
+  const [movieTime, setMovieTime] = useState(0);
+  const [movieCount, setMovieCount] = useState(0);
+  const [movieActivity, setMovieActivity] = useState("");
   const [tvLog, setTvLog] = useState([]);
   const [watchLaterShows, setWatchLaterShows] = useState([]);
+  const [tvTime, setTvTime] = useState(0);
+  const [tvCount, setTvCount] = useState(0);
+  const [tvActivity, setTvActivity] = useState("");
   const [readLaterArray, setReadLaterArray] = useState([]);
   const [loggedBooks, setLoggedBooks] = useState([]);
+  const [bookCount, setBookCount] = useState([]);
+  const [bookActivity, setBookActivity] = useState("");
+  const [mostRead, setMostRead] = useState("");
   const [error, setError] = useState("");
   const [ownProfile, setOwnProfile] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -82,7 +91,28 @@ const ProfilePage = () => {
             }
           );
           setMovieLog(response.data);
-          console.log(response.data);
+          //calculate total watched time
+          setMovieTime(response.data.reduce((sum, item) => sum + item.runtime, 0));
+          //calculate total movies watched (doesn not include repeats)
+          const movieIds = response.data.map(item => item.movieId);
+          const uniqueMovieIds = new Set(movieIds);
+          setMovieCount(uniqueMovieIds.size);
+          //calculates month with highest activity
+          const moviesByMonth = response.data.reduce((acc, movie) => {
+            const date = movie.watchDate.slice(0, 7);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+          }, {});
+          let highestMonth = "No data";
+          let highestCount = 0;
+          for (const [month, count] of Object.entries(moviesByMonth)) {
+            if (count > highestCount) {
+              highestCount = count;
+              highestMonth = month;
+            }
+          }
+          setMovieActivity(highestMonth);
+          console.log(movieActivity);
         } catch (err) {
           console.log(err);
           setError("Failed to load movie log.");
@@ -122,6 +152,26 @@ const ProfilePage = () => {
             }
           );
           setTvLog(response.data);
+          setTvTime(response.data.reduce((sum, item) => sum + item.number_of_episodes, 0));
+          const tvIds = response.data.map(item => item.movieId);
+          const uniqueTvIds = new Set(tvIds);
+          setTvCount(uniqueTvIds.size);
+          //calculates month with highest activity
+          const tvByMonth = response.data.reduce((acc, tv) => {
+            const date = tv.watchDate.slice(0, 7);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+          }, {});
+          let highestMonth = "No data";
+          let highestCount = 0;
+          for (const [month, count] of Object.entries(tvByMonth)) {
+            if (count > highestCount) {
+              highestCount = count;
+              highestMonth = month;
+            }
+          }
+          setTvActivity(highestMonth);
+          console.log(tvActivity);
           console.log(response.data);
         } catch (err) {
           console.log(err);
@@ -177,6 +227,39 @@ const ProfilePage = () => {
             }
           );
           setLoggedBooks(response.data);
+          const bookIds = response.data.map(item => item.bookId);
+          const uniqueBookIds = new Set(bookIds);
+          setBookCount(uniqueBookIds.size);
+          //find month with most logged books
+          const booksByMonth = response.data.reduce((acc, book) => {
+            const date = book.readDate.slice(0, 7);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+          }, {});
+          let highestMonth = "No data";
+          let highestCount = 0;
+          for (const [month, count] of Object.entries(booksByMonth)) {
+            if (count > highestCount) {
+              highestCount = count;
+              highestMonth = month;
+            }
+          }
+          setBookActivity(highestMonth);
+          //find most read author
+          const mostRead = response.data.reduce((acc, book) => {
+            const author = book.author
+            acc[author] = (acc[author] || 0) + 1;
+            return acc;
+          }, {});
+          let highestAuthor = "No data";
+          let maxCount = 0;
+          for (const [author, count] of Object.entries(mostRead)) {
+            if (count > maxCount) {
+              maxCount = count;
+              highestAuthor = author;
+            }
+          }
+          setMostRead(highestAuthor);
           console.log(response.data);
         } catch (err) {
           console.log(err);
@@ -1181,6 +1264,113 @@ const ProfilePage = () => {
             </Link>
           ))}
         </Box>
+
+        {/* User Stats Section */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: `"Libre Caslon Text", "Roboto", "Arial", sans-serif`,
+            fontWeight: 400,
+            mb: 2,
+            mt: 5,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          Statistics:
+        </Typography>
+        <div style={{ display: 'flex', gap: '20px', marginTop: '50px'}}>
+         <div style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#d9d8d4',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '300px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          margin: 'auto',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
+        <h2 style={{
+          fontSize: '24px',
+          color: '#54608a',
+          marginBottom: '15px'
+        }}>Movie Stats</h2>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Minutes Watched: </strong>
+          <span style={{ color: '#54608a' }}>{movieTime}</span> minutes
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Movies Watched: </strong>
+          <span style={{ color: '#54608a' }}>{movieCount}</span> movies
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Activity in: </strong>
+          <span style={{ color: '#54608a' }}>{movieActivity}</span>
+        </p>
+      </div>
+      <div style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#d9d8d4',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '300px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          margin: 'auto',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
+        <h2 style={{
+          fontSize: '24px',
+          color: '#54608a',
+          marginBottom: '15px'
+        }}>TV Stats</h2>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Episodes Watched: </strong>
+          <span style={{ color: '#54608a' }}>{tvTime}</span> episodes
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Shows Watched: </strong>
+          <span style={{ color: '#54608a' }}>{tvCount}</span> shows
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Activity in: </strong>
+          <span style={{ color: '#54608a' }}>{tvActivity}</span>
+        </p>
+      </div>
+      <div style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#d9d8d4',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '300px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center',
+          margin: 'auto',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
+        <h2 style={{
+          fontSize: '24px',
+          color: '#54608a',
+          marginBottom: '15px'
+        }}>Book Stats</h2>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Read Author: </strong>
+          <span style={{ color: '#54608a' }}>{mostRead}</span>
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Books Read: </strong>
+          <span style={{ color: '#54608a' }}>{bookCount}</span> books
+        </p>
+        <p style={{ margin: '10px 0', color: '#333' }}>
+          <strong>Most Activity in: </strong>
+          <span style={{ color: '#54608a' }}>{bookActivity}</span>
+        </p>
+      </div>
+      </div>
       </Box>
     </Box>
   );

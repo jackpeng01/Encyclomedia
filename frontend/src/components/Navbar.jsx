@@ -129,7 +129,12 @@ const Navbar = () => {
           navigate(`/tvsearch?query=${encodeURIComponent(
             searchQuery.trim()
           )}&category=${category}`);
-        } else if (category === "people") {
+        } else if (category === "authors") {
+          navigate(`/searchauthor?query=${encodeURIComponent(
+            searchQuery.trim()
+          )}&category=${category}`);
+        }
+        else if (category === "people") {
           navigate(
             `/searchpeople?query=${encodeURIComponent(
               searchQuery.trim()
@@ -419,7 +424,6 @@ const Navbar = () => {
                 <MenuItem onClick={handleToggleDarkMode}>Dark Mode</MenuItem>
                 <MenuItem onClick={() => { navigate("/discover") }}>Discover</MenuItem>
                 <MenuItem onClick={() => { navigate("/trending") }}>Trending</MenuItem>
-                <MenuItem onClick={() => { navigate("/statistics") }}>Statistics</MenuItem>
               </Menu>
 
               {/* Logout Button */}

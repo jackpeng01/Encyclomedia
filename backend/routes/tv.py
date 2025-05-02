@@ -230,6 +230,7 @@ def get_tv_details(tv_id):
             "poster_path": f"https://image.tmdb.org/t/p/w500{item.get('poster_path')}",
             "genres": [genre["name"] for genre in item.get("genres", [])],
             "number_of_seasons": item.get("number_of_seasons"),
+            "number_of_episodes": item.get("number_of_episodes"),
             "status": item.get("status"),
             "tagline": item.get("tagline"),
             "cast": cast,  # Add cast to the response
@@ -368,6 +369,7 @@ def log_tv(tv_id):
     username = data.get('username')
     title = data.get('title')
     poster = data.get('poster')
+    number_of_episodes = data.get('number_of_episodes')
         
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -406,6 +408,7 @@ def log_tv(tv_id):
         "tags": tags.split(",") if tags else [],  # Convert tags into a list if provided
         "title": title,
         "poster": poster,  # Add poster path to the movie log
+        "number_of_episodes": number_of_episodes,
     }
     
     result = tv_logs_col.update_one(
