@@ -3,8 +3,8 @@ import {
   Dialog, DialogTitle, Typography, Box, Button, Grid, Card, CardContent,
   DialogActions, DialogContent, TextField, CircularProgress, Rating, Menu, MenuItem
 } from "@mui/material";
-import { Sort as SortIcon } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { Sort as SortIcon, ThumbUp, ThumbDown, Comment as CommentIcon } from "@mui/icons-material";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import { useSelector } from "react-redux";
 import { getUserByToken } from "../api/users.js";
@@ -237,10 +237,8 @@ const LatestReviewsPage = () => {
             {reviews.map((review) => (
               <Grid item xs={12} sm={6} md={4} key={review._id}>
                 <Card
-                  onClick={() => handleViewDetails(review.media_id, review.media_type)}
                   onContextMenu={(e) => handleContextMenu(e, review._id)}
                   sx={{
-                    cursor: 'pointer',
                     transition: 'all 0.2s',
                     height: '100%',
                     display: 'flex',
@@ -252,45 +250,44 @@ const LatestReviewsPage = () => {
                   }}
                 >
                   <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                      <Typography variant="h6" noWrap>
-                        {review.title}
+                    <Box onClick={() => handleViewDetails(review.media_id, review.media_type)} sx={{ cursor: 'pointer' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="h6" noWrap>
+                          {review.title}
+                        </Typography>
+                        <Rating value={review.rating} readOnly size="small" />
+                      </Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+                        <strong>{review.media_title || 'Unknown title'}</strong> • {review.media_type.charAt(0).toUpperCase() + review.media_type.slice(1)} • <Link to={`/profile/${review.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <span style={{ '&:hover': { textDecoration: 'underline' } }}>{review.user_id}</span>
+                        </Link> • {new Date(review.created_at).toLocaleDateString()}
                       </Typography>
-                      <Rating value={review.rating} readOnly size="small" />
+                      <Box
+                        sx={{
+                          mt: 1, mb: 2,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          height: '4.5em'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: formatContent(review.content) }}
+                      />
                     </Box>
 
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-                      <strong>{review.media_title || 'Unknown title'}</strong> • {review.media_type.charAt(0).toUpperCase() + review.media_type.slice(1)} •
-                      By {review.user_id}
-                    </Typography>
-
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        mt: 1,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        height: '4.5em',
-                        '& strong': { fontWeight: 'bold' },
-                        '& em': { fontStyle: 'italic' },
-                        '& u': { textDecoration: 'underline' },
-                        '& ul': { paddingLeft: '1.5rem', margin: 0 },
-                        '& li': { marginBottom: '0.25rem' }
-                      }}
-                      dangerouslySetInnerHTML={{ __html: formatContent(review.content) }}
-                    />
-
-                    {review.comments.length > 0 && (
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto', pt: 1 }}>
-                        {review.comments.length} comment{review.comments.length !== 1 ? 's' : ''}
-                      </Typography>
-                    )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 'auto', pt: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ThumbUp fontSize="small" color={review.liked ? "primary" : "action"} />
+                        <Typography variant="caption">{review.likes || 0}</Typography>
+                        <ThumbDown fontSize="small" color={review.disliked ? "error" : "action"} sx={{ ml: 1 }} />
+                        <Typography variant="caption">{review.dislikes || 0}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CommentIcon fontSize="small" />
+                        <Typography variant="caption">{review.comments?.length || 0}</Typography>
+                      </Box>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>

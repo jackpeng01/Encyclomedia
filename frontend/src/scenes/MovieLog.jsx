@@ -7,6 +7,7 @@ import { Box, Button, Typography, IconButton, Slider, TextField } from "@mui/mat
 import { FaArrowUp, FaArrowDown, FaEquals, FaStar, FaUndo } from "react-icons/fa";
 import { getUserByUsername } from "../api/users";
 import { getUserByToken } from "../api/users";
+import StarRatingFilter from "../components/StarRatingFilter";
 
 const MovieLog = () => {
     const { username } = useParams(); // Get the username from the route
@@ -21,6 +22,7 @@ const MovieLog = () => {
     const [ownProfile, setOwnProfile] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");         
+    const [resetFilter, setResetFilter] = useState(false);
 
     useEffect(() => {
         // Fetch all movie logs on component mount
@@ -87,6 +89,8 @@ const MovieLog = () => {
 
     // Handle reset filter and sort
     const handleReset = () => {
+        setResetFilter(true); // Trigger reset in StarRatingFilter
+        setTimeout(() => setResetFilter(false), 0); // Reset the flag immediately after
         setSortOrder("default");
         setRatingRange([0, 5]);
         setFilteredMovieLog(movieLog); // Reset filtered movies to all movies
@@ -127,7 +131,7 @@ const MovieLog = () => {
     };
 
     // Filter movies by search query
-    const searchMovies = sortedMovieLog.filter((entry) =>
+    const searchMovies = filteredMovieLog.filter((entry) =>
         entry.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -166,29 +170,11 @@ const MovieLog = () => {
                         Sort by Rating
                     </Button>
 
-                    {/* Rating Range Filter */}
-                    <Box sx={{ width: "300px", textAlign: "center" }}>
-                        <Typography variant="subtitle1">Filter by Rating Range:</Typography>
-                        <Slider
-                            value={ratingRange}
-                            onChange={handleRatingRangeChange}
-                            valueLabelDisplay="auto"
-                            min={0}
-                            max={5}
-                            marks={[
-                                { value: 0, label: "0" },
-                                { value: 1, label: "1" },
-                                { value: 2, label: "2" },
-                                { value: 3, label: "3" },
-                                { value: 4, label: "4" },
-                                { value: 5, label: "5" },
-                            ]}
-                            sx={{ mt: 2 }}
-                        />
-                        <Typography variant="body2">
-                            Showing movies with ratings from {ratingRange[0]} to {ratingRange[1]}
-                        </Typography>
-                    </Box>
+                    <StarRatingFilter
+                        movieLog={movieLog}
+                        setFilteredMovieLog={setFilteredMovieLog}
+                        resetFilter={resetFilter}
+                    />
 
                     {/* Reset Button */}
                     <Button
@@ -198,10 +184,11 @@ const MovieLog = () => {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                         <FaUndo />
+                        Reset Filter
                     </Button>
                 </Box>
 
-                {sortedMovieLog.length === 0 ? (
+                {filteredMovieLog.length === 0 ? (
                     <Typography variant="h6" color="textSecondary" sx={{ textAlign: "center", mt: 4 }}>
                         No movies found in your movie log.
                     </Typography>

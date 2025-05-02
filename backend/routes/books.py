@@ -96,7 +96,7 @@ genres_and_subjects = [
     "Mathematics",
     "Geography",
     "Psychology",
-    "Algebra"
+    "Algebra",
 ]
 
 
@@ -108,13 +108,14 @@ OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 OPEN_LIBRARY_DETAILS_URL = "https://openlibrary.org/works"
 TRENDING_BOOKS_URL = "https://openlibrary.org/trending/weekly.json"
 
+
 @books_bp.route("/api/book/search", methods=["GET"])
 def search_books():
     query = request.args.get("query", "")
     subjects = request.args.get("subjects", "")  # Get selected subjects
     year_start = request.args.get("yearStart", None)  # Get yearStart from request
     year_end = request.args.get("yearEnd", None)  # Get yearEnd from request
-    
+
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
 
@@ -125,14 +126,18 @@ def search_books():
 
     try:
         # Perform the search request to Open Library
-        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": full_query, "limit": 10})
+        response = requests.get(
+            OPEN_LIBRARY_SEARCH_URL, params={"q": full_query, "limit": 10}
+        )
         response.raise_for_status()  # Raise error for bad responses
         data = response.json()
 
         books = []
         for book in data.get("docs", []):
             # Get the publish year from the book data (if available)
-            publish_year = int(book.get("first_publish_year", [None]))  # Default to None if no year
+            publish_year = int(
+                book.get("first_publish_year", [None])
+            )  # Default to None if no year
 
             # Filter by yearStart and yearEnd if those values are provided
             if year_start and publish_year and publish_year < int(year_start):
@@ -141,48 +146,60 @@ def search_books():
                 continue
 
             # Add book data to the list
-            books.append({
-                "id": book.get("key", "").replace("/works/", ""),  # Extracting book ID
-                "title": book.get("title", "Unknown Title"),
-                "author": book.get("author_name", ["Unknown Author"])[0],  # Take first author
-                "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg"  # Default cover if missing
-            })
+            books.append(
+                {
+                    "id": book.get("key", "").replace(
+                        "/works/", ""
+                    ),  # Extracting book ID
+                    "title": book.get("title", "Unknown Title"),
+                    "author": book.get("author_name", ["Unknown Author"])[
+                        0
+                    ],  # Take first author
+                    "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg",  # Default cover if missing
+                }
+            )
 
         return jsonify({"books": books})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 def search_book(title):
     if not title:
-        return jsonify({'error': 'Query parameter "title" is required'}), 400
-
+        return jsonify({"error": 'Query parameter "title" is required'}), 400
 
     # Construct the full query to include subjects if they are provided
     full_query = title
-    
+
     try:
         # Perform the search request to Open Library
-        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": full_query, "limit": 1})
+        response = requests.get(
+            OPEN_LIBRARY_SEARCH_URL, params={"q": full_query, "limit": 1}
+        )
         response.raise_for_status()  # Raise error for bad responses
         data = response.json()
 
         books = []
         for book in data.get("docs", []):
-
             # Add book data to the list
-            books.append({
-                "id": book.get("key", "").replace("/works/", ""),  # Extracting book ID
-                "title": book.get("title", "Unknown Title"),
-                "author": book.get("author_name", ["Unknown Author"])[0],  # Take first author
-                "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg"  # Default cover if missing
-            })
+            books.append(
+                {
+                    "id": book.get("key", "").replace(
+                        "/works/", ""
+                    ),  # Extracting book ID
+                    "title": book.get("title", "Unknown Title"),
+                    "author": book.get("author_name", ["Unknown Author"])[
+                        0
+                    ],  # Take first author
+                    "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg",  # Default cover if missing
+                }
+            )
 
         return jsonify({"books": books})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 @books_bp.route("/api/book/<book_id>", methods=["GET"])
@@ -200,22 +217,32 @@ def get_book_details(book_id):
             for author in data["authors"]:
                 author_key = author.get("author", {}).get("key")
                 if author_key:
-                    author_response = requests.get(f"https://openlibrary.org{author_key}.json")
+                    author_response = requests.get(
+                        f"https://openlibrary.org{author_key}.json"
+                    )
                     if author_response.status_code == 200:
                         author_data = author_response.json()
                         author_names.append(author_data.get("name", "Unknown Author"))
 
         # Fetch Edition Data (to get publish date & language)
-        edition_response = requests.get(f"https://openlibrary.org{data.get('key')}.json")
-        edition_data = edition_response.json() if edition_response.status_code == 200 else {}
+        edition_response = requests.get(
+            f"https://openlibrary.org{data.get('key')}.json"
+        )
+        edition_data = (
+            edition_response.json() if edition_response.status_code == 200 else {}
+        )
 
         # Extract first 3 genres
         subjects = data.get("subjects", [])
-        limited_genres = subjects[:3] if subjects else ["Unknown Genre"] 
+        limited_genres = subjects[:3] if subjects else ["Unknown Genre"]
 
         # Extract language
         language_codes = edition_data.get("languages", [])
-        languages = [lang.get("key").split("/")[-1].upper() for lang in language_codes] if language_codes else ["Unknown Language"]
+        languages = (
+            [lang.get("key").split("/")[-1].upper() for lang in language_codes]
+            if language_codes
+            else ["Unknown Language"]
+        )
 
         # Extract publish date
         publish_date = edition_data.get("created", {}).get("value", "Unknown Date")
@@ -223,19 +250,81 @@ def get_book_details(book_id):
         book_details = {
             "title": data.get("title", "Unknown Title"),
             "author": author_names if author_names else ["Unknown Author"],
-            "description": data.get("description", {}).get("value", "No description available") if isinstance(data.get("description"), dict) else data.get("description", "No description available"),
+            "description": data.get("description", {}).get(
+                "value", "No description available"
+            )
+            if isinstance(data.get("description"), dict)
+            else data.get("description", "No description available"),
             "genres": limited_genres,
             "language": languages,
             "publish_date": publish_date,
-            "cover_url": f"https://covers.openlibrary.org/b/id/{data.get('covers', [10909258])[0]}-L.jpg" if "covers" in data else None
+            "cover_url": f"https://covers.openlibrary.org/b/id/{data.get('covers', [10909258])[0]}-L.jpg"
+            if "covers" in data
+            else None,
         }
-        #print(book_details)
+        # print(book_details)
 
         return jsonify({"book": book_details})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
     
+@books_bp.route("/api/book/<book_id>/recommendations", methods=["GET"])
+def get_recommendations(book_id):
+    OPEN_LIBRARY_DETAILS_URL = f"https://openlibrary.org/works/{book_id}.json"
+    try:
+    
+        subjects_param = request.args.get('subjects', "")
+        subjects_list = [subject.strip() for subject in subjects_param if subject.strip()]
+
+        # Generate the dynamic subject filter
+        if subjects_list:       
+            subjects_filter = " OR ".join(f'"{subject.strip()}"' for subject in subjects_list)
+            
+
+        query = (
+            f'ebook_access:[borrowable TO *] '
+            f'-key:"/works/{book_id}" '
+            f'subject:({subjects_filter})'
+        )
+        # query = 'ebook_access:[borrowable TO *]'
+
+        params = {
+            "q": query,
+            "page": 1,
+            "limit": 5
+        }
+    
+        # response = requests.get(
+        #     OPEN_LIBRARY_SEARCH_URL, params={"q": query, "limit": 10}
+        # )
+        response = requests.get("https://openlibrary.org/search.json", params=params)
+        response.raise_for_status()
+        data = response.json()
+        # print(data)
+        
+        books = []
+        for book in data.get("docs", []):
+            # Add book data to the list
+            books.append(
+                {
+                    "id": book.get("key", "").replace(
+                        "/works/", ""
+                    ),  # Extracting book ID
+                    "title": book.get("title", "Unknown Title"),
+                    "author": book.get("author_name", ["Unknown Author"])[
+                        0
+                    ],  # Take first author
+                    "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg",  # Default cover if missing
+                }
+            )
+
+        return jsonify({"books": books})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @books_bp.route("/api/book/suggestions", methods=["GET"])
 def book_suggestions():
     query = request.args.get("query", "")
@@ -245,22 +334,29 @@ def book_suggestions():
     OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 
     try:
-        response = requests.get(OPEN_LIBRARY_SEARCH_URL, params={"q": query, "limit": 5})  # Get top 5 suggestions
+        response = requests.get(
+            OPEN_LIBRARY_SEARCH_URL, params={"q": query, "limit": 5}
+        )  # Get top 5 suggestions
         response.raise_for_status()
         data = response.json()
 
         suggestions = []
         for book in data.get("docs", []):
             cover_id = book.get("cover_i")
-            poster_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else None
+            poster_url = (
+                f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+                if cover_id
+                else None
+            )
 
-            suggestions.append({
-                "title": book.get("title", "Unknown Title"),
-                "id": book.get("key", "").replace("/works/", ""), 
-                "author": book.get("author_name", ["Unknown Author"])[0],
-                "poster": poster_url 
-            })
-
+            suggestions.append(
+                {
+                    "title": book.get("title", "Unknown Title"),
+                    "id": book.get("key", "").replace("/works/", ""),
+                    "author": book.get("author_name", ["Unknown Author"])[0],
+                    "poster": poster_url,
+                }
+            )
 
         return jsonify({"suggestions": suggestions})
 
@@ -295,12 +391,12 @@ def handle_read_later(book_id):
         }
         insert = book_logs_schema.load(info)
         book_logs_col.insert_one(insert)
-        user_book_log = book_logs_col.find_one({"username": username})  
+        user_book_log = book_logs_col.find_one({"username": username})
 
     # Check if the book already exists in `readLater`
     for book in user_book_log.get("readLater", []):
         if book["bookId"] == book_id:
-            return jsonify({"error": "Book is already in Read Later list."}), 400  
+            return jsonify({"error": "Book is already in Read Later list."}), 400
 
     # If not, add the book to Read Later
     new_entry = {
@@ -321,10 +417,10 @@ def handle_read_later(book_id):
         return jsonify({"error": "User not found or could not be updated."}), 400
 
 
-@books_bp.route('/api/book/read_later', methods=['GET'])
+@books_bp.route("/api/book/read_later", methods=["GET"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def get_read_later():
-    username = request.args.get('username')
+    username = request.args.get("username")
 
     # Ensure collections exist
     collections = current_app.config.get("collections", {})
@@ -337,7 +433,7 @@ def get_read_later():
     user = users_col.find_one({"username": username})
     if user is None:
         return jsonify({"error": "User not logged in!"}), 500
-    
+
     user_book_log_item = book_logs_col.find_one({"username": username})
 
     # If no book log found, initialize a new one
@@ -355,7 +451,6 @@ def get_read_later():
     if read_later_log is None:
         read_later_log = []
 
-
     # Convert ObjectId fields to string
     for entry in read_later_log:
         if "_id" in entry:
@@ -364,12 +459,12 @@ def get_read_later():
     return jsonify(read_later_log)
 
 
-@books_bp.route('/api/book/remove_read_later', methods=['POST'])
+@books_bp.route("/api/book/remove_read_later", methods=["POST"])
 def remove_book():
     data = request.get_json()
-    username = data.get('username')
-    entry = data.get('entry')  # This is the _id of the book to remove
-    section = data.get('section')
+    username = data.get("username")
+    entry = data.get("entry")  # This is the _id of the book to remove
+    section = data.get("section")
 
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -385,13 +480,17 @@ def remove_book():
     if user_book_log_item is None:
         return jsonify({"error": "User book log not found!"}), 404
 
-    print(f"Attempting to remove from section: {section}, entry: {entry}, for user: {username}")
+    print(
+        f"Attempting to remove from section: {section}, entry: {entry}, for user: {username}"
+    )
     print(f"User book log found: {user_book_log_item}")
 
     # ✅ Convert `entry` to a string before removing
     result = book_logs_col.update_one(
         {"username": username},
-        {"$pull": {section: {"_id": str(entry)}}}  # Ensure `_id` is treated as a string
+        {
+            "$pull": {section: {"_id": str(entry)}}
+        },  # Ensure `_id` is treated as a string
     )
 
     if result.modified_count == 0:
@@ -406,8 +505,8 @@ def handle_log_book(book_id):
     username = data.get("username")
     title = data.get("title")
     cover = data.get("cover")
-    read_date = data.get('read_date')
-    rating = data.get('rating')
+    read_date = data.get("read_date")
+    rating = data.get("rating")
     author = data.get('author')
 
     users_col = current_app.config["collections"].get("users")
@@ -430,23 +529,22 @@ def handle_log_book(book_id):
         }
         insert = book_logs_schema.load(info)
         book_logs_col.insert_one(insert)
-        user_book_log = book_logs_col.find_one({"username": username})  # Fetch again
+        user_book_log = book_logs_col.find_one({"username": username})
 
     # Validate date format
     if read_date:
         try:
-            datetime.strptime(read_date, '%Y-%m-%d')
+            datetime.strptime(read_date, "%Y-%m-%d")
         except ValueError:
             return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
-        
-    # Check if the book already exists in `bookLog`
+
+    # Reject duplicates
     for book in user_book_log.get("bookLog", []):
         if book["bookId"] == book_id:
-            return jsonify({"error": "Book is already in Book Log list."}), 400  #  Reject duplicate
+            return jsonify({"error": "Book is already in Book Log list."}), 400
 
-    #  If not, add the book to Book Log
     new_entry = {
-        "_id": str(ObjectId()),  # Convert ObjectId to string
+        "_id": str(ObjectId()),
         "bookId": book_id,
         "title": title,
         "cover": cover,
@@ -456,31 +554,63 @@ def handle_log_book(book_id):
     }
 
     result = book_logs_col.update_one(
-        {"username": username},  # Find the document by username
-        {"$push": {"bookLog": new_entry}},  # Append to readLater list
+        {"username": username},
+        {"$push": {"bookLog": new_entry}},
     )
-    print(user_book_log)
+
     if result.matched_count > 0:
-        return jsonify(new_entry), 200
+        # Re-fetch updated book log
+        updated_log = book_logs_col.find_one({"username": username})
+        total_books = len(updated_log.get("bookLog", []))
+
+        # Get the user's current achievements
+        achievements = user.get("achievements", [])
+        achievement_unlocked = False
+
+        # Unlock at 5, 6, 7, and 8 books
+        if total_books == 5 and "5_books" not in achievements:
+            users_col.update_one(
+                {"username": username}, {"$push": {"achievements": "5_books"}}
+            )
+            achievement_unlocked = "5_books"
+        elif total_books == 6 and "6_books" not in achievements:
+            users_col.update_one(
+                {"username": username}, {"$push": {"achievements": "6_books"}}
+            )
+            achievement_unlocked = "6_books"
+        elif total_books == 7 and "7_books" not in achievements:
+            users_col.update_one(
+                {"username": username}, {"$push": {"achievements": "7_books"}}
+            )
+            achievement_unlocked = "7_books"
+        elif total_books == 8 and "8_books" not in achievements:
+            users_col.update_one(
+                {"username": username}, {"$push": {"achievements": "8_books"}}
+            )
+            achievement_unlocked = "8_books"
+
+        return jsonify(
+            {"book": new_entry, "achievementUnlocked": achievement_unlocked}
+        ), 200
     else:
         return jsonify({"error": "User not found or could not be updated."}), 400
 
 
 # Route to get all logged books
-@books_bp.route('/api/book/log', methods=['GET'])
+@books_bp.route("/api/book/log", methods=["GET"])
 def get_logged_books():
-    username = request.args.get('username')  # Get username from query parameters
+    username = request.args.get("username")  # Get username from query parameters
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
         return jsonify({"error": "Database not connected"}), 500
-    
+
     user = users_col.find_one({"username": username})
     if user is None:
         return jsonify({"error": "User not logged in!"}), 500
-    
+
     book_logs_col = current_app.config["collections"].get("bookLogs")
     user_book_log_item = book_logs_col.find_one({"username": username})
-    
+
     if user_book_log_item is None:
         info = {
             "username": username,
@@ -489,20 +619,20 @@ def get_logged_books():
         }
         insert = book_logs_schema.load(info)
         book_logs_col.insert_one(insert)
-        
+
     book_log = user_book_log_item["bookLog"]
     for entry in book_log:
         entry["_id"] = str(entry["_id"])  # Serialize ObjectId to string
 
     return jsonify(book_log)
-    
 
-@books_bp.route('/api/book/remove_log', methods=['POST'])
+
+@books_bp.route("/api/book/remove_log", methods=["POST"])
 def remove_book_log():
     data = request.get_json()
-    username = data.get('username')
-    entry = data.get('entry')  # This is the _id of the book to remove
-    section = data.get('section')
+    username = data.get("username")
+    entry = data.get("entry")  # This is the _id of the book to remove
+    section = data.get("section")
 
     users_col = current_app.config["collections"].get("users")
     if users_col is None:
@@ -518,13 +648,17 @@ def remove_book_log():
     if user_book_log_item is None:
         return jsonify({"error": "User book log not found!"}), 404
 
-    print(f"Attempting to remove from section: {section}, entry: {entry}, for user: {username}")
+    print(
+        f"Attempting to remove from section: {section}, entry: {entry}, for user: {username}"
+    )
     print(f"User book log found: {user_book_log_item}")
 
     # ✅ Convert `entry` to a string before removing
     result = book_logs_col.update_one(
         {"username": username},
-        {"$pull": {section: {"_id": str(entry)}}}  # Ensure `_id` is treated as a string
+        {
+            "$pull": {section: {"_id": str(entry)}}
+        },  # Ensure `_id` is treated as a string
     )
 
     if result.modified_count == 0:
@@ -532,23 +666,32 @@ def remove_book_log():
 
     return jsonify({"success": True, "message": f"Book removed from {section}."}), 200
 
-@books_bp.route('/api/trendingbooks', methods=['GET'])
+
+@books_bp.route("/api/trendingbooks", methods=["GET"])
 @cross_origin(origin="http://localhost:3000", headers=["Content-Type"])
 def trending_books():
     try:
         book = []
-        response = requests.get(TRENDING_BOOKS_URL, params={"sort": "readinglog", "limit": 20})
-        response.raise_for_status() 
+        response = requests.get(
+            TRENDING_BOOKS_URL, params={"sort": "readinglog", "limit": 20}
+        )
+        response.raise_for_status()
         data = response.json()
-        
+
         for item in data.get("works", []):
-            book.append({
-                "title": item.get("title", "Unknown Title"),
-                "id": item.get("key", "").replace("/works/", ""),  # Extract book ID for linking
-                "author": item.get("author_name", ["Unknown Author"])[0],
-                "release_date": item.get("first_publish_year"),
-                "cover_url": f"https://covers.openlibrary.org/b/id/{item.get('cover_i')}-L.jpg" if "cover_i" in item else None
-             })
+            book.append(
+                {
+                    "title": item.get("title", "Unknown Title"),
+                    "id": item.get("key", "").replace(
+                        "/works/", ""
+                    ),  # Extract book ID for linking
+                    "author": item.get("author_name", ["Unknown Author"])[0],
+                    "release_date": item.get("first_publish_year"),
+                    "cover_url": f"https://covers.openlibrary.org/b/id/{item.get('cover_i')}-L.jpg"
+                    if "cover_i" in item
+                    else None,
+                }
+            )
         return jsonify({"book": book})
 
     except requests.exceptions.RequestException as e:
