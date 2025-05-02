@@ -268,6 +268,61 @@ def get_book_details(book_id):
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
+    
+@books_bp.route("/api/book/<book_id>/recommendations", methods=["GET"])
+def get_recommendations(book_id):
+    OPEN_LIBRARY_DETAILS_URL = f"https://openlibrary.org/works/{book_id}.json"
+    try:
+    
+        subjects_param = request.args.get('subjects', "")
+        subjects_list = [subject.strip() for subject in subjects_param if subject.strip()]
+
+        # Generate the dynamic subject filter
+        if subjects_list:       
+            subjects_filter = " OR ".join(f'"{subject.strip()}"' for subject in subjects_list)
+            
+
+        query = (
+            f'ebook_access:[borrowable TO *] '
+            f'-key:"/works/{book_id}" '
+            f'subject:({subjects_filter})'
+        )
+        # query = 'ebook_access:[borrowable TO *]'
+
+        params = {
+            "q": query,
+            "page": 1,
+            "limit": 5
+        }
+    
+        # response = requests.get(
+        #     OPEN_LIBRARY_SEARCH_URL, params={"q": query, "limit": 10}
+        # )
+        response = requests.get("https://openlibrary.org/search.json", params=params)
+        response.raise_for_status()
+        data = response.json()
+        # print(data)
+        
+        books = []
+        for book in data.get("docs", []):
+            # Add book data to the list
+            books.append(
+                {
+                    "id": book.get("key", "").replace(
+                        "/works/", ""
+                    ),  # Extracting book ID
+                    "title": book.get("title", "Unknown Title"),
+                    "author": book.get("author_name", ["Unknown Author"])[
+                        0
+                    ],  # Take first author
+                    "cover_url": f"https://covers.openlibrary.org/b/id/{book.get('cover_i', '10909258')}-M.jpg",  # Default cover if missing
+                }
+            )
+
+        return jsonify({"books": books})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @books_bp.route("/api/book/suggestions", methods=["GET"])

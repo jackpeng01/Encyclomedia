@@ -51,6 +51,8 @@ const TVDetails = () => {
   const [commentText, setCommentText] = useState('');
   const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [bookmarkedReviews, setBookmarkedReviews] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+
 
   const handleLikeReview = async (reviewId) => {
     try {
@@ -354,6 +356,10 @@ const TVDetails = () => {
         };
         const response = await axios.get(`http://127.0.0.1:5000/api/tv/${id}`); // Call your backend with the movie ID
         setTV(response.data);
+
+        const recommendationsResponse = await axios.get(`http://127.0.0.1:5000/api/tv/${id}/recommendations`);
+        setRecommendations(recommendationsResponse.data);
+
       } catch (err) {
         setError("Failed to load TV details.");
       }
@@ -544,35 +550,27 @@ const TVDetails = () => {
       >
         <Navbar userData={userData} />
 
-        {/* ✅ Main Container */}
+        {/* Main Container */}
         <Box
           sx={{
-            maxWidth: '50vw',
-            // marginTop: '500px',
-            margin: '0 auto', // Center content
-            padding: '1.5rem',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            borderRadius: '10px',
-            backgroundColor: '#ffffff',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            position: 'relative', // Ensure relative positioning for the recommendations
           }}
         >
-          {/* Top Section: Poster and Log/Save */}
-          <Box sx={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            {/* Poster Section */}
-            <img
-              src={tv.poster_path ? tv.poster_path : `${process.env.PUBLIC_URL}/default-poster-icon.png`}
-              alt={tv.title}
-              style={{
-                width: '100%',
-                maxWidth: '300px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-              }}
-            />
+          {/* Left Column: Main Content */}
+          <Box
+            sx={{
+              flex: 1,
+              maxWidth: '75%', // Main content takes up most of the width
+            }}
+          >
+            {/* ✅ Main Container */}
             <Box
               sx={{
-                maxWidth: '800px',
-                marginTop: '500px',
+                maxWidth: '50vw',
+                // marginTop: '500px',
                 margin: '0 auto', // Center content
                 padding: '1.5rem',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
@@ -580,73 +578,97 @@ const TVDetails = () => {
                 backgroundColor: '#ffffff',
               }}
             >
-              {/* Log and Save Section */}
-              <Box sx={{ flex: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
-                  <FavoriteButton
-                    id={id}
-                    mediaType={"tv"}
-                    userLikes={userData.favorites || []}
-                    toggleLike={toggleLike}
-                  />
-                </Box>
-                {/* Log Watched Movie */}
-                <Box sx={{ marginBottom: '1.5rem' }}>
-                  <label>
-                    <strong>Date Watched:</strong>
-                    <input
-                      type="date"
-                      value={watchedDate}
-                      onChange={(e) => setWatchedDate(e.target.value)}
-                      style={{
-                        marginLeft: '0.5rem',
-                        padding: '0.25rem',
-                        borderRadius: '5px',
-                        border: '1px solid #ccc',
-                      }}
-                    />
-                  </label>
-                </Box>
-                <Box sx={{ marginBottom: '1.5rem' }}>
-                  <label>
-                    <strong>Tags:</strong>
-                    <input
-                      type="text"
-                      placeholder="e.g., action, family"
-                      value={tags}
-                      onChange={(e) => setTags(e.target.value)}
-                      style={{
-                        marginLeft: '0.5rem',
-                        padding: '0.25rem',
-                        borderRadius: '5px',
-                        border: '1px solid #ccc',
-                        width: '70%',
-                      }}
-                    />
-                  </label>
-                </Box>
-
-                {/* Rating Section */}
+              {/* Top Section: Poster and Log/Save */}
+              <Box sx={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                {/* Poster Section */}
+                <img
+                  src={tv.poster_path ? tv.poster_path : `${process.env.PUBLIC_URL}/default-poster-icon.png`}
+                  alt={tv.title}
+                  style={{
+                    width: '100%',
+                    maxWidth: '300px',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                  }}
+                />
                 <Box
-                  sx={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
-                  onMouseLeave={() => setHover(0)} // Reset hover when the mouse leaves the star container
+                  sx={{
+                    maxWidth: '800px',
+                    marginTop: '500px',
+                    margin: '0 auto', // Center content
+                    padding: '1.5rem',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    borderRadius: '10px',
+                    backgroundColor: '#ffffff',
+                  }}
                 >
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <FaStar
-                      key={star}
-                      size={30}
-                      color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
-                      style={{
-                        cursor: "pointer",
-                        transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
-                        transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
-                      }}
-                      onMouseEnter={() => setHover(star)} // Set hover when entering a star
-                      onClick={() => setRating(star)} // Update rating on click
-                    />
-                  ))}
-                </Box>
+                  {/* Log and Save Section */}
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Log/Save</h2>
+                      <FavoriteButton
+                        id={id}
+                        mediaType={"tv"}
+                        userLikes={userData.favorites || []}
+                        toggleLike={toggleLike}
+                      />
+                    </Box>
+                    {/* Log Watched Movie */}
+                    <Box sx={{ marginBottom: '1.5rem' }}>
+                      <label>
+                        <strong>Date Watched:</strong>
+                        <input
+                          type="date"
+                          value={watchedDate}
+                          onChange={(e) => setWatchedDate(e.target.value)}
+                          style={{
+                            marginLeft: '0.5rem',
+                            padding: '0.25rem',
+                            borderRadius: '5px',
+                            border: '1px solid #ccc',
+                          }}
+                        />
+                      </label>
+                    </Box>
+                    <Box sx={{ marginBottom: '1.5rem' }}>
+                      <label>
+                        <strong>Tags:</strong>
+                        <input
+                          type="text"
+                          placeholder="e.g., action, family"
+                          value={tags}
+                          onChange={(e) => setTags(e.target.value)}
+                          style={{
+                            marginLeft: '0.5rem',
+                            padding: '0.25rem',
+                            borderRadius: '5px',
+                            border: '1px solid #ccc',
+                            width: '70%',
+                          }}
+                        />
+                      </label>
+                    </Box>
+
+                    {/* Rating Section */}
+                    <Box
+                      sx={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
+                      onMouseLeave={() => setHover(0)} // Reset hover when the mouse leaves the star container
+                    >
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          size={30}
+                          color={star <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
+                          style={{
+                            cursor: "pointer",
+                            transition: "color 0.2s ease-in-out, transform 0.2s ease-in-out", // Smooth color and size change
+                            transform: star === hover ? "scale(1.2)" : "scale(1)", // Slight enlargement on hover
+                          }}
+                          onMouseEnter={() => setHover(star)} // Set hover when entering a star
+                          onClick={() => setRating(star)} // Update rating on click
+                        />
+                      ))}
+                    </Box>
 
 
 
@@ -692,53 +714,53 @@ const TVDetails = () => {
                   {watchLater ? (buttonHover ? "Unsave from Watch Later" : "Saved to Watch Later") : "Save to Watch Later"}
                 </button>
 
-                <Box sx={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-                  <button onClick={openModal}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      borderRadius: '5px',
-                      backgroundColor: '#007bff',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Watch Trailer
-                  </button>
+                  <Box sx={{ marginTop: '1rem', marginBottom: '1.5rem', textAlign: 'left' }}>
+                      <button onClick={openModal}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '5px',
+                          backgroundColor: '#007bff',
+                          color: '#fff',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Watch Trailer
+                      </button>
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          </Box>
 
-          {/* Movie Info Section */}
-          <Box sx={{ marginTop: '2rem' }}>
-            <h1 style={{ fontSize: '2rem', margin: '0.5rem 0' }}>{tv.title}</h1>
-            {tv.tagline && (
-              <p style={{ fontStyle: 'italic', color: '#555', marginBottom: '1rem' }}>
-                "{tv.tagline}"
-              </p>
-            )}
-            <p style={{ color: '#666', marginBottom: '1rem' }}>{tv.overview}</p>
-            <p style={{ margin: '0.5rem 0' }}>
-              <strong>First Air Date:</strong> {tv.release_date}
-            </p>
-            <p style={{ margin: '0.5rem 0' }}>
-              <strong>Rating:</strong> {tv.vote_average.toFixed(1)}
-            </p>
-            {tv.number_of_seasons && (
-              <p style={{ margin: '0.5rem 0' }}>
-                <strong>Seasons:</strong> {tv.number_of_seasons}
-              </p>
-            )}
-            <p style={{ margin: '0.5rem 0' }}>
-              <strong>Genres:</strong> {tv.genres.join(', ')}
-            </p>
-            {tv.status && (
-              <p style={{ margin: '0.5rem 0' }}>
-                <strong>Status:</strong> {tv.status}
-              </p>
-            )}
-          </Box>
+              {/* Movie Info Section */}
+              <Box sx={{ marginTop: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', margin: '0.5rem 0' }}>{tv.title}</h1>
+                {tv.tagline && (
+                  <p style={{ fontStyle: 'italic', color: '#555', marginBottom: '1rem' }}>
+                    "{tv.tagline}"
+                  </p>
+                )}
+                <p style={{ color: '#666', marginBottom: '1rem' }}>{tv.overview}</p>
+                <p style={{ margin: '0.5rem 0' }}>
+                  <strong>First Air Date:</strong> {tv.release_date}
+                </p>
+                <p style={{ margin: '0.5rem 0' }}>
+                  <strong>Rating:</strong> {tv.vote_average.toFixed(1)}
+                </p>
+                {tv.number_of_seasons && (
+                  <p style={{ margin: '0.5rem 0' }}>
+                    <strong>Seasons:</strong> {tv.number_of_seasons}
+                  </p>
+                )}
+                <p style={{ margin: '0.5rem 0' }}>
+                  <strong>Genres:</strong> {tv.genres.join(', ')}
+                </p>
+                {tv.status && (
+                  <p style={{ margin: '0.5rem 0' }}>
+                    <strong>Status:</strong> {tv.status}
+                  </p>
+                )}
+              </Box>
 
           {/* Cast Section */}
           <Box sx={{ marginTop: '2rem' }}>
@@ -879,49 +901,96 @@ const TVDetails = () => {
                       </Box>
                     </Box>
 
-                    <Box
-                      sx={{
-                        marginTop: '1rem',
-                        '& strong': { fontWeight: 'bold' },
-                        '& em': { fontStyle: 'italic' },
-                        '& u': { textDecoration: 'underline' },
-                        '& ul': { paddingLeft: '1.5rem' },
-                        '& li': { marginBottom: '0.25rem' }
-                      }}
-                      dangerouslySetInnerHTML={{
-                        __html: review.content
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          .replace(/__(.*?)__/g, '<u>$1</u>')
-                          .replace(/• (.*?)(?=\n|$)/g, '<li>$1</li>')
-                          .replace(/<li>/g, '<ul><li>')
-                          .replace(/<\/li>/g, '</li></ul>')
-                          .replace(/<\/ul><ul>/g, '')
+                        <Box
+                          sx={{
+                            marginTop: '1rem',
+                            '& strong': { fontWeight: 'bold' },
+                            '& em': { fontStyle: 'italic' },
+                            '& u': { textDecoration: 'underline' },
+                            '& ul': { paddingLeft: '1.5rem' },
+                            '& li': { marginBottom: '0.25rem' }
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: review.content
+                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                              .replace(/__(.*?)__/g, '<u>$1</u>')
+                              .replace(/• (.*?)(?=\n|$)/g, '<li>$1</li>')
+                              .replace(/<li>/g, '<ul><li>')
+                              .replace(/<\/li>/g, '</li></ul>')
+                              .replace(/<\/ul><ul>/g, '')
+                          }}
+                        />
+
+                        {review.comments && review.comments.length > 0 && (
+                          <Box sx={{ marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
+                            <h4 style={{ margin: '0 0 0.5rem' }}>Comments ({review.comments.length})</h4>
+                            {review.comments.map((comment) => renderComment(comment, review._id))}
+                          </Box>
+                        )}
+
+                        <Button
+                          onClick={(e) => handleContextMenu(e, review._id)}
+                          variant="outlined"
+                          size="small"
+                          sx={{ mt: 1 }}
+                        >
+                          Add Comment
+                        </Button>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Box sx={{ textAlign: 'center', padding: '2rem 0', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
+                    <p style={{ margin: 0, color: '#666' }}>No reviews yet. Be the first to write a review!</p>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Right Column: Recommendations */}
+          <Box
+            sx={{
+              flex: 1, // Take up less space for recommendations
+              maxWidth: '200px',
+              padding: '1rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              borderRadius: '10px',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <h3 style={{ marginBottom: '1rem' }}>Recommended</h3>
+            {recommendations.length > 0 ? (
+              recommendations.slice(0, 5).map((rec, index) => (
+                <Link
+                  to={`/tv/${rec.id}`}
+                  key={index}
+                  style={{ textDecoration: 'none' }}
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'left',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <img
+                      src={rec.poster_path || `${process.env.PUBLIC_URL}/default-poster-icon.png`}
+                      alt={rec.title}
+                      style={{
+                        width: '100px',
+                        height: '150px',
+                        borderRadius: '5px',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                       }}
                     />
-
-                    {review.comments && review.comments.length > 0 && (
-                      <Box sx={{ marginTop: '1rem', borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
-                        <h4 style={{ margin: '0 0 0.5rem' }}>Comments ({review.comments.length})</h4>
-                        {review.comments.map((comment) => renderComment(comment, review._id))}
-                      </Box>
-                    )}
-
-                    <Button
-                      onClick={(e) => handleContextMenu(e, review._id)}
-                      variant="outlined"
-                      size="small"
-                      sx={{ mt: 1 }}
-                    >
-                      Add Comment
-                    </Button>
                   </Box>
-                ))}
-              </Box>
+                </Link>
+              ))
             ) : (
-              <Box sx={{ textAlign: 'center', padding: '2rem 0', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
-                <p style={{ margin: 0, color: '#666' }}>No reviews yet. Be the first to write a review!</p>
-              </Box>
+              <p>No recommendations available.</p>
             )}
           </Box>
         </Box>

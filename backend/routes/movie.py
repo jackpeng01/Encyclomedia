@@ -264,6 +264,35 @@ def get_movie_details(movie_id):
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
+@movie_bp.route("/api/movie/<int:movie_id>/recommendations", methods=["GET"])
+def get_recommendations(movie_id):
+    try:
+        url = f"{TMDB_BASE_URL}/movie/{movie_id}/recommendations"
+
+        headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
+        
+        # Movie details
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extract relevant movie data
+        recommendations = [
+            {
+                "id": movie["id"],
+                "title": movie["title"],
+                "poster_path": f"{TMDB_IMAGE_BASE_URL}{movie['poster_path']}"
+                if movie.get("poster_path")
+                else None,
+            }
+            for movie in data.get("results", [])
+        ]
+        
+        return jsonify(recommendations)
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 @movie_bp.route("/api/movie/log/<int:movie_id>", methods=["POST"])
